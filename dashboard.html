@@ -1764,13 +1764,8 @@ document.addEventListener('click', e => {
 
   // ── ROLE (à brancher sur Supabase Auth) ──
   // 'risk_manager' | 'analyst' | 'admin'
-  const CURRENT_ROLE = 'risk_manager'; // défaut
+  const CURRENT_ROLE = 'admin'; // défaut
   window._currentRole = CURRENT_ROLE;
-  // Settings link visible pour admin seulement
-  document.addEventListener('DOMContentLoaded', () => {
-    const sl = document.getElementById('settingsLink');
-    if (sl) sl.style.display = CURRENT_ROLE === 'admin' ? 'inline' : 'none';
-  });
 
   // ── JOURNAL (mock, à brancher sur Supabase) ──
   const JOURNAL = {
@@ -2839,6 +2834,16 @@ document.addEventListener('click', e => {
   }
   .nr-btn-submit:hover { background: var(--accent-hi); }
 </style>
+
+<script>
+  (function initRole() {
+    const labels = { admin:'ADMIN', risk_manager:'RISK MANAGER', analyst:'ANALYST' };
+    const roleEl = document.getElementById('userRole');
+    if (roleEl) roleEl.textContent = labels[window._currentRole] || window._currentRole.toUpperCase();
+    const sl = document.getElementById('settingsLink');
+    if (sl) sl.style.display = window._currentRole === 'admin' ? 'block' : 'none';
+  })();
+</script>
 
 </body>
 </html>

@@ -177,7 +177,10 @@
   }
 
   .lang-dropdown {
-    position: relative;
+    position: fixed;
+    top: 10px;
+    right: 16px;
+    z-index: 1000;
   }
 
   .lang-current {
@@ -997,6 +1000,17 @@ document.addEventListener('click', e => {
 </head>
 <body>
 
+<!-- ── LANG SWITCHER (fixed top-right) ── -->
+<div class="lang-dropdown" id="langDropdown">
+  <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
+  <div class="lang-menu" id="langMenu">
+    <button onclick="i18n.setLocale('en')">EN — English</button>
+    <button onclick="i18n.setLocale('fr')">FR — Français</button>
+    <button onclick="i18n.setLocale('nl')">NL — Nederlands</button>
+    <button onclick="i18n.setLocale('de')">DE — Deutsch</button>
+  </div>
+</div>
+
 <!-- ── TOPBAR ── -->
 <div class="topbar">
   <div class="topbar-logo">
@@ -1026,15 +1040,6 @@ document.addEventListener('click', e => {
   </div>
 
   <div class="topbar-right">
-    <div class="lang-dropdown" id="langDropdown">
-      <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
-      <div class="lang-menu" id="langMenu">
-        <button onclick="i18n.setLocale('en')">EN — English</button>
-        <button onclick="i18n.setLocale('fr')">FR — Français</button>
-        <button onclick="i18n.setLocale('nl')">NL — Nederlands</button>
-        <button onclick="i18n.setLocale('de')">DE — Deutsch</button>
-      </div>
-    </div>
     <span class="topbar-date" id="topDate"></span>
     <div class="topbar-user">
       <div class="user-avatar" id="userAvatar">OD</div>

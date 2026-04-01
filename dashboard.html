@@ -302,8 +302,12 @@
     cursor: pointer;
     letter-spacing: 0.06em;
     transition: background 0.1s, color 0.1s;
+    outline: none;
+    -webkit-appearance: none;
   }
-  .role-menu button:hover { background: var(--card-hi); color: var(--text); }
+  .role-menu button:hover,
+  .role-menu button:focus { background: var(--card-hi); color: var(--text); }
+  .role-menu button:focus-visible { outline: none; }
 
   /* ── LAYOUT ── */
   .main {

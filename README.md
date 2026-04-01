@@ -9,6 +9,16 @@ RiskManager is a comprehensive tool designed to help manage and assess risks in 
 - Customizable risk analysis templates
 - Integration with other management tools
 
+## Structure
+
+- `index.html` - Page d'accueil et connexion
+- `dashboard.html` - Tableau de bord
+- `style.css` - Styles de l'application
+- `app.js` - Logique principale
+- `api.js` - Communication avec l'API
+- `config.js` - Configuration
+- `auth.js` - Authentification
+
 ## Installation
 1. Clone the repository:
    ```bash

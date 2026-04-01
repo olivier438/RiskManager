@@ -1,32 +1,58 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RiskManager</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Manager — Login</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <header>
-        <h1>RiskManager</h1>
-        <nav>
-            <a href="index.html">Accueil</a>
-            <a href="dashboard.html">Dashboard</a>
-        </nav>
-    </header>
-    <main>
-        <section id="login">
-            <h2>Connexion</h2>
-            <form id="login-form">
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Mot de passe" required>
-                <button type="submit">Se connecter</button>
-            </form>
-        </section>
-    </main>
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
-    <script src="api.js"></script>
-    <script src="app.js"></script>
+<body class="page-login">
+
+<div class="env-badge beta env-badge-fixed" id="envBadge">BETA</div>
+
+<div class="login-card">
+
+  <div class="login-header">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16">
+          <rect x="2" y="2" width="5" height="5" rx="0.5"/>
+          <rect x="9" y="2" width="5" height="5" rx="0.5"/>
+          <rect x="2" y="9" width="5" height="5" rx="0.5"/>
+          <path d="M9 11.5h5M11.5 9v5"/>
+        </svg>
+      </div>
+      <span class="logo-name">Risk<span>Manager</span></span>
+    </div>
+    <div class="login-sub">Secure access — GRC Risk Platform</div>
+  </div>
+
+  <div class="login-divider"></div>
+
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="inputEmail" placeholder="user@organisation.be" autocomplete="email">
+  </div>
+
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="inputPassword" placeholder="••••••••••••" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') doLogin()">
+  </div>
+
+  <button class="btn-login" id="btnLogin" onclick="doLogin()">Authenticate</button>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="login-footer">
+    <span>ONE CIRCLE IT SOLUTIONS</span>
+    <span id="versionTag">v0.1.0 · BETA</span>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -1,41 +1,53 @@
-// Module d'authentification
+/* ============================================
+   RISK MANAGER — auth.js
+   ONE CIRCLE IT SOLUTIONS
+   ============================================ */
 
-const Auth = {
-    async login(email, password) {
-        try {
-            const response = await fetch(`${Config.API_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await response.json();
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Erreur de connexion:', error);
-            return false;
-        }
-    },
+const Auth = (() => {
 
-    logout() {
-        localStorage.removeItem('token');
-    },
+  // Connexion via Supabase Auth
+  async function login(email, password) {
+    // TODO: brancher sur Supabase
+    // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // if (error) throw error;
+    // return data;
+    throw new Error('Auth not yet connected');
+  }
 
-    getToken() {
-        return localStorage.getItem('token');
-    },
+  // Déconnexion
+  async function logout() {
+    // TODO: await supabase.auth.signOut();
+    window.location.href = '/index.html';
+  }
 
-    isAuthenticated() {
-        return !!this.getToken();
-    },
+  // Récupère la session courante
+  async function getSession() {
+    // TODO: return await supabase.auth.getSession();
+    return null;
+  }
 
-    getAuthHeaders() {
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getToken()}`
-        };
+  // Récupère le user courant
+  async function getUser() {
+    // TODO: const { data } = await supabase.auth.getUser();
+    // return data.user;
+    return null;
+  }
+
+  // Vérifie si l'user est ADMIN de son environment
+  async function isAdmin(environmentId) {
+    // TODO: vérifier le rôle dans la table users via RLS
+    return false;
+  }
+
+  // Redirige vers login si pas de session
+  async function requireAuth() {
+    const session = await getSession();
+    if (!session) {
+      window.location.href = '/index.html';
     }
-};
+    return session;
+  }
+
+  return { login, logout, getSession, getUser, isAdmin, requireAuth };
+
+})();

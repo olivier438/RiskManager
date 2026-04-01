@@ -176,6 +176,32 @@
     letter-spacing: 0.06em;
   }
 
+  .lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 12px;
+    border-right: 1px solid var(--border);
+    margin-right: 4px;
+  }
+
+  .lang-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 3px 6px;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .lang-btn:hover { color: var(--text); border-color: var(--border-hi); }
+  .lang-btn.active { color: var(--accent-hi); border-color: rgba(35,135,200,0.35); background: rgba(29,111,164,0.1); }
+
   .topbar-user {
     display: flex;
     align-items: center;
@@ -807,10 +833,70 @@
 </style>
 
 <script>
-/* ── I18N MODULE (inline) ── */
+/* ── I18N MODULE (inline, EN fallback embarqué) ── */
 const i18n = (() => {
   let _locale = 'en';
-  let _strings = {};
+
+  // Strings EN embarquées — fallback si fetch échoue
+  const FALLBACK = {
+    'app.name':'RiskManager','app.tagline':'Secure access — GRC Risk Platform',
+    'summary.critical':'Critical','summary.critical.sub':'Immediate action required',
+    'summary.high':'High','summary.high.sub':'Treatment in progress',
+    'summary.medium':'Medium','summary.medium.sub':'Under monitoring',
+    'summary.low':'Low','summary.low.sub':'Accepted or closed',
+    'summary.pending':'Pending','summary.pending.sub':'Awaiting approval',
+    'panel.my_risks':'My Risks','panel.live_feed':'Risk Studio — Live Feed','panel.pending_team':'Pending — Team',
+    'table.id':'ID','table.risk_name':'Risk Name','table.severity':'Severity',
+    'table.status':'Status','table.tags':'Tags','table.owner':'Owner',
+    'btn.new_risk':'+ New Risk','btn.approve':'Approve','btn.reject':'Reject',
+    'btn.view_all':'View all','btn.edit':'Edit Risk','btn.import':'Import as Risk',
+    'btn.cancel':'Cancel','btn.save_draft':'Save as Draft','btn.submit':'Submit for Analysis →',
+    'feed.open_rs':'Open Risk Studio','feed.import':'Import as risk →',
+    'pending.view_all':'View all pending',
+    'severity.critical':'Critical','severity.high':'High','severity.medium':'Medium','severity.low':'Low',
+    'status.draft':'DRAFT','status.in_analysis':'IN ANALYSIS','status.in_review':'IN REVIEW',
+    'status.in_treatment':'IN TREATMENT','status.pending_approval':'PENDING APPROVAL',
+    'status.monitored':'MONITORED','status.pending':'PENDING',
+    'risk.new.title':'New Risk','risk.new.sub':'Private by default',
+    'risk.new.section.identification':'Identification','risk.new.section.analysis':'Analysis',
+    'risk.new.section.scoring':'Scoring','risk.new.section.governance':'Governance',
+    'risk.new.section.measures':'Framework Measures',
+    'risk.new.name':'Risk Name','risk.new.description':'Description',
+    'risk.new.description.placeholder':'Describe the risk in plain language. Tags will be detected automatically...',
+    'risk.new.asset':'Asset concerned','risk.new.asset.placeholder':'Server, application, process...',
+    'risk.new.threat':'Threat source','risk.new.threat.placeholder':'External attacker, insider...',
+    'risk.new.vuln':'Vulnerability','risk.new.vuln.placeholder':'Unpatched system, weak auth...',
+    'risk.new.scenario':'Scenario','risk.new.scenario.placeholder':'How the threat exploits the vulnerability...',
+    'risk.new.likelihood':'Likelihood','risk.new.impact':'Impact',
+    'risk.new.gross_risk':'Gross Risk (auto)',
+    'risk.new.visibility':'Visibility','risk.new.owner':'Risk Owner',
+    'risk.new.owner.me':'Me','risk.new.owner.assign':'Assign to team...',
+    'risk.new.tags_detected':'Tags detected','risk.new.tags_manual':'Additional tags',
+    'risk.new.tags_manual.placeholder':'#custom-tag  (space to separate)',
+    'risk.new.measures.hint':'Based on your active frameworks · auto-matched from tags',
+    'risk.new.measures.empty':'Start typing the description to detect measures.',
+    'risk.new.tags.empty':'No measures matched yet.',
+    'risk.new.groq.analysing':'Analysing...','risk.new.groq.detected':'{{n}} tag(s) detected',
+    'likelihood.1':'1 — Rare','likelihood.2':'2 — Unlikely','likelihood.3':'3 — Possible',
+    'likelihood.4':'4 — Likely','likelihood.5':'5 — Almost certain',
+    'impact.1':'1 — Negligible','impact.2':'2 — Minor','impact.3':'3 — Moderate',
+    'impact.4':'4 — Major','impact.5':'5 — Catastrophic',
+    'visibility.private':'PRIVATE','visibility.team':'TEAM',
+    'detail.section.identification':'Identification','detail.section.analysis':'Analysis',
+    'detail.section.governance':'Governance','detail.risk_name':'Risk Name',
+    'detail.severity':'Severity','detail.status':'Status','detail.tags':'Tags',
+    'detail.likelihood':'Likelihood','detail.impact':'Impact',
+    'detail.gross_risk':'Gross Risk','detail.residual_risk':'Residual Risk',
+    'detail.decision':'Treatment Decision','detail.owner':'Risk Owner',
+    'detail.visibility':'Visibility','detail.not_defined':'Not defined',
+    'filtered.risks':'Risk(s)','filtered.view':'Filtered view','filtered.empty':'No risks found.',
+    'feed.detail.section':'Threat Intelligence','feed.detail.title':'Title',
+    'feed.detail.severity':'Severity','feed.detail.source':'Source',
+    'feed.detail.tags':'Tags','feed.detail.description':'Description',
+    'pulse.elevated':'ELEVATED','pulse.calm':'CALM','pulse.critical':'CRITICAL',
+  };
+
+  let _strings = { ...FALLBACK };
 
   async function load(locale = 'en') {
     try {
@@ -820,12 +906,13 @@ const i18n = (() => {
       _locale = locale;
       document.documentElement.lang = locale;
     } catch {
-      if (locale !== 'en') await load('en');
+      _strings = { ...FALLBACK };
+      _locale = 'en';
     }
   }
 
   function t(key, vars = {}) {
-    let str = _strings[key] ?? key;
+    let str = _strings[key] ?? FALLBACK[key] ?? key;
     Object.entries(vars).forEach(([k, v]) => { str = str.replace(`{{${k}}}`, v); });
     return str;
   }
@@ -833,7 +920,6 @@ const i18n = (() => {
   function applyDOM() {
     document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.getAttribute('data-i18n-placeholder')));
-    document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = t(el.getAttribute('data-i18n-title')));
   }
 
   async function init() {
@@ -841,14 +927,27 @@ const i18n = (() => {
     const browser = navigator.language?.split('-')[0];
     const supported = ['en','fr','nl','de'];
     const locale = saved || (supported.includes(browser) ? browser : 'en');
-    await load(locale);
+    if (locale !== 'en') await load(locale);
+    else _locale = 'en';
+    document.documentElement.lang = _locale;
     applyDOM();
+    renderLangSwitcher();
   }
 
   async function setLocale(locale) {
     localStorage.setItem('rm_locale', locale);
     await load(locale);
     applyDOM();
+    renderLangSwitcher();
+  }
+
+  function renderLangSwitcher() {
+    const el = document.getElementById('langSwitcher');
+    if (!el) return;
+    el.innerHTML = AVAILABLE.map(l => `
+      <button class="lang-btn ${l.code === _locale ? 'active' : ''}"
+        onclick="i18n.setLocale('${l.code}')">${l.code.toUpperCase()}</button>
+    `).join('');
   }
 
   const AVAILABLE = [
@@ -893,6 +992,7 @@ const i18n = (() => {
   </div>
 
   <div class="topbar-right">
+    <div id="langSwitcher" class="lang-switcher"></div>
     <span class="topbar-date" id="topDate"></span>
     <div class="topbar-user">
       <div class="user-avatar" id="userAvatar">OD</div>

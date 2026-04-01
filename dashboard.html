@@ -1494,6 +1494,137 @@ document.addEventListener('click', e => {
 
   .sp-btn.primary { background: var(--accent); color: #fff; }
   .sp-btn.primary:hover { background: var(--accent-hi); }
+
+  /* ── ANALYST EDIT FIELDS ── */
+  .sp-select {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 2px;
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .sp-select:focus { border-color: var(--accent); }
+
+  .sp-textarea {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  .sp-textarea::placeholder { color: var(--muted); opacity: 0.5; }
+  .sp-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,111,164,0.1); }
+
+  /* ── JOURNAL ── */
+  .jn-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .jn-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    resize: none;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  .jn-input::placeholder { color: var(--muted); opacity: 0.5; }
+  .jn-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,111,164,0.1); }
+
+  .jn-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border-hi);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .jn-btn:hover { background: var(--card-hi); border-color: var(--accent); color: var(--accent-hi); }
+
+  .jn-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .jn-list::-webkit-scrollbar { width: 3px; }
+  .jn-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  .jn-entry {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 2px 2px 0;
+    padding: 8px 12px;
+    animation: fadeUp 0.2s ease both;
+  }
+
+  .jn-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .jn-author {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-hi);
+    letter-spacing: 0.04em;
+  }
+
+  .jn-ts {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .jn-text {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .jn-empty {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding: 8px 0;
+  }
   .sp-btn.approve { background: rgba(26,122,74,0.15); border: 1px solid rgba(26,122,74,0.4); color: var(--low); }
   .sp-btn.approve:hover { background: rgba(26,122,74,0.25); }
   .sp-btn.reject  { background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3); color: var(--critical); }
@@ -1552,6 +1683,22 @@ document.addEventListener('click', e => {
     { id:'RS-005', name:'DORA — EBA publishes final ITS on incident reporting templates',    sev:'low',      source:'GRC · EBA',       tags:['#dora','#reporting'],        time:'5h ago',     desc:'The EBA published the final Implementing Technical Standards for DORA incident reporting. Financial entities must adopt the templates by Q3 2026.' },
   ];
 
+  // ── ROLE (à brancher sur Supabase Auth) ──
+  // 'risk_manager' | 'analyst' | 'admin'
+  const CURRENT_ROLE = 'analyst'; // ← changer pour tester les vues
+
+  // ── JOURNAL (mock, à brancher sur Supabase) ──
+  const JOURNAL = {
+    'RM-0012': [
+      { ts:'2026-04-01 21:14', author:'O. Delvigne', text:'VPN endpoint non patché depuis 6 mois. Ticket IT #4521 ouvert mais sans priorité.' },
+      { ts:'2026-04-01 22:41', author:'O. Delvigne', text:'Contacté l\'équipe réseau. Rollback impossible avant vendredi. Risque actif en attendant.' },
+      { ts:'2026-04-01 23:15', author:'O. Delvigne', text:'CVE-2025-3284 confirmée sur cette version. CVSS 9.1. Exploit public disponible.' },
+    ],
+    'RM-0009': [
+      { ts:'2026-04-01 18:30', author:'O. Delvigne', text:'Windows Server 2016 en fin de support étendu. Pas de budget migration prévu pour 2026.' },
+    ],
+  };
+
   // ── PANEL ──
   function openPanel(title, subtitle, bodyHTML) {
     document.getElementById('spTitle').textContent = title;
@@ -1578,10 +1725,68 @@ document.addEventListener('click', e => {
     return (tags || []).map(t => `<span class="tag">${t}</span>`).join('');
   }
 
+  // ── JOURNAL HTML ──
+  function journalHTML(riskId) {
+    const entries = JOURNAL[riskId] || [];
+    const list = entries.slice().reverse().map(e => `
+      <div class="jn-entry">
+        <div class="jn-meta">
+          <span class="jn-author">${e.author}</span>
+          <span class="jn-ts">${e.ts}</span>
+        </div>
+        <div class="jn-text">${e.text}</div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="sp-section">
+        <div class="sp-section-title">Analysis Journal</div>
+        <div class="jn-input-row">
+          <textarea class="jn-input" id="jnInput" placeholder="Add a note — findings, research, contacts, CVEs..." rows="2"></textarea>
+          <button class="jn-btn" onclick="addJournalEntry('${riskId}')">Add</button>
+        </div>
+        <div class="jn-list" id="jnList-${riskId}">
+          ${list || '<div class="jn-empty">No entries yet.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  function addJournalEntry(riskId) {
+    const input = document.getElementById('jnInput');
+    const text = input?.value.trim();
+    if (!text) return;
+
+    if (!JOURNAL[riskId]) JOURNAL[riskId] = [];
+    const now = new Date();
+    const ts = now.toISOString().slice(0,16).replace('T',' ');
+    JOURNAL[riskId].push({ ts, author:'O. Delvigne', text });
+
+    // Re-render list
+    const list = document.getElementById(`jnList-${riskId}`);
+    if (list) {
+      list.innerHTML = JOURNAL[riskId].slice().reverse().map(e => `
+        <div class="jn-entry">
+          <div class="jn-meta">
+            <span class="jn-author">${e.author}</span>
+            <span class="jn-ts">${e.ts}</span>
+          </div>
+          <div class="jn-text">${e.text}</div>
+        </div>
+      `).join('');
+    }
+    input.value = '';
+    input.focus();
+  }
+
   // ── RISK DETAIL ──
   function openRisk(risk) {
     const brut = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : '—';
-    openPanel(risk.id, risk.status + ' · ' + risk.sev.toUpperCase(), `
+    const isAnalyst = CURRENT_ROLE === 'analyst';
+    const isRM = CURRENT_ROLE === 'risk_manager';
+
+    // Section identification commune
+    const sectionIdentification = `
       <div class="sp-section">
         <div class="sp-section-title">${i18n.t('detail.section.identification')}</div>
         <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.risk_name')}</div><div class="sp-field-value">${risk.name}</div></div>
@@ -1591,6 +1796,44 @@ document.addEventListener('click', e => {
         </div>
         <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.tags')}</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${tagHTML(risk.tags)}</div></div>
       </div>
+    `;
+
+    // Section analyse — éditable pour analyst, read-only pour RM
+    const sectionAnalysis = isAnalyst ? `
+      <div class="sp-section">
+        <div class="sp-section-title">${i18n.t('detail.section.analysis')} <span style="color:var(--accent-hi);font-size:9px;margin-left:6px">EDITABLE</span></div>
+        <div class="sp-row">
+          <div class="sp-field">
+            <div class="sp-field-label">${i18n.t('detail.likelihood')}</div>
+            <select class="sp-select" id="editLikelihood" onchange="calcGross()">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${risk.likelihood===n?'selected':''}>${n}</option>`).join('')}
+            </select>
+          </div>
+          <div class="sp-field">
+            <div class="sp-field-label">${i18n.t('detail.impact')}</div>
+            <select class="sp-select" id="editImpact" onchange="calcGross()">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${risk.impact===n?'selected':''}>${n}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">${i18n.t('detail.gross_risk')} (auto)</div>
+          <div class="sp-field-value" id="editGross" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div>
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Scenario</div>
+          <textarea class="sp-textarea" placeholder="Describe the attack scenario..." rows="3">${risk.scenario || ''}</textarea>
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Existing controls</div>
+          <textarea class="sp-textarea" placeholder="List existing controls..." rows="2">${risk.controls || ''}</textarea>
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Proposed treatment measures</div>
+          <textarea class="sp-textarea" placeholder="Propose treatment measures..." rows="2">${risk.measures || ''}</textarea>
+        </div>
+      </div>
+    ` : `
       <div class="sp-section">
         <div class="sp-section-title">${i18n.t('detail.section.analysis')}</div>
         <div class="sp-row">
@@ -1603,6 +1846,10 @@ document.addEventListener('click', e => {
         </div>
         <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.decision')}</div><div class="sp-field-value">${risk.decision ?? i18n.t('detail.not_defined')}</div></div>
       </div>
+    `;
+
+    // Section governance
+    const sectionGovernance = `
       <div class="sp-section">
         <div class="sp-section-title">${i18n.t('detail.section.governance')}</div>
         <div class="sp-row">
@@ -1610,10 +1857,51 @@ document.addEventListener('click', e => {
           <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.visibility')}</div><div class="sp-field-value">${i18n.t('visibility.team')}</div></div>
         </div>
       </div>
+    `;
+
+    // Actions selon rôle
+    const sectionActions = isAnalyst ? `
+      <div class="sp-actions">
+        <button class="sp-btn primary" onclick="submitAnalysis('${risk.id}')">Submit for Review →</button>
+      </div>
+    ` : `
       <div class="sp-actions">
         <button class="sp-btn primary">${i18n.t('btn.edit')}</button>
+        ${risk.status === 'PENDING APPROVAL' ? `
+          <button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)">Approve</button>
+          <button class="sp-btn" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)">Reject</button>
+        ` : ''}
+        ${isRM ? `<button class="sp-btn" style="background:var(--surface);border:1px solid var(--border-hi);color:var(--muted)">Assign →</button>` : ''}
       </div>
-    `);
+    `;
+
+    openPanel(risk.id, `${risk.status} · ${risk.sev.toUpperCase()}`,
+      sectionIdentification +
+      sectionAnalysis +
+      sectionGovernance +
+      journalHTML(risk.id) +
+      sectionActions
+    );
+  }
+
+  function calcGross() {
+    const l = parseInt(document.getElementById('editLikelihood')?.value) || 0;
+    const i = parseInt(document.getElementById('editImpact')?.value) || 0;
+    const el = document.getElementById('editGross');
+    if (el && l && i) {
+      const score = l * i;
+      const sev = score >= 16 ? 'critical' : score >= 9 ? 'high' : score >= 4 ? 'medium' : 'low';
+      const colors = { critical:'var(--critical)', high:'var(--high)', medium:'var(--medium)', low:'var(--low)' };
+      el.textContent = score;
+      el.style.color = colors[sev];
+    }
+  }
+
+  function submitAnalysis(riskId) {
+    const btn = event.target;
+    btn.textContent = '✓ Submitted';
+    btn.disabled = true;
+    btn.style.background = 'var(--low)';
   }
 
   // ── FEED DETAIL ──

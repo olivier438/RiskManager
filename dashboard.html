@@ -1,29 +1,1560 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RiskManager - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Manager — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #090c10;
+    --surface:    #0d1117;
+    --card:       #111820;
+    --card-hi:    #141e28;
+    --border:     #1c2730;
+    --border-hi:  #2a3a4a;
+    --accent:     #1d6fa4;
+    --accent-hi:  #2387c8;
+    --text:       #cdd9e5;
+    --muted:      #7a95aa;
+    --mono:       'IBM Plex Mono', monospace;
+    --sans:       'IBM Plex Sans', sans-serif;
+
+    --critical:   #c0392b;
+    --high:       #d4700a;
+    --medium:     #b8960a;
+    --low:        #1a7a4a;
+    --info:       var(--accent);
+
+    --calm:       #1a7a4a;
+    --elevated:   #b8960a;
+    --threat:     #c0392b;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 0;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 32px;
+  }
+
+  .topbar-icon {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .topbar-icon svg {
+    width: 11px; height: 11px;
+    fill: none; stroke: var(--accent);
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .topbar-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  .topbar-name span { color: var(--accent-hi); }
+
+  .topbar-sep {
+    width: 1px; height: 20px;
+    background: var(--border);
+    margin: 0 20px;
+  }
+
+  .topbar-env {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(212,150,10,0.3);
+    background: rgba(212,150,10,0.06);
+    color: #d4960a;
+    margin-right: 16px;
+  }
+
+  .topbar-env.prod {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .topbar-org {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .topbar-chart {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 16px;
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+  }
+
+  .chart-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .chart-label.up   { color: var(--critical); }
+  .chart-label.down { color: var(--low); }
+  .chart-label.flat { color: var(--muted); }
+
+  .chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .legend-dot {
+    width: 6px; height: 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .topbar-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .user-avatar {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .user-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .user-role {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── LAYOUT ── */
+  .main {
+    flex: 1;
+    padding: 20px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── PULSE BAR ── */
+  .pulse-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pulse-bar::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--pulse-color, var(--calm));
+    border-radius: 4px 0 0 4px;
+  }
+
+  .pulse-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pulse-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--pulse-color, var(--calm));
+    box-shadow: 0 0 0 0 var(--pulse-color, var(--calm));
+    animation: pulseAnim 2s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulseAnim {
+    0%   { box-shadow: 0 0 0 0 rgba(26,122,74,0.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(26,122,74,0); }
+    100% { box-shadow: 0 0 0 0 rgba(26,122,74,0); }
+  }
+
+  .pulse-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pulse-color, var(--calm));
+  }
+
+  .pulse-sep { width: 1px; height: 16px; background: var(--border); }
+
+  .pulse-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+
+  .pulse-desc {
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .pulse-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .pulse-updated {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .pulse-events {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pulse-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+
+  .pulse-tag.critical { color: var(--critical); border-color: rgba(192,57,43,0.3); background: rgba(192,57,43,0.06); }
+  .pulse-tag.high     { color: var(--high);     border-color: rgba(212,112,10,0.3); background: rgba(212,112,10,0.06); }
+  .pulse-tag.medium   { color: var(--medium);   border-color: rgba(184,150,10,0.3); background: rgba(184,150,10,0.06); }
+
+  /* ── GRID LAYOUT ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .panel.full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* My Risks — liste full width */
+  .panel.full-width .panel-body {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 220px;
+    padding: 0;
+  }
+
+  .panel.full-width .risk-item {
+    display: grid;
+    grid-template-columns: 72px 1fr 110px auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 16px;
+    border-radius: 0;
+    border-bottom: 1px solid var(--border);
+    background: none;
+  }
+
+  .panel.full-width .risk-item:last-child { border-bottom: none; }
+  .panel.full-width .risk-item:hover { background: var(--card-hi); }
+  .panel.full-width .risk-item-top  { display: contents; }
+  .panel.full-width .risk-item-bot  { display: contents; }
+  .panel.full-width .risk-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  .panel.full-width .risk-tags { display: flex; gap: 4px; }
+  .panel.full-width .risk-status { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.04em; white-space: nowrap; }
+  .panel.full-width .risk-owner { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; text-align: right; }
+
+  /* ── CARD ── */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex: 1;
+  }
+
+  .panel-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--border);
+    padding: 2px 7px;
+    border-radius: 2px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #1a7a4a;
+    animation: pulseAnim 2s infinite;
+    flex-shrink: 0;
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  /* ── RISK TABLE (My Risks) ── */
+  .risk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .risk-table thead tr {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-hi);
+  }
+
+  .risk-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 7px 12px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .risk-table th:first-child { padding-left: 16px; }
+  .risk-table th:last-child  { padding-right: 16px; }
+
+  .risk-row {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .risk-row:last-child { border-bottom: none; }
+  .risk-row:hover { background: var(--card-hi); }
+
+  .risk-row td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .risk-row td:first-child { padding-left: 16px; }
+  .risk-row td:last-child  { padding-right: 16px; }
+
+  .col-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    width: 72px;
+  }
+
+  .col-name {
+    font-weight: 500;
+    color: var(--text);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .col-sev  { width: 80px; }
+  .col-status {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    width: 130px;
+  }
+
+  .col-tags { display: flex; gap: 4px; align-items: center; }
+  .col-owner {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+    width: 60px;
+  }
+
+  /* ── RISK ITEM (autres panels) ── */
+  .risk-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .risk-item:last-child { border-bottom: none; }
+  .risk-item:hover { background: var(--card-hi); }
+
+  .risk-item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .risk-id {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  .risk-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .severity {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+
+  .severity.critical { color: var(--critical); border-color: rgba(192,57,43,0.35); background: rgba(192,57,43,0.08); }
+  .severity.high     { color: var(--high);     border-color: rgba(212,112,10,0.35); background: rgba(212,112,10,0.08); }
+  .severity.medium   { color: var(--medium);   border-color: rgba(184,150,10,0.35); background: rgba(184,150,10,0.08); }
+  .severity.low      { color: var(--low);      border-color: rgba(26,122,74,0.35);  background: rgba(26,122,74,0.08); }
+
+  .risk-item-bot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .risk-status {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .risk-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent-hi);
+    background: rgba(29,111,164,0.1);
+    border: 1px solid rgba(29,111,164,0.2);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  .risk-owner {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* ── LIVE FEED ITEM ── */
+  .feed-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { background: var(--card-hi); }
+
+  .feed-item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .feed-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  .feed-item-bot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .feed-source {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .feed-time {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .feed-new {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent-hi);
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  /* ── PENDING ITEM ── */
+  .pending-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .pending-item:last-child { border-bottom: none; }
+  .pending-item:hover { background: var(--card-hi); }
+
+  .pending-item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .pending-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .pending-item-bot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pending-by {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .pending-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-approve {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(26,122,74,0.4);
+    background: rgba(26,122,74,0.1);
+    color: var(--low);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .btn-approve:hover { background: rgba(26,122,74,0.2); }
+
+  .btn-reject {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(192,57,43,0.3);
+    background: rgba(192,57,43,0.06);
+    color: var(--critical);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .btn-reject:hover { background: rgba(192,57,43,0.14); }
+
+  /* ── PANEL FOOTER ── */
+  .panel-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .btn-link {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--accent-hi);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-transform: uppercase;
+  }
+
+  .btn-link:hover { color: var(--text); }
+
+  .btn-new {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-new:hover { background: var(--accent-hi); }
+
+  /* ── SUMMARY ROW ── */
+  .summary-row {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .summary-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .summary-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .summary-val.critical { color: var(--critical); }
+  .summary-val.high     { color: var(--high); }
+  .summary-val.medium   { color: var(--medium); }
+  .summary-val.low      { color: var(--low); }
+  .summary-val.neutral  { color: var(--text); }
+
+  .summary-info {}
+  .summary-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .summary-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
 </head>
 <body>
-    <header>
-        <h1>RiskManager</h1>
-        <nav>
-            <a href="index.html">Accueil</a>
-            <a href="dashboard.html">Dashboard</a>
-            <button id="logout-btn">Déconnexion</button>
-        </nav>
-    </header>
-    <main>
-        <section id="dashboard">
-            <h2>Tableau de bord</h2>
-            <div id="risk-list"></div>
-        </section>
-    </main>
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
-    <script src="api.js"></script>
-    <script src="app.js"></script>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="topbar-icon">
+      <svg viewBox="0 0 16 16">
+        <rect x="2" y="2" width="5" height="5" rx="0.5"/>
+        <rect x="9" y="2" width="5" height="5" rx="0.5"/>
+        <rect x="2" y="9" width="5" height="5" rx="0.5"/>
+        <path d="M9 11.5h5M11.5 9v5"/>
+      </svg>
+    </div>
+    <span class="topbar-name">Risk<span>Manager</span></span>
+  </div>
+
+  <div class="topbar-env" id="envBadge">BETA</div>
+
+  <div class="topbar-sep"></div>
+
+  <span class="topbar-org" id="orgName">HamburgerLAND — Environment</span>
+
+  <div class="topbar-chart" title="Monthly risk evolution — Critical vs High">
+    <svg id="sparkline" width="200" height="32" viewBox="0 0 200 32"></svg>
+    <div class="chart-legend">
+      <div class="chart-legend-item"><div class="legend-dot" style="background:#c0392b"></div>Critical</div>
+      <div class="chart-legend-item"><div class="legend-dot" style="background:#d4700a"></div>High</div>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <span class="topbar-date" id="topDate"></span>
+    <div class="topbar-user">
+      <div class="user-avatar" id="userAvatar">OD</div>
+      <div>
+        <div class="user-name" id="userName">Olivier Delvigne</div>
+        <div class="user-role" id="userRole">Admin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- SUMMARY ROW -->
+  <div class="summary-row">
+    <div class="summary-card">
+      <div class="summary-val critical" id="countCritical">3</div>
+      <div class="summary-info">
+        <div class="summary-label">Critical</div>
+        <div class="summary-sub">Immediate action required</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val high" id="countHigh">7</div>
+      <div class="summary-info">
+        <div class="summary-label">High</div>
+        <div class="summary-sub">Treatment in progress</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val medium" id="countMedium">12</div>
+      <div class="summary-info">
+        <div class="summary-label">Medium</div>
+        <div class="summary-sub">Under monitoring</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val low" id="countLow">5</div>
+      <div class="summary-info">
+        <div class="summary-label">Low</div>
+        <div class="summary-sub">Accepted or closed</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val neutral" id="countPending">2</div>
+      <div class="summary-info">
+        <div class="summary-label">Pending</div>
+        <div class="summary-sub">Awaiting approval</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3-COL GRID -->
+  <div class="grid">
+
+    <!-- MY RISKS — FULL WIDTH HORIZONTAL -->
+    <div class="panel full-width">
+      <div class="panel-header">
+        <span class="panel-title">My Risks</span>
+        <span class="panel-count" id="myRisksCount">8</span>
+      </div>
+      <div class="panel-body" id="myRisksList" style="padding:0;overflow-x:auto;">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Risk Name</th>
+              <th>Severity</th>
+              <th>Status</th>
+              <th>Tags</th>
+              <th>Owner</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="risk-row">
+              <td class="col-id">RM-0012</td>
+              <td class="col-name">Unauthorised access via VPN endpoint</td>
+              <td class="col-sev"><span class="severity critical">Critical</span></td>
+              <td class="col-status">IN TREATMENT</td>
+              <td class="col-tags"><span class="tag">#access-control</span><span class="tag">#vpn</span></td>
+              <td class="col-owner">You</td>
+            </tr>
+            <tr class="risk-row">
+              <td class="col-id">RM-0009</td>
+              <td class="col-name">Unpatched Windows Server 2016 on DMZ</td>
+              <td class="col-sev"><span class="severity high">High</span></td>
+              <td class="col-status">IN ANALYSIS</td>
+              <td class="col-tags"><span class="tag">#patch</span><span class="tag">#server</span></td>
+              <td class="col-owner">You</td>
+            </tr>
+            <tr class="risk-row">
+              <td class="col-id">RM-0007</td>
+              <td class="col-name">No MFA on admin accounts</td>
+              <td class="col-sev"><span class="severity critical">Critical</span></td>
+              <td class="col-status">PENDING APPROVAL</td>
+              <td class="col-tags"><span class="tag">#iam</span><span class="tag">#mfa</span></td>
+              <td class="col-owner">You</td>
+            </tr>
+            <tr class="risk-row">
+              <td class="col-id">RM-0005</td>
+              <td class="col-name">Supplier contract missing security clauses</td>
+              <td class="col-sev"><span class="severity medium">Medium</span></td>
+              <td class="col-status">IN REVIEW</td>
+              <td class="col-tags"><span class="tag">#supply-chain</span></td>
+              <td class="col-owner">You</td>
+            </tr>
+            <tr class="risk-row">
+              <td class="col-id">RM-0003</td>
+              <td class="col-name">Backup untested for 8 months</td>
+              <td class="col-sev"><span class="severity high">High</span></td>
+              <td class="col-status">DRAFT</td>
+              <td class="col-tags"><span class="tag">#backup</span><span class="tag">#bcm</span></td>
+              <td class="col-owner">You</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-footer">
+        <button class="btn-link">View all</button>
+        <button class="btn-new">+ New Risk</button>
+      </div>
+    </div>
+
+    <!-- PENDING TEAM -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Pending — Team</span>
+        <span class="panel-count" id="pendingCount">2</span>
+      </div>
+      <div class="panel-body" id="pendingList">
+
+        <div class="pending-item">
+          <div class="pending-item-top">
+            <span class="risk-id">RM-0014</span>
+            <span class="pending-name">Cloud storage bucket publicly exposed</span>
+            <span class="severity high">High</span>
+          </div>
+          <div class="pending-item-bot">
+            <div class="risk-tags"><span class="tag">#cloud</span><span class="tag">#data-exposure</span></div>
+            <div class="pending-actions">
+              <button class="btn-approve">Approve</button>
+              <button class="btn-reject">Reject</button>
+            </div>
+          </div>
+          <div style="margin-top:6px;">
+            <span class="pending-by" style="font-size:10px;color:var(--muted);">Submitted by J. Masson · 1h ago</span>
+          </div>
+        </div>
+
+        <div class="pending-item">
+          <div class="pending-item-top">
+            <span class="risk-id">RM-0013</span>
+            <span class="pending-name">Absence of formal asset inventory</span>
+            <span class="severity medium">Medium</span>
+          </div>
+          <div class="pending-item-bot">
+            <div class="risk-tags"><span class="tag">#asset-management</span></div>
+            <div class="pending-actions">
+              <button class="btn-approve">Approve</button>
+              <button class="btn-reject">Reject</button>
+            </div>
+          </div>
+          <div style="margin-top:6px;">
+            <span class="pending-by" style="font-size:10px;color:var(--muted);">Submitted by T. Lecomte · 3h ago</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="panel-footer">
+        <button class="btn-link">View all pending</button>
+      </div>
+    </div>
+
+    <!-- LIVE FEED RS -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="live-dot"></div>
+        <span class="panel-title">Risk Studio — Live Feed</span>
+        <span class="panel-count">RS</span>
+      </div>
+
+      <!-- GLOBAL THREAT PULSE intégré -->
+      <div class="pulse-bar" id="pulseBar" style="border-radius:0;border:none;border-bottom:1px solid var(--border);margin:0;">
+        <div class="pulse-indicator">
+          <div class="pulse-dot" id="pulseDot"></div>
+          <span class="pulse-label" id="pulseLabel">ELEVATED</span>
+        </div>
+        <div class="pulse-sep"></div>
+        <span class="pulse-desc" id="pulseDesc">Ransomware surge · EU public sector · 3 CVEs 9.0+</span>
+        <div class="pulse-right">
+          <div class="pulse-events">
+            <span class="pulse-tag critical">2 Crit</span>
+            <span class="pulse-tag high">5 High</span>
+          </div>
+          <span class="pulse-updated" id="pulseUpdated">4 min ago</span>
+        </div>
+      </div>
+      <div class="panel-body" id="liveFeedList">
+
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <div class="feed-new"></div>
+            <span class="feed-name">CVE-2025-3284 — Critical RCE in Apache HTTP Server 2.4.x</span>
+            <span class="severity critical">Critical</span>
+          </div>
+          <div class="feed-item-bot">
+            <span class="feed-source">CYBERSEC · CVE</span>
+            <div class="risk-tags"><span class="tag">#server</span><span class="tag">#rce</span></div>
+            <span class="feed-time">12 min ago</span>
+          </div>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <div class="feed-new"></div>
+            <span class="feed-name">Mass credential leak — 2.1M records from Belgian gov contractor</span>
+            <span class="severity critical">Critical</span>
+          </div>
+          <div class="feed-item-bot">
+            <span class="feed-source">DATALEAK</span>
+            <div class="risk-tags"><span class="tag">#credentials</span><span class="tag">#gov</span></div>
+            <span class="feed-time">38 min ago</span>
+          </div>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <span class="feed-name">NIS2 — CCB updated CyFun mapping v2.1 released</span>
+            <span class="severity medium">Medium</span>
+          </div>
+          <div class="feed-item-bot">
+            <span class="feed-source">GRC · CCB</span>
+            <div class="risk-tags"><span class="tag">#nis2</span><span class="tag">#cyfun</span></div>
+            <span class="feed-time">2h ago</span>
+          </div>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <span class="feed-name">Ransomware campaign targeting EU public sector — LockBit variant</span>
+            <span class="severity high">High</span>
+          </div>
+          <div class="feed-item-bot">
+            <span class="feed-source">CYBERSEC · ENISA</span>
+            <div class="risk-tags"><span class="tag">#ransomware</span><span class="tag">#public-sector</span></div>
+            <span class="feed-time">3h ago</span>
+          </div>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <span class="feed-name">DORA — EBA publishes final ITS on incident reporting templates</span>
+            <span class="severity low">Low</span>
+          </div>
+          <div class="feed-item-bot">
+            <span class="feed-source">GRC · EBA</span>
+            <div class="risk-tags"><span class="tag">#dora</span><span class="tag">#reporting</span></div>
+            <span class="feed-time">5h ago</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="panel-footer">
+        <button class="btn-link">Open Risk Studio</button>
+        <button class="btn-link">Import as risk →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SLIDE PANEL ── -->
+<div class="sp-overlay" id="spOverlay" onclick="closePanel()"></div>
+<div class="slide-panel" id="slidePanel">
+  <div class="sp-header">
+    <div class="sp-title-row">
+      <span class="sp-title" id="spTitle">Detail</span>
+      <button class="sp-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="sp-subtitle" id="spSubtitle"></div>
+  </div>
+  <div class="sp-body" id="spBody"></div>
+</div>
+
+<style>
+  /* ── SLIDE PANEL ── */
+  .sp-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .sp-overlay.open { display: block; }
+
+  .slide-panel {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 480px;
+    background: var(--card);
+    border-left: 1px solid var(--border-hi);
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .slide-panel.open { transform: translateX(0); }
+
+  .sp-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .sp-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .sp-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  .sp-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.1s;
+  }
+  .sp-close:hover { color: var(--text); }
+
+  .sp-subtitle {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .sp-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sp-body::-webkit-scrollbar { width: 4px; }
+  .sp-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  /* SP sections */
+  .sp-section { display: flex; flex-direction: column; gap: 8px; }
+  .sp-section-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sp-field { display: flex; flex-direction: column; gap: 3px; }
+  .sp-field-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sp-field-value {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .sp-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Filtered list in panel */
+  .sp-risk-list { display: flex; flex-direction: column; gap: 6px; }
+  .sp-risk-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color 0.1s, background 0.1s;
+  }
+  .sp-risk-card:hover { background: var(--card-hi); border-color: var(--border-hi); }
+  .sp-risk-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .sp-risk-card-id {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .sp-risk-card-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+  .sp-risk-card-bot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* SP action buttons */
+  .sp-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  .sp-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 2px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .sp-btn.primary { background: var(--accent); color: #fff; }
+  .sp-btn.primary:hover { background: var(--accent-hi); }
+  .sp-btn.approve { background: rgba(26,122,74,0.15); border: 1px solid rgba(26,122,74,0.4); color: var(--low); }
+  .sp-btn.approve:hover { background: rgba(26,122,74,0.25); }
+  .sp-btn.reject  { background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3); color: var(--critical); }
+  .sp-btn.reject:hover { background: rgba(192,57,43,0.2); }
+
+  /* Clickable rows/cards */
+  .risk-row { cursor: pointer; }
+  .summary-card { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .summary-card:hover { border-color: var(--border-hi); background: var(--card-hi); }
+  .feed-item { cursor: pointer; }
+  .pending-item { cursor: pointer; }
+</style>
+
+<script>
+  // ── ENV ──
+  const ENV = window.location.hostname.includes('beta') || !window.location.hostname.includes('www') ? 'beta' : 'prod';
+  const badge = document.getElementById('envBadge');
+  if (ENV === 'prod') { badge.textContent = 'PROD'; badge.classList.add('prod'); }
+
+  // ── DATE ──
+  const now = new Date();
+  document.getElementById('topDate').textContent =
+    now.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+
+  // ── PULSE ──
+  const PULSE_STATE = 'ELEVATED';
+  const pulseColors = { CALM:'#1a7a4a', ELEVATED:'#b8960a', CRITICAL:'#c0392b' };
+  const color = pulseColors[PULSE_STATE];
+  document.documentElement.style.setProperty('--pulse-color', color);
+  document.getElementById('pulseLabel').textContent = PULSE_STATE;
+  let secs = 4 * 60;
+  setInterval(() => {
+    secs++;
+    const m = Math.floor(secs / 60);
+    document.getElementById('pulseUpdated').textContent = m > 0 ? `${m} min ago` : `${secs % 60}s ago`;
+  }, 1000);
+
+  // ── DATA ──
+  const RISKS = [
+    { id:'RM-0012', name:'Unauthorised access via VPN endpoint',        sev:'critical', status:'IN TREATMENT',    tags:['#access-control','#vpn'],      owner:'You',  likelihood:4, impact:5, residual:3, decision:'Reduce', owner_full:'Olivier Delvigne' },
+    { id:'RM-0009', name:'Unpatched Windows Server 2016 on DMZ',        sev:'high',     status:'IN ANALYSIS',     tags:['#patch','#server'],            owner:'You',  likelihood:3, impact:4, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
+    { id:'RM-0007', name:'No MFA on admin accounts',                    sev:'critical', status:'PENDING APPROVAL', tags:['#iam','#mfa'],                 owner:'You',  likelihood:4, impact:5, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
+    { id:'RM-0005', name:'Supplier contract missing security clauses',   sev:'medium',   status:'IN REVIEW',       tags:['#supply-chain'],               owner:'You',  likelihood:2, impact:3, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
+    { id:'RM-0003', name:'Backup untested for 8 months',                sev:'high',     status:'DRAFT',           tags:['#backup','#bcm'],              owner:'You',  likelihood:3, impact:5, residual:3, decision:'Reduce', owner_full:'Olivier Delvigne' },
+    { id:'RM-0014', name:'Cloud storage bucket publicly exposed',        sev:'high',     status:'PENDING',         tags:['#cloud','#data-exposure'],     owner:'J. Masson',  likelihood:4, impact:4, residual:null, decision:null, owner_full:'Julie Masson' },
+    { id:'RM-0013', name:'Absence of formal asset inventory',           sev:'medium',   status:'PENDING',         tags:['#asset-management'],           owner:'T. Lecomte', likelihood:2, impact:3, residual:null, decision:null, owner_full:'Thomas Lecomte' },
+    { id:'RM-0002', name:'Legacy firewall rules not reviewed since 2023',sev:'medium',   status:'MONITORED',       tags:['#firewall','#network'],        owner:'J. Masson',  likelihood:2, impact:3, residual:2, decision:'Accept', owner_full:'Julie Masson' },
+    { id:'RM-0001', name:'No formal incident response plan',            sev:'low',      status:'MONITORED',       tags:['#irt','#process'],             owner:'You',  likelihood:1, impact:4, residual:1, decision:'Accept', owner_full:'Olivier Delvigne' },
+  ];
+
+  const FEED = [
+    { id:'RS-001', name:'CVE-2025-3284 — Critical RCE in Apache HTTP Server 2.4.x',         sev:'critical', source:'CYBERSEC · CVE',  tags:['#server','#rce'],           time:'12 min ago', desc:'A remote code execution vulnerability in Apache HTTP Server 2.4.x allows unauthenticated attackers to execute arbitrary code via a crafted HTTP request. CVSS 9.8. Patch available.' },
+    { id:'RS-002', name:'Mass credential leak — 2.1M records from Belgian gov contractor',   sev:'critical', source:'DATALEAK',        tags:['#credentials','#gov'],       time:'38 min ago', desc:'A Belgian government IT contractor suffered a data breach exposing 2.1M credential records. Emails, hashed passwords and user roles included. Sector: public administration.' },
+    { id:'RS-003', name:'NIS2 — CCB updated CyFun mapping v2.1 released',                   sev:'medium',   source:'GRC · CCB',       tags:['#nis2','#cyfun'],            time:'2h ago',     desc:'The Centre for Cybersecurity Belgium released CyFun mapping v2.1 with updated control references for NIS2 compliance. Key changes in PR.AC and DE.CM families.' },
+    { id:'RS-004', name:'Ransomware campaign targeting EU public sector — LockBit variant',  sev:'high',     source:'CYBERSEC · ENISA',tags:['#ransomware','#public-sector'],time:'3h ago',   desc:'ENISA confirmed an active LockBit variant campaign targeting EU public sector organisations. Entry vector: unpatched VPN gateways. 6 confirmed victims in BE/NL/FR.' },
+    { id:'RS-005', name:'DORA — EBA publishes final ITS on incident reporting templates',    sev:'low',      source:'GRC · EBA',       tags:['#dora','#reporting'],        time:'5h ago',     desc:'The EBA published the final Implementing Technical Standards for DORA incident reporting. Financial entities must adopt the templates by Q3 2026.' },
+  ];
+
+  // ── PANEL ──
+  function openPanel(title, subtitle, bodyHTML) {
+    document.getElementById('spTitle').textContent = title;
+    document.getElementById('spSubtitle').textContent = subtitle;
+    document.getElementById('spBody').innerHTML = bodyHTML;
+    document.getElementById('spOverlay').classList.add('open');
+    document.getElementById('slidePanel').classList.add('open');
+    const id = title.match(/RM-\d+/)?.[0];
+    if (id) history.replaceState(null,'',`?risk=${id}`);
+  }
+
+  function closePanel() {
+    document.getElementById('spOverlay').classList.remove('open');
+    document.getElementById('slidePanel').classList.remove('open');
+    history.replaceState(null,'','?');
+  }
+
+  // ── SEVERITY BADGE HTML ──
+  function sevBadge(sev) {
+    return `<span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span>`;
+  }
+
+  function tagHTML(tags) {
+    return tags.map(t => `<span class="tag">${t}</span>`).join('');
+  }
+
+  // ── RISK DETAIL ──
+  function openRisk(risk) {
+    const brut = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : '—';
+    openPanel(risk.id, risk.status + ' · ' + risk.sev.toUpperCase(), `
+      <div class="sp-section">
+        <div class="sp-section-title">Identification</div>
+        <div class="sp-field"><div class="sp-field-label">Risk Name</div><div class="sp-field-value">${risk.name}</div></div>
+        <div class="sp-row">
+          <div class="sp-field"><div class="sp-field-label">Severity</div><div class="sp-field-value">${sevBadge(risk.sev)}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Status</div><div class="sp-field-value" style="font-family:var(--mono);font-size:11px;color:var(--muted)">${risk.status}</div></div>
+        </div>
+        <div class="sp-field"><div class="sp-field-label">Tags</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${tagHTML(risk.tags)}</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">ISO 27005 Analysis</div>
+        <div class="sp-row">
+          <div class="sp-field"><div class="sp-field-label">Likelihood</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.likelihood ?? '—'}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Impact</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.impact ?? '—'}</div></div>
+        </div>
+        <div class="sp-row">
+          <div class="sp-field"><div class="sp-field-label">Gross Risk</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Residual Risk</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--low)">${risk.residual ?? '—'}</div></div>
+        </div>
+        <div class="sp-field"><div class="sp-field-label">Treatment Decision</div><div class="sp-field-value">${risk.decision ?? 'Not defined'}</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Governance</div>
+        <div class="sp-row">
+          <div class="sp-field"><div class="sp-field-label">Risk Owner</div><div class="sp-field-value">${risk.owner_full}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Visibility</div><div class="sp-field-value">TEAM</div></div>
+        </div>
+      </div>
+      <div class="sp-actions">
+        <button class="sp-btn primary">Edit Risk</button>
+      </div>
+    `);
+  }
+
+  // ── FEED DETAIL ──
+  function openFeed(item) {
+    openPanel(item.id, item.source + ' · ' + item.time, `
+      <div class="sp-section">
+        <div class="sp-section-title">Threat Intelligence</div>
+        <div class="sp-field"><div class="sp-field-label">Title</div><div class="sp-field-value">${item.name}</div></div>
+        <div class="sp-field"><div class="sp-field-label">Severity</div><div class="sp-field-value">${sevBadge(item.sev)}</div></div>
+        <div class="sp-field"><div class="sp-field-label">Source</div><div class="sp-field-value" style="font-family:var(--mono);font-size:11px">${item.source}</div></div>
+        <div class="sp-field"><div class="sp-field-label">Tags</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${tagHTML(item.tags)}</div></div>
+        <div class="sp-field"><div class="sp-field-label">Description</div><div class="sp-field-value">${item.desc}</div></div>
+      </div>
+      <div class="sp-actions">
+        <button class="sp-btn primary">Import as Risk</button>
+      </div>
+    `);
+  }
+
+  // ── FILTERED LIST ──
+  function openFiltered(sev, label) {
+    const filtered = RISKS.filter(r => sev === 'pending' ? r.status === 'PENDING' : r.sev === sev);
+    const cards = filtered.map(r => `
+      <div class="sp-risk-card" onclick="openRisk(RISKS.find(x=>x.id==='${r.id}'))">
+        <div class="sp-risk-card-top">
+          <span class="sp-risk-card-id">${r.id}</span>
+          <span class="sp-risk-card-name">${r.name}</span>
+          ${sevBadge(r.sev)}
+        </div>
+        <div class="sp-risk-card-bot">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${r.status}</span>
+          <span style="margin-left:auto">${tagHTML(r.tags)}</span>
+        </div>
+      </div>
+    `).join('');
+    openPanel(`${filtered.length} ${label} Risk${filtered.length > 1 ? 's' : ''}`, 'Filtered view', `
+      <div class="sp-section">
+        <div class="sp-risk-list">${cards || '<div style="color:var(--muted);font-size:12px">No risks found.</div>'}</div>
+      </div>
+    `);
+  }
+
+  // ── SPARKLINE ──
+  const criticalByMonth = [0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 3, 3];
+  const highByMonth     = [1, 1, 2, 2, 3, 3, 4, 4, 5, 6, 7, 7];
+
+  (function drawSparkline() {
+    const svg = document.getElementById('sparkline');
+    const W = 200, H = 32, PAD = 3;
+    const allVals = [...criticalByMonth, ...highByMonth];
+    const min = Math.min(...allVals);
+    const max = Math.max(...allVals);
+    const range = max - min || 1;
+    const n = 12;
+
+    const x = i => PAD + (i / (n - 1)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - min) / range) * (H - PAD * 2 - 2);
+
+    function makeLine(data, color) {
+      const pts = data.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+      const areaPath = `M${x(0)},${y(data[0])} ` +
+        data.slice(1).map((v,i) => `L${x(i+1)},${y(v)}`).join(' ') +
+        ` L${x(n-1)},${H} L${x(0)},${H} Z`;
+      const gradId = `grad_${color.replace('#','')}`;
+      return `
+        <defs>
+          <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="${color}" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#${gradId})"/>
+        <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${x(n-1)}" cy="${y(data[n-1])}" r="2.5" fill="${color}"/>
+      `;
+    }
+
+    // Month tick marks
+    const ticks = Array.from({length:12}, (_,i) =>
+      `<line x1="${x(i)}" y1="${H-1}" x2="${x(i)}" y2="${H}" stroke="var(--border-hi)" stroke-width="1"/>`
+    ).join('');
+
+    svg.innerHTML = ticks + makeLine(highByMonth, '#d4700a') + makeLine(criticalByMonth, '#c0392b');
+  })();
+  document.querySelectorAll('.summary-card').forEach(card => {
+    const label = card.querySelector('.summary-label').textContent.trim().toLowerCase();
+    card.addEventListener('click', () => {
+      if (label === 'critical') openFiltered('critical', 'Critical');
+      else if (label === 'high')   openFiltered('high', 'High');
+      else if (label === 'medium') openFiltered('medium', 'Medium');
+      else if (label === 'low')    openFiltered('low', 'Low');
+      else if (label === 'pending') openFiltered('pending', 'Pending');
+    });
+  });
+
+  // ── BIND RISK ROWS ──
+  document.querySelectorAll('.risk-row').forEach(row => {
+    const id = row.querySelector('.col-id')?.textContent.trim();
+    row.addEventListener('click', () => {
+      const risk = RISKS.find(r => r.id === id);
+      if (risk) openRisk(risk);
+    });
+  });
+
+  // ── BIND FEED ITEMS ──
+  document.querySelectorAll('.feed-item').forEach((item, i) => {
+    item.addEventListener('click', () => openFeed(FEED[i]));
+  });
+
+  // ── BIND PENDING ITEMS ──
+  document.querySelectorAll('.pending-item').forEach(item => {
+    const id = item.querySelector('.risk-id')?.textContent.trim();
+    item.addEventListener('click', (e) => {
+      if (e.target.classList.contains('btn-approve') || e.target.classList.contains('btn-reject')) return;
+      const risk = RISKS.find(r => r.id === id);
+      if (risk) openRisk(risk);
+    });
+  });
+
+  // ── APPROVE / REJECT ──
+  document.querySelectorAll('.btn-approve').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const item = btn.closest('.pending-item');
+      item.style.opacity = '0.4';
+      item.style.pointerEvents = 'none';
+      btn.textContent = '✓ Approved';
+    });
+  });
+
+  document.querySelectorAll('.btn-reject').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const item = btn.closest('.pending-item');
+      item.style.opacity = '0.4';
+      item.style.pointerEvents = 'none';
+      btn.textContent = '✕ Rejected';
+    });
+  });
+
+  // ── URL RESTORE ──
+  const urlRisk = new URLSearchParams(location.search).get('risk');
+  if (urlRisk) { const r = RISKS.find(x => x.id === urlRisk); if (r) openRisk(r); }
+</script>
+
 </body>
 </html>

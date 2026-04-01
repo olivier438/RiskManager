@@ -1035,14 +1035,18 @@ function toggleRoleMenu() {
   document.getElementById('roleMenu')?.classList.toggle('open');
 }
 
+function toggleAppMenu() {
+  const menu = document.getElementById('appMenu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
 function setRole(role) {
   const labels = { admin:'ADMIN', risk_manager:'RISK MANAGER', analyst:'ANALYST' };
   document.getElementById('userRole').textContent = labels[role] || role.toUpperCase();
   document.getElementById('roleMenu')?.classList.remove('open');
   window._currentRole = role;
-  // Settings visible admin seulement
   const sl = document.getElementById('settingsLink');
-  if (sl) sl.style.display = role === 'admin' ? 'inline' : 'none';
+  if (sl) sl.style.display = role === 'admin' ? 'block' : 'none';
 }
 
 document.addEventListener('click', e => {
@@ -1050,6 +1054,11 @@ document.addEventListener('click', e => {
   if (dd && !dd.contains(e.target)) document.getElementById('langMenu')?.classList.remove('open');
   const rb = document.getElementById('userRoleBtn');
   if (rb && !rb.closest('.user-role-wrap').contains(e.target)) document.getElementById('roleMenu')?.classList.remove('open');
+  const am = document.getElementById('appMenu');
+  if (am && am.style.display === 'block') {
+    const btn = am.previousElementSibling;
+    if (!am.contains(e.target) && !btn?.contains(e.target)) am.style.display = 'none';
+  }
 });
 </script>
 </head>
@@ -1066,12 +1075,6 @@ document.addEventListener('click', e => {
   <div class="topbar-sep"></div>
 
   <span class="topbar-org" id="orgName">HamburgerLAND — Environment</span>
-
-  <div style="display:flex;gap:4px;margin-left:24px;">
-    <a href="dashboard.html" style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:5px 12px;border-radius:2px;border:1px solid rgba(35,135,200,0.35);background:rgba(29,111,164,0.08);color:var(--accent-hi);text-decoration:none;">Work</a>
-    <a href="kpi.html" style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:5px 12px;border-radius:2px;border:1px solid transparent;background:none;color:var(--muted);text-decoration:none;">KPI</a>
-    <a href="search.html" style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:5px 12px;border-radius:2px;border:1px solid transparent;background:none;color:var(--muted);text-decoration:none;">Search</a>
-  </div>
 
   <div class="topbar-chart" title="Monthly risk evolution — Critical vs High">
     <svg id="sparkline" width="200" height="32" viewBox="0 0 200 32"></svg>
@@ -1099,7 +1102,21 @@ document.addEventListener('click', e => {
         </div>
       </div>
     </div>
-    <a id="settingsLink" href="settings.html" title="Settings" style="font-family:var(--mono);font-size:14px;color:var(--muted);text-decoration:none;padding:4px;border-radius:2px;transition:color 0.15s;display:none;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">⚙</a>
+
+    <!-- HAMBURGER MENU -->
+    <div style="position:relative;margin-left:8px;">
+      <button onclick="toggleAppMenu()" style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;padding:5px 8px;font-size:14px;line-height:1;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--border-hi)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">≡</button>
+      <div id="appMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border-hi);border-radius:3px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:500;overflow:hidden;">
+        <div style="padding:4px 0;">
+          <a href="dashboard.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Work</a>
+          <a href="kpi.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">KPI</a>
+          <a href="search.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Search</a>
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+          <a href="profile.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">My Profile</a>
+          <a href="settings.html" id="settingsLink" style="display:none;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Settings</a>
+        </div>
+      </div>
+    </div>
     <div class="lang-dropdown" id="langDropdown">
       <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
       <div class="lang-menu" id="langMenu">

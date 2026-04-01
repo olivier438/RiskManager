@@ -505,6 +505,13 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
 document.getElementById('topDate').textContent =
   new Date().toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
 
+// ── AUTO-SEARCH FROM URL PARAM ──
+const urlQ = new URLSearchParams(location.search).get('q');
+if (urlQ) {
+  document.getElementById('searchInput').value = urlQ;
+  setTimeout(doSearch, 100);
+}
+
 // ── DATA ──
 const RISKS = [
   { id:'RM-0012', name:'Unauthorised access via VPN endpoint',        sev:'critical', status:'IN TREATMENT',     tags:['#access-control','#vpn'],       owner:'You',        likelihood:4, impact:5, residual:3, decision:'Reduce', owner_full:'Olivier Delvigne', asset:'VPN Gateway',      desc:'External attacker exploiting unpatched VPN endpoint to gain network access.' },

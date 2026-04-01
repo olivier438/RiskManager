@@ -176,31 +176,56 @@
     letter-spacing: 0.06em;
   }
 
-  .lang-switcher {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 0 12px;
-    border-right: 1px solid var(--border);
-    margin-right: 4px;
+  .lang-dropdown {
+    position: relative;
   }
 
-  .lang-btn {
+  .lang-current {
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    padding: 3px 6px;
+    letter-spacing: 0.1em;
+    padding: 4px 8px;
     border-radius: 2px;
-    border: 1px solid transparent;
-    background: none;
+    border: 1px solid var(--border-hi);
+    background: transparent;
     color: var(--muted);
     cursor: pointer;
     transition: all 0.15s;
   }
+  .lang-current:hover { color: var(--text); border-color: var(--accent); }
 
-  .lang-btn:hover { color: var(--text); border-color: var(--border-hi); }
-  .lang-btn.active { color: var(--accent-hi); border-color: rgba(35,135,200,0.35); background: rgba(29,111,164,0.1); }
+  .lang-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border-hi);
+    border-radius: 3px;
+    overflow: hidden;
+    z-index: 500;
+    min-width: 140px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .lang-menu.open { display: block; }
+
+  .lang-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+    letter-spacing: 0.04em;
+  }
+  .lang-menu button:hover { background: var(--card-hi); color: var(--text); }
 
   .topbar-user {
     display: flex;
@@ -942,12 +967,8 @@ const i18n = (() => {
   }
 
   function renderLangSwitcher() {
-    const el = document.getElementById('langSwitcher');
-    if (!el) return;
-    el.innerHTML = AVAILABLE.map(l => `
-      <button class="lang-btn ${l.code === _locale ? 'active' : ''}"
-        onclick="i18n.setLocale('${l.code}')">${l.code.toUpperCase()}</button>
-    `).join('');
+    const btn = document.getElementById('langCurrentBtn');
+    if (btn) btn.textContent = _locale.toUpperCase();
   }
 
   const AVAILABLE = [
@@ -959,6 +980,19 @@ const i18n = (() => {
 
   return { init, load, t, locale: () => _locale, setLocale, applyDOM, AVAILABLE };
 })();
+
+function toggleLangMenu() {
+  const menu = document.getElementById('langMenu');
+  menu.classList.toggle('open');
+}
+
+// Ferme le menu si clic ailleurs
+document.addEventListener('click', e => {
+  const dd = document.getElementById('langDropdown');
+  if (dd && !dd.contains(e.target)) {
+    document.getElementById('langMenu')?.classList.remove('open');
+  }
+});
 </script>
 </head>
 <body>
@@ -992,7 +1026,15 @@ const i18n = (() => {
   </div>
 
   <div class="topbar-right">
-    <div id="langSwitcher" class="lang-switcher"></div>
+    <div class="lang-dropdown" id="langDropdown">
+      <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
+      <div class="lang-menu" id="langMenu">
+        <button onclick="i18n.setLocale('en')">EN — English</button>
+        <button onclick="i18n.setLocale('fr')">FR — Français</button>
+        <button onclick="i18n.setLocale('nl')">NL — Nederlands</button>
+        <button onclick="i18n.setLocale('de')">DE — Deutsch</button>
+      </div>
+    </div>
     <span class="topbar-date" id="topDate"></span>
     <div class="topbar-user">
       <div class="user-avatar" id="userAvatar">OD</div>

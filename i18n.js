@@ -43,16 +43,19 @@ const i18n = (() => {
     { code: 'de', label: 'Deutsch' },
   ];
 
+  // Met à jour le bouton de langue courant
+  function renderLangSwitcher() {
+    const btn = document.getElementById('langCurrentBtn');
+    if (btn) btn.textContent = _locale.toUpperCase();
+  }
+
   // Applique les traductions sur tous les éléments [data-i18n]
-  // <span data-i18n="summary.critical"></span>
   function applyDOM() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      el.textContent = t(key);
+      el.textContent = t(el.getAttribute('data-i18n'));
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-      const key = el.getAttribute('data-i18n-placeholder');
-      el.placeholder = t(key);
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
     });
   }
 
@@ -64,15 +67,17 @@ const i18n = (() => {
     const locale = saved || (supported.includes(browser) ? browser : 'en');
     await load(locale);
     applyDOM();
+    renderLangSwitcher();
   }
 
-  // Change la langue et recharge la page
+  // Change la langue
   async function setLocale(locale) {
     localStorage.setItem('rm_locale', locale);
     await load(locale);
     applyDOM();
+    renderLangSwitcher();
   }
 
-  return { init, load, t, locale, setLocale, applyDOM, AVAILABLE };
+  return { init, load, t, locale: () => _locale, setLocale, applyDOM, AVAILABLE };
 
 })();

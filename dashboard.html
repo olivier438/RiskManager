@@ -1040,6 +1040,9 @@ function setRole(role) {
   document.getElementById('userRole').textContent = labels[role] || role.toUpperCase();
   document.getElementById('roleMenu')?.classList.remove('open');
   window._currentRole = role;
+  // Settings visible admin seulement
+  const sl = document.getElementById('settingsLink');
+  if (sl) sl.style.display = role === 'admin' ? 'inline' : 'none';
 }
 
 document.addEventListener('click', e => {
@@ -1080,12 +1083,12 @@ document.addEventListener('click', e => {
 
   <div class="topbar-right">
     <span class="topbar-date" id="topDate"></span>
-    <div class="topbar-user">
+    <div class="topbar-user" style="cursor:pointer;" onclick="window.location.href='profile.html'" title="My Profile">
       <div class="user-avatar" id="userAvatar">OD</div>
       <div>
         <div class="user-name" id="userName">Olivier Delvigne</div>
         <div class="user-role-wrap">
-          <button class="user-role-btn" id="userRoleBtn" onclick="toggleRoleMenu()">
+          <button class="user-role-btn" id="userRoleBtn" onclick="event.stopPropagation();toggleRoleMenu()">
             <span id="userRole">ADMIN</span> ▾
           </button>
           <div class="role-menu" id="roleMenu">
@@ -1096,6 +1099,7 @@ document.addEventListener('click', e => {
         </div>
       </div>
     </div>
+    <a id="settingsLink" href="settings.html" title="Settings" style="font-family:var(--mono);font-size:14px;color:var(--muted);text-decoration:none;padding:4px;border-radius:2px;transition:color 0.15s;display:none;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">⚙</a>
     <div class="lang-dropdown" id="langDropdown">
       <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
       <div class="lang-menu" id="langMenu">
@@ -1745,6 +1749,11 @@ document.addEventListener('click', e => {
   // 'risk_manager' | 'analyst' | 'admin'
   const CURRENT_ROLE = 'risk_manager'; // défaut
   window._currentRole = CURRENT_ROLE;
+  // Settings link visible pour admin seulement
+  document.addEventListener('DOMContentLoaded', () => {
+    const sl = document.getElementById('settingsLink');
+    if (sl) sl.style.display = CURRENT_ROLE === 'admin' ? 'inline' : 'none';
+  });
 
   // ── JOURNAL (mock, à brancher sur Supabase) ──
   const JOURNAL = {

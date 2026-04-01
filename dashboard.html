@@ -177,10 +177,8 @@
   }
 
   .lang-dropdown {
-    position: fixed;
-    top: 10px;
-    right: 16px;
-    z-index: 1000;
+    position: relative;
+    flex-shrink: 0;
   }
 
   .lang-current {
@@ -248,11 +246,7 @@
     color: #fff;
   }
 
-  .user-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text);
-  }
+  .user-name { font-size: 12px; font-weight: 500; color: var(--text); }
 
   .user-role {
     font-family: var(--mono);
@@ -261,6 +255,52 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
+
+  .user-role-wrap { position: relative; }
+
+  .user-role-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .user-role-btn:hover { color: var(--accent-hi); }
+
+  .role-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border-hi);
+    border-radius: 3px;
+    overflow: hidden;
+    z-index: 500;
+    min-width: 130px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .role-menu.open { display: block; }
+  .role-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: background 0.1s, color 0.1s;
+  }
+  .role-menu button:hover { background: var(--card-hi); color: var(--text); }
 
   /* ── LAYOUT ── */
   .main {
@@ -985,31 +1025,29 @@ const i18n = (() => {
 })();
 
 function toggleLangMenu() {
-  const menu = document.getElementById('langMenu');
-  menu.classList.toggle('open');
+  document.getElementById('langMenu')?.classList.toggle('open');
 }
 
-// Ferme le menu si clic ailleurs
+function toggleRoleMenu() {
+  document.getElementById('roleMenu')?.classList.toggle('open');
+}
+
+function setRole(role) {
+  const labels = { admin:'ADMIN', risk_manager:'RISK MANAGER', analyst:'ANALYST' };
+  document.getElementById('userRole').textContent = labels[role] || role.toUpperCase();
+  document.getElementById('roleMenu')?.classList.remove('open');
+  window._currentRole = role;
+}
+
 document.addEventListener('click', e => {
   const dd = document.getElementById('langDropdown');
-  if (dd && !dd.contains(e.target)) {
-    document.getElementById('langMenu')?.classList.remove('open');
-  }
+  if (dd && !dd.contains(e.target)) document.getElementById('langMenu')?.classList.remove('open');
+  const rb = document.getElementById('userRoleBtn');
+  if (rb && !rb.closest('.user-role-wrap').contains(e.target)) document.getElementById('roleMenu')?.classList.remove('open');
 });
 </script>
 </head>
 <body>
-
-<!-- ── LANG SWITCHER (fixed top-right) ── -->
-<div class="lang-dropdown" id="langDropdown">
-  <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
-  <div class="lang-menu" id="langMenu">
-    <button onclick="i18n.setLocale('en')">EN — English</button>
-    <button onclick="i18n.setLocale('fr')">FR — Français</button>
-    <button onclick="i18n.setLocale('nl')">NL — Nederlands</button>
-    <button onclick="i18n.setLocale('de')">DE — Deutsch</button>
-  </div>
-</div>
 
 <!-- ── TOPBAR ── -->
 <div class="topbar">
@@ -1045,7 +1083,25 @@ document.addEventListener('click', e => {
       <div class="user-avatar" id="userAvatar">OD</div>
       <div>
         <div class="user-name" id="userName">Olivier Delvigne</div>
-        <div class="user-role" id="userRole">Admin</div>
+        <div class="user-role-wrap">
+          <button class="user-role-btn" id="userRoleBtn" onclick="toggleRoleMenu()">
+            <span id="userRole">ADMIN</span> ▾
+          </button>
+          <div class="role-menu" id="roleMenu">
+            <button onclick="setRole('admin')">ADMIN</button>
+            <button onclick="setRole('risk_manager')">RISK MANAGER</button>
+            <button onclick="setRole('analyst')">ANALYST</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lang-dropdown" id="langDropdown">
+      <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
+      <div class="lang-menu" id="langMenu">
+        <button onclick="i18n.setLocale('en')">EN — English</button>
+        <button onclick="i18n.setLocale('fr')">FR — Français</button>
+        <button onclick="i18n.setLocale('nl')">NL — Nederlands</button>
+        <button onclick="i18n.setLocale('de')">DE — Deutsch</button>
       </div>
     </div>
   </div>
@@ -1685,7 +1741,8 @@ document.addEventListener('click', e => {
 
   // ── ROLE (à brancher sur Supabase Auth) ──
   // 'risk_manager' | 'analyst' | 'admin'
-  const CURRENT_ROLE = 'analyst'; // ← changer pour tester les vues
+  const CURRENT_ROLE = 'risk_manager'; // défaut
+  window._currentRole = CURRENT_ROLE;
 
   // ── JOURNAL (mock, à brancher sur Supabase) ──
   const JOURNAL = {
@@ -1782,8 +1839,8 @@ document.addEventListener('click', e => {
   // ── RISK DETAIL ──
   function openRisk(risk) {
     const brut = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : '—';
-    const isAnalyst = CURRENT_ROLE === 'analyst';
-    const isRM = CURRENT_ROLE === 'risk_manager';
+    const isAnalyst = window._currentRole === 'analyst';
+    const isRM = window._currentRole === 'risk_manager';
 
     // Section identification commune
     const sectionIdentification = `

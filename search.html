@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem("rm-theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risk Manager — Search</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +26,25 @@
   --medium:    #b8960a;
   --low:       #1a7a4a;
 }
+
+  /* ── LIGHT THEME ── */
+  [data-theme="light"] {
+    --bg:        #f0f4f8;
+    --surface:   #ffffff;
+    --card:      #fafcfe;
+    --card-hi:   #eef3f8;
+    --border:    #d0dae4;
+    --border-hi: #b0bfcc;
+    --accent:    #1d6fa4;
+    --accent-hi: #156091;
+    --text:      #1a2a38;
+    --muted:     #5a7a90;
+    --critical:  #c0392b;
+    --high:      #b85c08;
+    --medium:    #8a6c00;
+    --low:       #156038;
+  }
+
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); font-family: var(--sans); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
@@ -189,6 +209,34 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
   transition: color 0.15s;
 }
 .filter-reset:hover { color: var(--critical); }
+
+  /* ── SCOPE BUTTONS ── */
+  .scope-btn {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 2px;
+    border: 1px solid var(--border-hi);
+    background: none; color: var(--muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .scope-btn:hover { color: var(--text); }
+  .scope-btn.active { color: var(--accent-hi); border-color: rgba(35,135,200,0.4); background: rgba(29,111,164,0.1); }
+
+  /* ── RS RESULT CARD (full) ── */
+  .rs-full-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid var(--low);
+    border-radius: 4px; padding: 14px 20px; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    animation: fadeUp 0.2s ease both;
+  }
+  .rs-full-card:hover { background: var(--card-hi); }
+  .rs-section-label {
+    font-family: var(--mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--low); display: flex; align-items: center; gap: 6px;
+    margin-bottom: 10px;
+  }
 
 /* ── RESULTS ── */
 .results-header {
@@ -385,6 +433,22 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
 .sp-btn.primary { background: var(--accent); color: #fff; }
 .sp-btn.primary:hover { background: var(--accent-hi); }
 </style>
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('rm-theme', next);
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = next === 'light' ? '☀ Light' : '☾ Dark';
+  }
+
+  (function applyTheme() {
+    const saved = localStorage.getItem('rm-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+  })();
+</script>
 </head>
 <body>
 
@@ -427,6 +491,17 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
         placeholder="Search risks — name, description, tags, asset, owner..."
         oninput="onSearchInput()" onkeydown="if(event.key==='Enter') doSearch()">
       <button class="search-btn" onclick="doSearch()">Search</button>
+      <button class="search-btn" style="background:var(--low);margin-left:4px;" onclick="openNewRisk()">+ New Risk</button>
+    </div>
+
+    <!-- SCOPE TOGGLE -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <span class="filter-label">Scope</span>
+      <div style="display:flex;gap:4px;" id="scopeGroup">
+        <button class="scope-btn active" data-scope="client" onclick="setScope('client')">Client Register</button>
+        <button class="scope-btn" data-scope="rs" onclick="setScope('rs')">Risk Studio</button>
+        <button class="scope-btn" data-scope="all" onclick="setScope('all')">All Sources</button>
+      </div>
     </div>
 
     <div class="journal-option">
@@ -435,7 +510,7 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
       <span class="journal-warning" id="journalWarning" style="display:none">· slower · searches analyst notes</span>
     </div>
 
-    <div class="filters-row">
+    <div class="filters-row" id="clientFilters">
       <span class="filter-label">Filters</span>
       <select class="filter-select" id="filterSev" onchange="doSearch()">
         <option value="">All severities</option>
@@ -576,92 +651,190 @@ function highlight(text, query) {
 }
 
 // ── SEARCH ──
+// ── SCOPE ──
+let currentScope = 'client';
+
+function setScope(scope) {
+  currentScope = scope;
+  document.querySelectorAll('.scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
+  // Show/hide client filters
+  const cf = document.getElementById('clientFilters');
+  if (cf) cf.style.display = scope === 'rs' ? 'none' : 'flex';
+  // Update placeholder
+  const input = document.getElementById('searchInput');
+  if (input) {
+    const ph = { client:'Search client risks — name, tags, asset, owner...', rs:'Search Risk Studio feed — threats, CVEs, GRC alerts...', all:'Search all sources — client register + Risk Studio feed...' };
+    input.placeholder = ph[scope];
+  }
+  if (document.getElementById('searchInput').value.trim()) doSearch();
+}
+
+// ── NEW RISK ──
+function openNewRisk() {
+  const q = document.getElementById('searchInput').value.trim();
+  // Pre-fill name with current search term if any
+  openPanel('New Risk', 'DRAFT · quick create', `
+    <div class="sp-section">
+      <div class="sp-section-title">Quick Create</div>
+      <div class="sp-field">
+        <div class="sp-field-label">Risk Name</div>
+        <input type="text" id="qrName" value="${q}" placeholder="Describe the risk..." style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">
+      </div>
+      <div class="sp-row">
+        <div class="sp-field">
+          <div class="sp-field-label">Severity</div>
+          <select id="qrSev" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Owner</div>
+          <select id="qrOwner" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">
+            <option value="You">Olivier Delvigne</option>
+            <option value="J. Masson">J. Masson</option>
+            <option value="T. Lecomte">T. Lecomte</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="sp-actions">
+      <button class="sp-btn primary" onclick="createQuickRisk()">Create as DRAFT →</button>
+    </div>
+  `);
+}
+
+function createQuickRisk() {
+  const name = document.getElementById('qrName')?.value.trim();
+  if (!name) return;
+  const sev = document.getElementById('qrSev')?.value || 'medium';
+  const owner = document.getElementById('qrOwner')?.value || 'You';
+  const newId = 'RM-' + String(100 + RISKS.length).padStart(4,'0');
+  RISKS.push({ id:newId, name, sev, status:'DRAFT', tags:[], owner, owner_full:'Olivier Delvigne', likelihood:null, impact:null, residual:null, decision:null, desc:'' });
+  closePanel();
+  showToast(`${newId} created as DRAFT`);
+  doSearch();
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, { position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)', background:'var(--low)', color:'#fff', fontFamily:'var(--mono)', fontSize:'11px', letterSpacing:'0.04em', padding:'10px 20px', borderRadius:'3px', zIndex:'9999', whiteSpace:'nowrap', boxShadow:'0 4px 16px rgba(0,0,0,0.4)' });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── FIND SIMILAR ──
+function findSimilarInRS(risk) {
+  return RS_FEED.filter(rs => rs.tags?.some(t => risk.tags?.includes(t)) || rs.name.toLowerCase().includes(risk.name.split(' ')[0].toLowerCase())).slice(0,3);
+}
+
+function findSimilarInClient(rsItem) {
+  return RISKS.filter(r => r.tags?.some(t => rsItem.tags?.includes(t)) || r.name.toLowerCase().includes(rsItem.name.split(' ')[2]?.toLowerCase() || '')).slice(0,3);
+}
+
 function doSearch() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const filterSev    = document.getElementById('filterSev').value;
-  const filterStatus = document.getElementById('filterStatus').value;
-  const filterOwner  = document.getElementById('filterOwner').value;
+  const filterSev    = document.getElementById('filterSev')?.value || '';
+  const filterStatus = document.getElementById('filterStatus')?.value || '';
+  const filterOwner  = document.getElementById('filterOwner')?.value || '';
 
-  const list = document.getElementById('resultsList');
+  const list   = document.getElementById('resultsList');
   const header = document.getElementById('resultsHeader');
   const count  = document.getElementById('resultsCount');
+  const rsSection = document.getElementById('rsSection');
 
   if (!q && !filterSev && !filterStatus && !filterOwner) {
-    list.innerHTML = '<div class="initial-state"><div class="initial-text">TYPE TO SEARCH YOUR RISK REGISTER</div><div class="empty-sub" style="margin-top:8px">Searches within your environment only · HamburgerLAND</div></div>';
+    list.innerHTML = '<div class="initial-state"><div class="initial-text">TYPE TO SEARCH YOUR RISK REGISTER</div><div class="empty-sub" style="margin-top:8px">Scope: ' + (currentScope === 'client' ? 'Client Register' : currentScope === 'rs' ? 'Risk Studio' : 'All Sources') + ' · HamburgerLAND</div></div>';
     header.style.display = 'none';
-    document.getElementById('rsSection').classList.remove('visible');
+    rsSection.classList.remove('visible');
     return;
   }
 
-  // Filter risks
+  // ── RS RESULTS (scope rs or all) ──
+  if (currentScope === 'rs' || currentScope === 'all') {
+    const rsMatches = RS_FEED.filter(rs =>
+      !q || rs.name.toLowerCase().includes(q) || rs.tags.some(t => t.toLowerCase().includes(q))
+    );
+    if (rsMatches.length > 0) {
+      rsSection.classList.add('visible');
+      document.getElementById('rsResults').innerHTML = rsMatches.map(rs => {
+        const similarClient = findSimilarInClient(rs);
+        const simHTML = similarClient.length > 0 ? `
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+            <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.06em;">Similar in register → </span>
+            ${similarClient.map(r => `<span onclick="openRisk(RISKS.find(x=>x.id==='${r.id}'))" style="font-family:var(--mono);font-size:9px;color:var(--accent-hi);cursor:pointer;margin-left:6px;">${r.id}</span>`).join('')}
+          </div>` : '';
+        return `
+          <div class="rs-full-card" onclick="openRSItem(RS_FEED.find(x=>x.id==='${rs.id}'))">
+            <div class="result-top">
+              <span class="sev-pill ${rs.sev}">${rs.sev.charAt(0).toUpperCase()+rs.sev.slice(1)}</span>
+              <span class="result-name" style="flex:1">${highlight(rs.name, q)}</span>
+              <span class="rs-source">${rs.source}</span>
+            </div>
+            ${simHTML}
+          </div>`;
+      }).join('');
+    } else {
+      rsSection.classList.remove('visible');
+    }
+  } else {
+    // Client scope only — show RS as suggestions
+    const rsMatches = q ? RS_FEED.filter(rs => rs.name.toLowerCase().includes(q) || rs.tags.some(t => t.toLowerCase().includes(q))) : [];
+    if (rsMatches.length > 0) {
+      rsSection.classList.add('visible');
+      document.getElementById('rsResults').innerHTML = rsMatches.map(rs => `
+        <div class="rs-item" onclick="openRSItem(RS_FEED.find(x=>x.id==='${rs.id}'))">
+          <span class="sev-pill ${rs.sev}">${rs.sev.charAt(0).toUpperCase()+rs.sev.slice(1)}</span>
+          <span class="rs-item-name">${highlight(rs.name, q)}</span>
+          <span class="rs-source">${rs.source}</span>
+        </div>`).join('');
+    } else {
+      rsSection.classList.remove('visible');
+    }
+  }
+
+  // ── CLIENT RESULTS (scope client or all) ──
+  if (currentScope === 'rs') {
+    header.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+
   let results = RISKS.filter(r => {
     if (filterSev    && r.sev    !== filterSev)    return false;
     if (filterStatus && r.status !== filterStatus)  return false;
     if (filterOwner  && r.owner  !== filterOwner)   return false;
-
     if (!q) return true;
-
-    const searchable = [r.name, r.desc, r.asset, r.owner_full, ...(r.tags || [])].join(' ').toLowerCase();
+    const searchable = [r.name, r.desc, r.asset, r.owner_full, ...(r.tags||[])].join(' ').toLowerCase();
     let match = searchable.includes(q);
-
     if (!match && includeJournal) {
-      const notes = (JOURNAL[r.id] || []).map(e => e.text).join(' ').toLowerCase();
+      const notes = (JOURNAL[r.id]||[]).map(e => e.text).join(' ').toLowerCase();
       match = notes.includes(q);
       if (match) r._journalMatch = true;
     }
     return match;
   });
 
-  // RS suggestions
-  if (q) {
-    const rsMatches = RS_FEED.filter(rs =>
-      rs.name.toLowerCase().includes(q) ||
-      rs.tags.some(t => t.toLowerCase().includes(q))
-    );
-    const rsSection = document.getElementById('rsSection');
-    const rsResults = document.getElementById('rsResults');
-    if (rsMatches.length > 0) {
-      rsSection.classList.add('visible');
-      rsResults.innerHTML = rsMatches.map(rs => `
-        <div class="rs-item">
-          <span class="sev-pill ${rs.sev}">${rs.sev.charAt(0).toUpperCase()+rs.sev.slice(1)}</span>
-          <span class="rs-item-name">${highlight(rs.name, q)}</span>
-          <span class="rs-source">${rs.source}</span>
-        </div>
-      `).join('');
-    } else {
-      rsSection.classList.remove('visible');
-    }
-  } else {
-    document.getElementById('rsSection').classList.remove('visible');
-  }
-
-  // Render results
   header.style.display = 'flex';
-  const total = RISKS.length;
-  count.innerHTML = `<span>${results.length}</span> result${results.length !== 1 ? 's' : ''} out of ${total} risks`;
+  count.innerHTML = `<span>${results.length}</span> result${results.length !== 1 ? 's' : ''} in register${currentScope === 'all' ? ' · <span style="color:var(--low)">' + (document.querySelectorAll('.rs-full-card').length || 0) + ' in RS</span>' : ''}`;
 
   if (results.length === 0) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-text">NO RESULTS FOUND</div>
-        <div class="empty-sub">Try different keywords or remove filters</div>
-      </div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">NO RESULTS IN CLIENT REGISTER</div><div class="empty-sub">Try Risk Studio scope or different keywords</div></div>`;
     return;
   }
 
   list.innerHTML = results.map((r, i) => {
-    const journalNotes = includeJournal && r._journalMatch
-      ? (JOURNAL[r.id] || []).filter(e => e.text.toLowerCase().includes(q))
-      : [];
-
+    const journalNotes = includeJournal && r._journalMatch ? (JOURNAL[r.id]||[]).filter(e => e.text.toLowerCase().includes(q)) : [];
     const matchedNote = journalNotes.length > 0
       ? `<div class="result-mid">📓 ${highlight(journalNotes[0].text, q)}</div>`
-      : (q && r.desc.toLowerCase().includes(q) ? `<div class="result-mid">${highlight(r.desc, q)}</div>` : '');
-
+      : (q && r.desc?.toLowerCase().includes(q) ? `<div class="result-mid">${highlight(r.desc, q)}</div>` : '');
+    const similarRS = q ? findSimilarInRS(r) : [];
+    const simRSHTML = similarRS.length > 0 ? `<div style="margin-top:6px;"><span style="font-family:var(--mono);font-size:9px;color:var(--low);letter-spacing:0.06em;">RS → </span>${similarRS.map(rs => `<span onclick="event.stopPropagation();openRSItem(RS_FEED.find(x=>x.id==='${rs.id}'))" style="font-family:var(--mono);font-size:9px;color:var(--accent-hi);cursor:pointer;margin-left:6px;">${rs.id}</span>`).join('')}</div>` : '';
     return `
-      <div class="result-card" style="animation-delay:${i * 0.04}s" onclick="openRisk(RISKS.find(x=>x.id==='${r.id}'))">
+      <div class="result-card" style="animation-delay:${i*0.04}s" onclick="openRisk(RISKS.find(x=>x.id==='${r.id}'))">
         <div class="result-top">
           <span class="result-id">${r.id}</span>
           <span class="result-name">${highlight(r.name, q)}</span>
@@ -671,14 +844,63 @@ function doSearch() {
         ${matchedNote}
         <div class="result-bot">
           ${(r.tags||[]).map(t => `<span class="tag">${highlight(t, q)}</span>`).join('')}
-          ${journalNotes.length > 0 ? `<span class="journal-match">📓 ${journalNotes.length} note match${journalNotes.length>1?'es':''}</span>` : ''}
+          ${journalNotes.length > 0 ? `<span class="journal-match">📓 ${journalNotes.length} note match</span>` : ''}
           <span class="result-owner">${highlight(r.owner_full, q)}</span>
         </div>
+        ${simRSHTML}
       </div>`;
   }).join('');
 
-  // Clean up temp flag
   RISKS.forEach(r => delete r._journalMatch);
+}
+
+// ── OPEN RS ITEM PANEL ──
+function openRSItem(rs) {
+  if (!rs) return;
+  const similarClient = findSimilarInClient(rs);
+  const simHTML = similarClient.length > 0 ? `
+    <div class="sp-section">
+      <div class="sp-section-title" style="color:var(--medium)">⚠ Similar risks in client register</div>
+      <div class="sp-risk-list">
+        ${similarClient.map(r => `
+          <div class="sp-risk-card" onclick="openRisk(RISKS.find(x=>x.id==='${r.id}'))">
+            <div class="sp-risk-card-top">
+              <span class="sp-risk-card-id">${r.id}</span>
+              <span class="sp-risk-card-name">${r.name}</span>
+            </div>
+            <div class="sp-risk-card-bot">
+              <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${r.status}</span>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  openPanel(rs.id, `${rs.source} · Risk Studio`, `
+    <div class="sp-section">
+      <div class="sp-section-title">Risk Studio Alert</div>
+      <div class="sp-field"><div class="sp-field-label">Title</div><div class="sp-field-value">${rs.name}</div></div>
+      <div class="sp-field"><div class="sp-field-label">Severity</div><div class="sp-field-value"><span class="sev-pill ${rs.sev}">${rs.sev.charAt(0).toUpperCase()+rs.sev.slice(1)}</span></div></div>
+      <div class="sp-field"><div class="sp-field-label">Source</div><div class="sp-field-value" style="font-family:var(--mono);font-size:11px">${rs.source}</div></div>
+      <div class="sp-field"><div class="sp-field-label">Tags</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${(rs.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
+    </div>
+    ${simHTML}
+    <div class="sp-actions">
+      <button class="sp-btn primary" onclick="importRSFromSearch('${rs.id}')">⊕ Import as Risk →</button>
+    </div>
+  `);
+}
+
+const RS_IMPORTED = new Set();
+function importRSFromSearch(rsId) {
+  if (RS_IMPORTED.has(rsId)) return;
+  RS_IMPORTED.add(rsId);
+  const rs = RS_FEED.find(x => x.id === rsId);
+  if (!rs) return;
+  const newId = 'RM-' + String(100 + RISKS.length).padStart(4,'0');
+  RISKS.push({ id:newId, name:rs.name, sev:rs.sev, status:'DRAFT', tags:rs.tags, owner:'You', owner_full:'Olivier Delvigne', likelihood:null, impact:null, residual:null, decision:null, desc:'', _fromRS:rsId });
+  const btn = document.querySelector('.sp-btn.primary');
+  if (btn) { btn.textContent = '✓ Imported as DRAFT'; btn.disabled = true; btn.style.background = 'var(--low)'; }
+  showToast(`${newId} created as DRAFT from RS`);
 }
 
 // ── SLIDE PANEL ──
@@ -739,6 +961,13 @@ function openRisk(risk) {
     <div class="sp-actions"><button class="sp-btn primary" onclick="closePanel()">Close</button></div>
   `);
 }
+
+// Theme button label init
+document.addEventListener('DOMContentLoaded', function() {
+  var saved = localStorage.getItem('rm-theme') || 'dark';
+  var btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
+});
 </script>
 </body>
 </html>

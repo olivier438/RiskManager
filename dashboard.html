@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem("rm-theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risk Manager — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,6 +31,24 @@
     --calm:       #1a7a4a;
     --elevated:   #b8960a;
     --threat:     #c0392b;
+  }
+
+  /* ── LIGHT THEME ── */
+  [data-theme="light"] {
+    --bg:        #f0f4f8;
+    --surface:   #ffffff;
+    --card:      #fafcfe;
+    --card-hi:   #eef3f8;
+    --border:    #d0dae4;
+    --border-hi: #b0bfcc;
+    --accent:    #1d6fa4;
+    --accent-hi: #156091;
+    --text:      #1a2a38;
+    --muted:     #5a7a90;
+    --critical:  #c0392b;
+    --high:      #b85c08;
+    --medium:    #8a6c00;
+    --low:       #156038;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1064,6 +1083,21 @@ document.addEventListener('click', e => {
     if (!am.contains(e.target) && !btn?.contains(e.target)) am.style.display = 'none';
   }
 });
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('rm-theme', next);
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = next === 'light' ? '☀ Light' : '☾ Dark';
+  }
+
+  (function applyTheme() {
+    const saved = localStorage.getItem('rm-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+  })();
 </script>
 </head>
 <body>
@@ -1115,9 +1149,12 @@ document.addEventListener('click', e => {
           <a href="dashboard.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Work</a>
           <a href="kpi.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">KPI</a>
           <a href="search.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Search</a>
+          <a href="status.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Status</a>
           <div style="height:1px;background:var(--border);margin:4px 0;"></div>
           <a href="profile.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">My Profile</a>
           <a href="settings.html" id="settingsLink" style="display:none;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Settings</a>
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+          <button onclick="toggleTheme()" id="themeToggleBtn" style="display:block;width:100%;text-align:left;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);background:none;border:none;cursor:pointer;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">☾ Dark</button>
         </div>
       </div>
     </div>
@@ -2246,13 +2283,18 @@ document.addEventListener('click', e => {
   }
 
   // Close on overlay click
-  document.getElementById('newRiskModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('newRiskModal')) closeNewRiskModal();
-  });
+  const modalEl = document.getElementById('newRiskModal');
+  if (modalEl) {
+    modalEl.addEventListener('click', e => {
+      if (e.target === modalEl) closeNewRiskModal();
+    });
+  }
 
   // Auto-calc gross risk
   ['nrLikelihood','nrImpact'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
       const l = parseInt(document.getElementById('nrLikelihood').value) || 0;
       const i = parseInt(document.getElementById('nrImpact').value) || 0;
       const el = document.getElementById('nrGrossRisk');
@@ -2270,13 +2312,16 @@ document.addEventListener('click', e => {
   let groqTimer;
   const DETECTED_TAGS = new Set();
 
-  document.getElementById('nrDescription').addEventListener('input', () => {
-    clearTimeout(groqTimer);
-    const desc = document.getElementById('nrDescription').value.trim();
-    if (desc.length < 20) return;
-    document.getElementById('nrGroqStatus').textContent = i18n.t('risk.new.groq.analysing');
-    groqTimer = setTimeout(() => detectTagsGroq(desc), 900);
-  });
+  const nrDescEl = document.getElementById('nrDescription');
+  if (nrDescEl) {
+    nrDescEl.addEventListener('input', () => {
+      clearTimeout(groqTimer);
+      const desc = document.getElementById('nrDescription').value.trim();
+      if (desc.length < 20) return;
+      document.getElementById('nrGroqStatus').textContent = i18n.t('risk.new.groq.analysing');
+      groqTimer = setTimeout(() => detectTagsGroq(desc), 900);
+    });
+  }
 
   async function detectTagsGroq(description) {
     const status = document.getElementById('nrGroqStatus');
@@ -2849,5 +2894,13 @@ document.addEventListener('click', e => {
   })();
 </script>
 
+<script>
+// Theme button label init
+document.addEventListener('DOMContentLoaded', function() {
+  var saved = localStorage.getItem('rm-theme') || 'dark';
+  var btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
+});
+</script>
 </body>
 </html>

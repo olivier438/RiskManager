@@ -2995,8 +2995,10 @@ function renderMyRisks(risks) {
     const ownerFull = r.owner
       ? `${r.owner.first_name} ${r.owner.last_name}`
       : (r.owner_full || 'Unassigned');
+    // Encoder pour attribut HTML onclick — JSON.stringify puis échapper les guillemets doubles
+    const enc = s => JSON.stringify(s||'').replace(/"/g, '&quot;');
     return `
-      <tr class="risk-row" onclick="openRisk({id:'${ref}',uuid:'${uuid}',name:${JSON.stringify(r.name||'')},sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:${JSON.stringify(ownerFull)},likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||r.residual||'null'},decision:${JSON.stringify(r.decision||'')}})">
+      <tr class="risk-row" onclick="openRisk({id:'${ref}',uuid:'${uuid}',name:${enc(r.name)},sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:${enc(ownerFull)},likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||r.residual||'null'},decision:${enc(r.decision)}})">
         <td class="col-id">${ref}</td>
         <td class="col-name">${r.name}</td>
         <td class="col-sev"><span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span></td>

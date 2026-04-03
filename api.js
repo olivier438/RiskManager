@@ -609,13 +609,23 @@ async function listRSFeed(limit = 20) {
   if (error) throw error;
 
   return (data || []).map(r => {
-    // Sévérité depuis cvss_score
+    // Sévérité depuis cvss_score, fallback sur impact (1-5)
     const score = parseFloat(r.cvss_score);
-    const sev = score >= 9.0 ? 'critical'
-              : score >= 7.0 ? 'high'
-              : score >= 4.0 ? 'medium'
-              : score > 0    ? 'low'
-              : 'medium'; // null → medium par défaut
+    let sev;
+    if (!isNaN(score) && score > 0) {
+      sev = score >= 9.0 ? 'critical'
+          : score >= 7.0 ? 'high'
+          : score >= 4.0 ? 'medium'
+          : 'low';
+    } else {
+      // Fallback sur champ impact RS (1-5)
+      const imp = parseInt(r.impact);
+      sev = imp >= 5 ? 'critical'
+          : imp >= 4 ? 'high'
+          : imp >= 3 ? 'medium'
+          : imp >= 1 ? 'low'
+          : 'medium';
+    }
 
     // Tags depuis produits + cve_id
     const tags = [];
@@ -627,10 +637,21 @@ async function listRSFeed(limit = 20) {
       });
     }
 
-    // Source badge depuis type + menace
-    const sourceMap = { cyber: 'CYBERSEC', grc: 'GRC', dataleak: 'DATALEAK' };
-    const source = (sourceMap[r.type?.toLowerCase()] || r.type?.toUpperCase() || 'RS') +
-      (r.menace ? ' · ' + r.menace.split(' ').slice(0,2).join(' ').toUpperCase() : '');
+    // Source badge — déduit depuis cve_id, menace et type
+    let source;
+    if (r.cve_id) {
+      source = 'CVE · ' + r.cve_id;
+    } else {
+      const menaceLower = (r.menace || '').toLowerCase();
+      if (menaceLower.includes('fuite') || menaceLower.includes('breach') || menaceLower.includes('leak') || menaceLower.includes('vol de données')) {
+        source = 'DATALEAK';
+      } else if (menaceLower.includes('règlement') || menaceLower.includes('conformité') || menaceLower.includes('nis2') || menaceLower.includes('dora') || menaceLower.includes('iso')) {
+        source = 'GRC';
+      } else {
+        source = 'CYBERSEC';
+      }
+      if (r.menace) source += ' · ' + r.menace.split(' ').slice(0, 2).join(' ').toUpperCase();
+    }
 
     // Temps relatif
     const diffMs = Date.now() - new Date(r.created_at).getTime();

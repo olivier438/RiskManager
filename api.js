@@ -545,3 +545,112 @@ async function saveAndTreat(riskUuid) {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2500);
 }
+
+// ── LIST RISKS IN REVIEW (Pending Team) ──
+async function listPendingRisks() {
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { data, error } = await sb
+    .from(`${P}risks`)
+    .select(`
+      id, risk_ref, name, severity, status,
+      updated_at,
+      owner:owner_id(first_name, last_name),
+      assignee:assigned_to(first_name, last_name),
+      rm_risk_tags(tag)
+    `)
+    .eq('environment_id', env)
+    .eq('status', 'IN REVIEW')
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+// ── PENDING ACTION (Approve/Reject depuis le panel) ──
+async function pendingAction(riskUuid, newStatus, btn) {
+  const item = btn?.closest('.pending-item');
+  if (item) { item.style.opacity = '0.5'; item.style.pointerEvents = 'none'; }
+
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) {
+    if (item) { item.style.opacity = '1'; item.style.pointerEvents = ''; }
+    alert('Error: ' + error.message);
+    return;
+  }
+
+  const label = newStatus === 'MONITORED' ? '✓ Approved' : '✗ Rejected';
+  if (btn) btn.textContent = label;
+
+  // Recharger les deux panels
+  await loadAndRenderRisks();
+}
+
+// ── RISK STUDIO FEED ──
+async function listRSFeed(limit = 20) {
+  const sb = getClient();
+
+  const { data, error } = await sb
+    .from('risks')
+    .select('id, titre, type, cvss_score, menace, scenario, produits, cve_id, source_url, created_at')
+    .eq('triage', 'significant')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  return (data || []).map(r => {
+    // Sévérité depuis cvss_score
+    const score = parseFloat(r.cvss_score);
+    const sev = score >= 9.0 ? 'critical'
+              : score >= 7.0 ? 'high'
+              : score >= 4.0 ? 'medium'
+              : score > 0    ? 'low'
+              : 'medium'; // null → medium par défaut
+
+    // Tags depuis produits + cve_id
+    const tags = [];
+    if (r.cve_id) tags.push(`#${r.cve_id.toLowerCase()}`);
+    if (r.produits && Array.isArray(r.produits)) {
+      r.produits.slice(0, 2).forEach(p => {
+        const tag = '#' + p.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        if (tag.length > 1) tags.push(tag);
+      });
+    }
+
+    // Source badge depuis type + menace
+    const sourceMap = { cyber: 'CYBERSEC', grc: 'GRC', dataleak: 'DATALEAK' };
+    const source = (sourceMap[r.type?.toLowerCase()] || r.type?.toUpperCase() || 'RS') +
+      (r.menace ? ' · ' + r.menace.split(' ').slice(0,2).join(' ').toUpperCase() : '');
+
+    // Temps relatif
+    const diffMs = Date.now() - new Date(r.created_at).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const time = diffMin < 60
+      ? `${diffMin} min ago`
+      : diffMin < 1440
+        ? `${Math.floor(diffMin/60)}h ago`
+        : `${Math.floor(diffMin/1440)}d ago`;
+
+    return {
+      id:     r.id,
+      name:   r.titre,
+      sev,
+      source: source.slice(0, 30), // max 30 chars
+      tags:   tags.slice(0, 3),
+      time,
+      desc:   r.scenario || r.menace || '',
+      source_url: r.source_url,
+      cvss:   r.cvss_score,
+    };
+  });
+}

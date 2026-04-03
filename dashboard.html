@@ -1226,46 +1226,10 @@ document.addEventListener('click', e => {
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title" data-i18n="panel.pending_team">Pending — Team</span>
-        <span class="panel-count" id="pendingCount">2</span>
+        <span class="panel-count" id="pendingCount">0</span>
       </div>
       <div class="panel-body" id="pendingList">
-
-        <div class="pending-item">
-          <div class="pending-item-top">
-            <span class="risk-id">RM-0014</span>
-            <span class="pending-name">Cloud storage bucket publicly exposed</span>
-            <span class="severity high" data-i18n="severity.high">High</span>
-          </div>
-          <div class="pending-item-bot">
-            <div class="risk-tags"><span class="tag">#cloud</span><span class="tag">#data-exposure</span></div>
-            <div class="pending-actions">
-              <button class="btn-approve" data-i18n="btn.approve">Approve</button>
-              <button class="btn-reject" data-i18n="btn.reject">Reject</button>
-            </div>
-          </div>
-          <div style="margin-top:6px;">
-            <span class="pending-by" style="font-size:10px;color:var(--muted);">Submitted by J. Masson · 1h ago</span>
-          </div>
-        </div>
-
-        <div class="pending-item">
-          <div class="pending-item-top">
-            <span class="risk-id">RM-0013</span>
-            <span class="pending-name">Absence of formal asset inventory</span>
-            <span class="severity medium" data-i18n="severity.medium">Medium</span>
-          </div>
-          <div class="pending-item-bot">
-            <div class="risk-tags"><span class="tag">#asset-management</span></div>
-            <div class="pending-actions">
-              <button class="btn-approve" data-i18n="btn.approve">Approve</button>
-              <button class="btn-reject" data-i18n="btn.reject">Reject</button>
-            </div>
-          </div>
-          <div style="margin-top:6px;">
-            <span class="pending-by" style="font-size:10px;color:var(--muted);">Submitted by T. Lecomte · 3h ago</span>
-          </div>
-        </div>
-
+        <div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading...</div>
       </div>
       <div class="panel-footer">
         <button class="btn-link" data-i18n="pending.view_all">View all pending</button>
@@ -1298,69 +1262,7 @@ document.addEventListener('click', e => {
         </div>
       </div>
       <div class="panel-body" id="liveFeedList">
-
-        <div class="feed-item">
-          <div class="feed-item-top">
-            <div class="feed-new"></div>
-            <span class="feed-name">CVE-2025-3284 — Critical RCE in Apache HTTP Server 2.4.x</span>
-            <span class="severity critical">Critical</span>
-          </div>
-          <div class="feed-item-bot">
-            <span class="feed-source">CYBERSEC · CVE</span>
-            <div class="risk-tags"><span class="tag">#server</span><span class="tag">#rce</span></div>
-            <span class="feed-time">12 min ago</span>
-          </div>
-        </div>
-
-        <div class="feed-item">
-          <div class="feed-item-top">
-            <div class="feed-new"></div>
-            <span class="feed-name">Mass credential leak — 2.1M records from Belgian gov contractor</span>
-            <span class="severity critical">Critical</span>
-          </div>
-          <div class="feed-item-bot">
-            <span class="feed-source">DATALEAK</span>
-            <div class="risk-tags"><span class="tag">#credentials</span><span class="tag">#gov</span></div>
-            <span class="feed-time">38 min ago</span>
-          </div>
-        </div>
-
-        <div class="feed-item">
-          <div class="feed-item-top">
-            <span class="feed-name">NIS2 — CCB updated CyFun mapping v2.1 released</span>
-            <span class="severity medium">Medium</span>
-          </div>
-          <div class="feed-item-bot">
-            <span class="feed-source">GRC · CCB</span>
-            <div class="risk-tags"><span class="tag">#nis2</span><span class="tag">#cyfun</span></div>
-            <span class="feed-time">2h ago</span>
-          </div>
-        </div>
-
-        <div class="feed-item">
-          <div class="feed-item-top">
-            <span class="feed-name">Ransomware campaign targeting EU public sector — LockBit variant</span>
-            <span class="severity high">High</span>
-          </div>
-          <div class="feed-item-bot">
-            <span class="feed-source">CYBERSEC · ENISA</span>
-            <div class="risk-tags"><span class="tag">#ransomware</span><span class="tag">#public-sector</span></div>
-            <span class="feed-time">3h ago</span>
-          </div>
-        </div>
-
-        <div class="feed-item">
-          <div class="feed-item-top">
-            <span class="feed-name">DORA — EBA publishes final ITS on incident reporting templates</span>
-            <span class="severity low">Low</span>
-          </div>
-          <div class="feed-item-bot">
-            <span class="feed-source">GRC · EBA</span>
-            <div class="risk-tags"><span class="tag">#dora</span><span class="tag">#reporting</span></div>
-            <span class="feed-time">5h ago</span>
-          </div>
-        </div>
-
+        <div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading feed...</div>
       </div>
       <div class="panel-footer">
         <button class="btn-link" data-i18n="feed.open_rs">Open Risk Studio</button>
@@ -1754,13 +1656,8 @@ document.addEventListener('click', e => {
     { id:'RM-0001', name:'No formal incident response plan',            sev:'low',      status:'MONITORED',       tags:['#irt','#process'],             owner:'You',  likelihood:1, impact:4, residual:1, decision:'Accept', owner_full:'Olivier Delvigne' },
   ];
 
-  const FEED = [
-    { id:'RS-001', name:'CVE-2025-3284 — Critical RCE in Apache HTTP Server 2.4.x',         sev:'critical', source:'CYBERSEC · CVE',  tags:['#server','#rce'],           time:'12 min ago', desc:'A remote code execution vulnerability in Apache HTTP Server 2.4.x allows unauthenticated attackers to execute arbitrary code via a crafted HTTP request. CVSS 9.8. Patch available.' },
-    { id:'RS-002', name:'Mass credential leak — 2.1M records from Belgian gov contractor',   sev:'critical', source:'DATALEAK',        tags:['#credentials','#gov'],       time:'38 min ago', desc:'A Belgian government IT contractor suffered a data breach exposing 2.1M credential records. Emails, hashed passwords and user roles included. Sector: public administration.' },
-    { id:'RS-003', name:'NIS2 — CCB updated CyFun mapping v2.1 released',                   sev:'medium',   source:'GRC · CCB',       tags:['#nis2','#cyfun'],            time:'2h ago',     desc:'The Centre for Cybersecurity Belgium released CyFun mapping v2.1 with updated control references for NIS2 compliance. Key changes in PR.AC and DE.CM families.' },
-    { id:'RS-004', name:'Ransomware campaign targeting EU public sector — LockBit variant',  sev:'high',     source:'CYBERSEC · ENISA',tags:['#ransomware','#public-sector'],time:'3h ago',   desc:'ENISA confirmed an active LockBit variant campaign targeting EU public sector organisations. Entry vector: unpatched VPN gateways. 6 confirmed victims in BE/NL/FR.' },
-    { id:'RS-005', name:'DORA — EBA publishes final ITS on incident reporting templates',    sev:'low',      source:'GRC · EBA',       tags:['#dora','#reporting'],        time:'5h ago',     desc:'The EBA published the final Implementing Technical Standards for DORA incident reporting. Financial entities must adopt the templates by Q3 2026.' },
-  ];
+  // FEED — peuplé dynamiquement depuis Risk Studio (Supabase)
+  let FEED = [];
 
   // ── ROLE (à brancher sur Supabase Auth) ──
   // 'risk_manager' | 'analyst' | 'admin'
@@ -2166,10 +2063,14 @@ document.addEventListener('click', e => {
       <div class="sp-section">
         <div class="sp-section-title">${i18n.t('feed.detail.section')}</div>
         <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.title')}</div><div class="sp-field-value">${item.name}</div></div>
-        <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.severity')}</div><div class="sp-field-value">${sevBadge(item.sev)}</div></div>
+        <div class="sp-row">
+          <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.severity')}</div><div class="sp-field-value">${sevBadge(item.sev)}</div></div>
+          ${item.cvss ? `<div class="sp-field"><div class="sp-field-label">CVSS Score</div><div class="sp-field-value" style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--${item.sev})">${item.cvss}</div></div>` : ''}
+        </div>
         <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.source')}</div><div class="sp-field-value" style="font-family:var(--mono);font-size:11px">${item.source}</div></div>
         <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.tags')}</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${tagHTML(item.tags)}</div></div>
         <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.description')}</div><div class="sp-field-value">${item.desc}</div></div>
+        ${item.source_url ? `<div class="sp-field"><div class="sp-field-label">Source</div><div class="sp-field-value"><a href="${item.source_url}" target="_blank" style="color:var(--accent-hi);font-family:var(--mono);font-size:10px">View original →</a></div></div>` : ''}
       </div>
       ${similarHTML}
       <div class="sp-actions">
@@ -2316,41 +2217,62 @@ document.addEventListener('click', e => {
     });
   });
 
-  // ── BIND FEED ITEMS ──
-  document.querySelectorAll('.feed-item').forEach((item, i) => {
-    item.addEventListener('click', () => openFeed(FEED[i]));
-  });
+  // ── RENDER FEED ──
+  function renderFeed(items) {
+    const list = document.getElementById('liveFeedList');
+    if (!list) return;
 
-  // ── BIND PENDING ITEMS ──
-  document.querySelectorAll('.pending-item').forEach(item => {
-    const id = item.querySelector('.risk-id')?.textContent.trim();
-    item.addEventListener('click', (e) => {
-      if (e.target.classList.contains('btn-approve') || e.target.classList.contains('btn-reject')) return;
-      const risk = RISKS.find(r => r.id === id);
-      if (risk) openRisk(risk);
-    });
-  });
+    if (!items || items.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No significant threats at this time</div>';
+      return;
+    }
 
-  // ── APPROVE / REJECT ──
-  document.querySelectorAll('.btn-approve').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const item = btn.closest('.pending-item');
-      item.style.opacity = '0.4';
-      item.style.pointerEvents = 'none';
-      btn.textContent = '✓ Approved';
-    });
-  });
+    list.innerHTML = items.map((item, i) => `
+      <div class="feed-item" onclick="openFeed(FEED[${i}])">
+        <div class="feed-item-top">
+          ${i < 3 ? '<div class="feed-new"></div>' : ''}
+          <span class="feed-name">${item.name}</span>
+          <span class="severity ${item.sev}">${item.sev.charAt(0).toUpperCase()+item.sev.slice(1)}</span>
+        </div>
+        <div class="feed-item-bot">
+          <span class="feed-source">${item.source}</span>
+          <div class="risk-tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+          <span class="feed-time">${item.time}</span>
+        </div>
+      </div>
+    `).join('');
+  }
 
-  document.querySelectorAll('.btn-reject').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const item = btn.closest('.pending-item');
-      item.style.opacity = '0.4';
-      item.style.pointerEvents = 'none';
-      btn.textContent = '✕ Rejected';
+  // ── PULSE BAR — mise à jour depuis données réelles ──
+  function updatePulse(items) {
+    const counts = { critical:0, high:0 };
+    items.forEach(r => {
+      if (r.sev === 'critical') counts.critical++;
+      else if (r.sev === 'high') counts.high++;
     });
-  });
+
+    const state = counts.critical >= 3 ? 'CRITICAL'
+                : counts.critical >= 1 || counts.high >= 3 ? 'ELEVATED'
+                : 'CALM';
+
+    const pulseColors = { CALM:'#1a7a4a', ELEVATED:'#b8960a', CRITICAL:'#c0392b' };
+    const color = pulseColors[state];
+    document.documentElement.style.setProperty('--pulse-color', color);
+
+    const labelEl = document.getElementById('pulseLabel');
+    if (labelEl) labelEl.textContent = state;
+
+    // Top menace pour la description
+    const top = items[0];
+    const descEl = document.getElementById('pulseDesc');
+    if (descEl && top) descEl.textContent = top.name.length > 60 ? top.name.slice(0,60)+'…' : top.name;
+
+    // Compteurs
+    const critEl = document.querySelector('.pulse-tag.critical');
+    const highEl = document.querySelector('.pulse-tag.high');
+    if (critEl) critEl.textContent = `${counts.critical} Crit`;
+    if (highEl) highEl.textContent = `${counts.high} High`;
+  }
 
   // ── URL RESTORE (après chargement des risques) ──
   const urlRisk = new URLSearchParams(location.search).get('risk');
@@ -3029,6 +2951,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Charger et afficher les risques (une seule fois)
     await loadAndRenderRisks();
 
+    // Charger le feed Risk Studio
+    await loadAndRenderFeed();
+
   } catch (err) {
     console.error('Dashboard init error:', err);
   }
@@ -3068,10 +2993,63 @@ function renderMyRisks(risks) {
   }).join('');
 }
 
+function renderPendingTeam(risks) {
+  const list    = document.getElementById('pendingList');
+  const countEl = document.getElementById('pendingCount');
+  if (!list) return;
+
+  if (countEl) countEl.textContent = risks.length;
+
+  if (!risks.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No risks pending review</div>';
+    return;
+  }
+
+  list.innerHTML = risks.map(r => {
+    const sev      = r.severity || 'medium';
+    const tags     = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
+    const analyst  = r.assignee ? `${r.assignee.first_name} ${r.assignee.last_name}` : 'Unassigned';
+    const updated  = r.updated_at ? timeAgo(r.updated_at) : '';
+    const nameEsc  = (r.name || '').replace(/'/g, "&#39;");
+
+    return `
+      <div class="pending-item" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:'${nameEsc}',sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'',owner_full:'${analyst}'})">
+        <div class="pending-item-top">
+          <span class="risk-id">${r.risk_ref}</span>
+          <span class="pending-name">${r.name}</span>
+          <span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span>
+        </div>
+        <div class="pending-item-bot">
+          <div class="risk-tags">${tags}</div>
+          <div class="pending-actions">
+            <button class="btn-approve" onclick="event.stopPropagation();pendingAction('${r.id}','MONITORED',this)">Approve</button>
+            <button class="btn-reject"  onclick="event.stopPropagation();pendingAction('${r.id}','IN ANALYSIS',this)">Reject</button>
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <span style="font-size:10px;color:var(--muted)">Submitted by ${analyst} · ${updated}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function timeAgo(isoDate) {
+  const diff = Math.floor((Date.now() - new Date(isoDate)) / 1000);
+  if (diff < 60)   return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}min ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
 async function loadAndRenderRisks() {
   try {
-    const risks = await listRisks();
+    const [risks, pending] = await Promise.all([
+      listRisks(),
+      listPendingRisks(),
+    ]);
+
     renderMyRisks(risks);
+    renderPendingTeam(pending);
 
     // ── SUMMARY ROW — compteurs réels ──
     const counts = { critical:0, high:0, medium:0, low:0 };
@@ -3105,6 +3083,18 @@ async function loadAndRenderRisks() {
     }
   } catch (err) {
     console.error('Load risks error:', err);
+  }
+}
+
+async function loadAndRenderFeed() {
+  try {
+    const items = await listRSFeed();
+    FEED.length = 0;
+    items.forEach(i => FEED.push(i));
+    renderFeed(FEED);
+    updatePulse(FEED);
+  } catch (err) {
+    console.error('Load RS feed error:', err);
   }
 }
 

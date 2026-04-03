@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem("rm-theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risk Manager — KPI Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +26,25 @@
   --medium:    #b8960a;
   --low:       #1a7a4a;
 }
+
+  /* ── LIGHT THEME ── */
+  [data-theme="light"] {
+    --bg:        #f0f4f8;
+    --surface:   #ffffff;
+    --card:      #fafcfe;
+    --card-hi:   #eef3f8;
+    --border:    #d0dae4;
+    --border-hi: #b0bfcc;
+    --accent:    #1d6fa4;
+    --accent-hi: #156091;
+    --text:      #1a2a38;
+    --muted:     #5a7a90;
+    --critical:  #c0392b;
+    --high:      #b85c08;
+    --medium:    #8a6c00;
+    --low:       #156038;
+  }
+
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -316,6 +336,22 @@ body {
 .kpi-card:nth-child(3) { animation-delay: 0.15s; }
 .kpi-card:nth-child(4) { animation-delay: 0.20s; }
 </style>
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('rm-theme', next);
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = next === 'light' ? '☀ Light' : '☾ Dark';
+  }
+
+  (function applyTheme() {
+    const saved = localStorage.getItem('rm-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+  })();
+</script>
 </head>
 <body>
 
@@ -747,5 +783,23 @@ setTimeout(() => {
 }, 100);
 </script>
 
+<script>
+// Theme button label init
+document.addEventListener('DOMContentLoaded', function() {
+  var saved = localStorage.getItem('rm-theme') || 'dark';
+  var btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script>
+(async () => {
+  const user = await requireAuth();
+  if (!user) return;
+})();
+</script>
 </body>
 </html>

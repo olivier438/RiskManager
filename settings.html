@@ -2,12 +2,32 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem("rm-theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risk Manager — Settings</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#090c10;--surface:#0d1117;--card:#111820;--card-hi:#141e28;--border:#1c2730;--border-hi:#2a3a4a;--accent:#1d6fa4;--accent-hi:#2387c8;--text:#cdd9e5;--muted:#7a95aa;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--critical:#c0392b;--low:#1a7a4a;}
+
+  /* ── LIGHT THEME ── */
+  [data-theme="light"] {
+    --bg:        #f0f4f8;
+    --surface:   #ffffff;
+    --card:      #fafcfe;
+    --card-hi:   #eef3f8;
+    --border:    #d0dae4;
+    --border-hi: #b0bfcc;
+    --accent:    #1d6fa4;
+    --accent-hi: #156091;
+    --text:      #1a2a38;
+    --muted:     #5a7a90;
+    --critical:  #c0392b;
+    --high:      #b85c08;
+    --medium:    #8a6c00;
+    --low:       #156038;
+  }
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);font-family:var(--sans);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
 .topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;flex-shrink:0;position:sticky;top:0;z-index:100;}
@@ -69,6 +89,22 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);min-height:1
 .btn-invite{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:7px 14px;border-radius:2px;border:1px solid var(--border-hi);background:var(--surface);color:var(--text);cursor:pointer;transition:all 0.15s;}
 .btn-invite:hover{border-color:var(--accent);color:var(--accent-hi);}
 </style>
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('rm-theme', next);
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = next === 'light' ? '☀ Light' : '☾ Dark';
+  }
+
+  (function applyTheme() {
+    const saved = localStorage.getItem('rm-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+  })();
+</script>
 </head>
 <body>
 
@@ -268,21 +304,21 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);min-height:1
           <tbody>
             <tr>
               <td style="font-weight:500">Olivier Delvigne</td>
-              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">olivier@onecircle.be</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dcb3b0b5aab5b9ae9cb3b2b9bfb5aebfb0b9f2beb9">[email&#160;protected]</a></td>
               <td><span class="role-badge admin">Admin</span></td>
               <td style="font-family:var(--mono);font-size:10px;color:var(--low)">Active</td>
               <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">You</td>
             </tr>
             <tr>
               <td style="font-weight:500">Julie Masson</td>
-              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">j.masson@hamburgerland.be</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cea4e0a3afbdbda1a08ea6afa3acbbbca9abbca2afa0aae0acab">[email&#160;protected]</a></td>
               <td><span class="role-badge risk_manager">Risk Manager</span></td>
               <td style="font-family:var(--mono);font-size:10px;color:var(--low)">Active</td>
               <td><button style="font-family:var(--mono);font-size:9px;color:var(--muted);background:none;border:none;cursor:pointer;">Edit</button></td>
             </tr>
             <tr>
               <td style="font-weight:500">Thomas Lecomte</td>
-              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">t.lecomte@hamburgerland.be</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2e5a00424b4d41435a4b6e464f434c5b5c494b5c424f404a004c4b">[email&#160;protected]</a></td>
               <td><span class="role-badge analyst">Analyst</span></td>
               <td style="font-family:var(--mono);font-size:10px;color:var(--low)">Active</td>
               <td><button style="font-family:var(--mono);font-size:9px;color:var(--muted);background:none;border:none;cursor:pointer;">Edit</button></td>
@@ -436,7 +472,7 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);min-height:1
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 document.getElementById('topDate').textContent =
   new Date().toLocaleDateString('en-GB', {weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
 
@@ -482,11 +518,4 @@ function testSSO(btn) {
 }
 
 function activateSSO(btn) {
-  if (!confirm('Activate SSO? All users will be redirected to the IdP on next login.\n\nMake sure local auth fallback is enabled before confirming.')) return;
-  btn.textContent = '✓ SSO Activated';
-  btn.style.background = 'rgba(192,57,43,0.3)';
-  btn.disabled = true;
-}
-</script>
-</body>
-</html>
+  if (!confirm('Activate SSO? All users will be redirected to the IdP on next login.\n\nM

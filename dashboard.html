@@ -2969,6 +2969,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Charger le feed Risk Studio
     await loadAndRenderFeed();
 
+    // Charger le panel Pending Team
+    await loadAndRenderPending();
+
   } catch (err) {
     console.error('Dashboard init error:', err);
   }
@@ -3026,10 +3029,10 @@ function renderPendingTeam(risks) {
     const tags     = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
     const analyst  = r.assignee ? `${r.assignee.first_name} ${r.assignee.last_name}` : 'Unassigned';
     const updated  = r.updated_at ? timeAgo(r.updated_at) : '';
-    // nameEsc handled via JSON.stringify inline
+    const enc      = s => JSON.stringify(s||'').replace(/"/g, '&quot;');
 
     return `
-      <div class="pending-item" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:'${nameEsc}',sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'',owner_full:'${analyst}'})">
+      <div class="pending-item" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:${enc(r.name)},sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'',owner_full:${enc(analyst)}})">
         <div class="pending-item-top">
           <span class="risk-id">${r.risk_ref}</span>
           <span class="pending-name">${r.name}</span>
@@ -3099,6 +3102,15 @@ async function loadAndRenderRisks() {
     }
   } catch (err) {
     console.error('Load risks error:', err);
+  }
+}
+
+async function loadAndRenderPending() {
+  try {
+    const risks = await listPendingTeam();
+    renderPendingTeam(risks);
+  } catch (err) {
+    console.error('Load pending error:', err);
   }
 }
 

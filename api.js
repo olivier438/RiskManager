@@ -681,3 +681,58 @@ async function listRSFeed(limit = 20) {
     };
   });
 }
+
+// ── PENDING TEAM — risques IN REVIEW ──
+async function listPendingTeam() {
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { data, error } = await sb
+    .from(`${P}risks`)
+    .select(`
+      id, risk_ref, name, severity, status, updated_at,
+      rm_risk_tags(tag),
+      assignee:assigned_to(first_name, last_name)
+    `)
+    .eq('environment_id', env)
+    .eq('status', 'IN REVIEW')
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+// ── PENDING ACTION (approve / reject) ──
+async function pendingAction(riskUuid, newStatus, btn) {
+  const sb  = getClient();
+  const env = getEnvId();
+
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) {
+    alert('Error: ' + error.message);
+    if (btn) { btn.disabled = false; btn.textContent = btn.classList.contains('btn-approve') ? 'Approve' : 'Reject'; }
+    return;
+  }
+
+  await loadAndRenderPending();
+  await loadAndRenderRisks();
+
+  const toast = document.createElement('div');
+  toast.textContent = newStatus === 'MONITORED' ? '✓ Risk approved' : '✗ Risk rejected → back to Analysis';
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background: newStatus === 'MONITORED' ? 'var(--low)' : 'var(--muted)',
+    color:'#fff', fontFamily:'var(--mono)', fontSize:'11px',
+    padding:'10px 20px', borderRadius:'3px',
+    zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}

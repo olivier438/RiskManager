@@ -1908,12 +1908,31 @@ document.addEventListener('click', e => {
         </div>
       </div>`;
 
+    const statuses = [
+      { value:'DRAFT',            key:'status.draft' },
+      { value:'IN ANALYSIS',      key:'status.in_analysis' },
+      { value:'IN REVIEW',        key:'status.in_review' },
+      { value:'IN TREATMENT',     key:'status.in_treatment' },
+      { value:'PENDING APPROVAL', key:'status.pending_approval' },
+      { value:'MONITORED',        key:'status.monitored' },
+    ];
+    const statusOptions = statuses.map(s =>
+      `<option value="${s.value}" ${s.value === risk.status ? 'selected' : ''}>${i18n.t(s.key)}</option>`
+    ).join('');
+
     const sectionActions = isRM ? `
-      <div class="sp-actions">
-        <button class="sp-btn primary" onclick="changeStatus('${risk.uuid || risk.id}', '${risk.status}')">Change Status</button>
+      <div class="sp-actions" style="flex-direction:column;gap:8px;align-items:stretch">
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="statusSelect" style="flex:1;background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;">
+            ${statusOptions}
+          </select>
+          <button class="sp-btn primary" onclick="applyStatus('${risk.uuid || risk.id}')">Apply →</button>
+        </div>
         ${risk.status === 'PENDING APPROVAL' ? `
-          <button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="changeStatus('${risk.uuid || risk.id}','MONITORED')">✓ Approve</button>
-          <button class="sp-btn" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="changeStatus('${risk.uuid || risk.id}','IN TREATMENT')">✗ Reject</button>
+          <div style="display:flex;gap:8px">
+            <button class="sp-btn" style="flex:1;background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid || risk.id}','MONITORED')">✓ Approve</button>
+            <button class="sp-btn" style="flex:1;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="applyStatusDirect('${risk.uuid || risk.id}','IN TREATMENT')">✗ Reject</button>
+          </div>
         ` : ''}
       </div>` : `
       <div class="sp-actions">

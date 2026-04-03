@@ -1203,7 +1203,8 @@ document.addEventListener('click', e => {
     <div class="panel full-width">
       <div class="panel-header">
         <span class="panel-title" data-i18n="panel.my_risks">My Risks</span>
-        <span class="panel-count" id="myRisksCount">8</span>
+        <span class="panel-count" id="myRisksCount">0</span>
+        <span id="filterBadge" style="display:none;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:2px;border:1px solid;margin-left:8px;cursor:pointer;" onclick="filterTable(null)"></span>
       </div>
       <div class="panel-body" id="myRisksList" style="padding:0;overflow-x:auto;">
         <table class="risk-table">
@@ -1223,7 +1224,7 @@ document.addEventListener('click', e => {
         </table>
       </div>
       <div class="panel-footer">
-        <button class="btn-link" data-i18n="btn.view_all">View all</button>
+        <button class="btn-link" onclick="filterTable(null)" data-i18n="btn.view_all">View all</button>
         <button class="btn-new" data-i18n="btn.new_risk">+ New Risk</button>
       </div>
     </div>
@@ -2173,26 +2174,77 @@ document.addEventListener('click', e => {
   }
 
   // ── FILTERED LIST ──
-  function openFiltered(sev, label) {
-    const filtered = RISKS.filter(r => sev === 'pending' ? r.status === 'PENDING' : r.sev === sev);
-    const cards = filtered.map(r => `
-      <div class="sp-risk-card" onclick="openRisk(RISKS.find(x=>x.id==='${r.id}'))">
-        <div class="sp-risk-card-top">
-          <span class="sp-risk-card-id">${r.id}</span>
-          <span class="sp-risk-card-name">${r.name}</span>
-          ${sevBadge(r.sev)}
-        </div>
-        <div class="sp-risk-card-bot">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${r.status}</span>
-          <span style="margin-left:auto">${tagHTML(r.tags)}</span>
-        </div>
-      </div>
-    `).join('');
-    openPanel(`${filtered.length} ${i18n.t('filtered.risks')}`, i18n.t('filtered.view'), `
-      <div class="sp-section">
-        <div class="sp-risk-list">${cards || `<div style="color:var(--muted);font-size:12px">${i18n.t('filtered.empty')}</div>`}</div>
-      </div>
-    `);
+  // ── FILTER TABLE ──
+  let _activeFilter = null; // null = all, 'critical'/'high'/'medium'/'low'/'pending'
+
+  function filterTable(sev) {
+    _activeFilter = sev;
+
+    const badge = document.getElementById('filterBadge');
+    const sevColors = {
+      critical: { color:'var(--critical)', border:'rgba(192,57,43,0.4)', bg:'rgba(192,57,43,0.08)' },
+      high:     { color:'var(--high)',     border:'rgba(212,112,10,0.4)', bg:'rgba(212,112,10,0.08)' },
+      medium:   { color:'var(--medium)',   border:'rgba(184,150,10,0.4)', bg:'rgba(184,150,10,0.08)' },
+      low:      { color:'var(--low)',      border:'rgba(26,122,74,0.4)',  bg:'rgba(26,122,74,0.08)' },
+      pending:  { color:'var(--muted)',    border:'var(--border-hi)',     bg:'var(--surface)' },
+    };
+
+    // Mettre à jour le badge filtre
+    if (sev && badge) {
+      const c = sevColors[sev] || sevColors.pending;
+      badge.style.display     = 'inline-block';
+      badge.style.color       = c.color;
+      badge.style.borderColor = c.border;
+      badge.style.background  = c.bg;
+      badge.textContent       = `${sev.toUpperCase()} ×`;
+    } else if (badge) {
+      badge.style.display = 'none';
+    }
+
+    // Mettre à jour le style actif des tiles
+    document.querySelectorAll('.summary-card').forEach(card => {
+      const key = card.querySelector('.summary-label')?.getAttribute('data-i18n') || '';
+      const cardSev = key.replace('summary.', '');
+      if (sev && cardSev === sev) {
+        card.style.borderColor = 'var(--accent-hi)';
+        card.style.background  = 'var(--card-hi)';
+      } else {
+        card.style.borderColor = '';
+        card.style.background  = '';
+      }
+    });
+
+    // Filtrer les risques et passer à renderMyRisks
+    // RISKS est peuplé par loadAndRenderRisks avec les bons champs
+    const filtered = sev
+      ? RISKS.filter(r => sev === 'pending'
+          ? r.status === 'PENDING APPROVAL'
+          : r.sev === sev)
+      : RISKS;
+
+    // Convertir le format RISKS → format Supabase pour renderMyRisks
+    const mapped = filtered.map(r => ({
+      id:           r.uuid,
+      risk_ref:     r.id,
+      name:         r.name,
+      severity:     r.sev,
+      status:       r.status,
+      rm_risk_tags: (r.tags || []).map(t => ({ tag: t })),
+      owner:        r.owner_full ? {
+        first_name: r.owner_full.split(' ')[0],
+        last_name:  r.owner_full.split(' ').slice(1).join(' '),
+      } : null,
+      likelihood:   r.likelihood,
+      impact:       r.impact,
+      residual_risk: r.residual,
+      decision:     r.decision,
+    }));
+
+    renderMyRisks(mapped);
+
+    // Mettre à jour le compteur
+    const countEl = document.getElementById('myRisksCount');
+    if (countEl) countEl.textContent = filtered.length;
   }
 
   // ── SPARKLINE ──
@@ -2238,13 +2290,15 @@ document.addEventListener('click', e => {
     svg.innerHTML = ticks + makeLine(highByMonth, '#d4700a') + makeLine(criticalByMonth, '#c0392b');
   })();
   document.querySelectorAll('.summary-card').forEach(card => {
-    const key = card.querySelector('.summary-label').getAttribute('data-i18n');
+    const key = card.querySelector('.summary-label')?.getAttribute('data-i18n') || '';
     card.addEventListener('click', () => {
-      if (key === 'summary.critical') openFiltered('critical', i18n.t('severity.critical'));
-      else if (key === 'summary.high')   openFiltered('high',     i18n.t('severity.high'));
-      else if (key === 'summary.medium') openFiltered('medium',   i18n.t('severity.medium'));
-      else if (key === 'summary.low')    openFiltered('low',      i18n.t('severity.low'));
-      else if (key === 'summary.pending') openFiltered('pending', i18n.t('summary.pending'));
+      const sev = key.replace('summary.', '');
+      // Toggle : clic sur la tile active → clear filter
+      if (_activeFilter === sev) {
+        filterTable(null);
+      } else {
+        filterTable(sev);
+      }
     });
   });
 
@@ -2967,12 +3021,12 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 
 function renderMyRisks(risks) {
-  const tbody = document.getElementById('myRisksBody');
+  const tbody   = document.getElementById('myRisksBody');
   const countEl = document.getElementById('myRisksCount');
   if (!tbody) return;
 
   if (!risks || risks.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No risks yet — create your first risk</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No risks found</td></tr>';
     if (countEl) countEl.textContent = '0';
     return;
   }
@@ -2980,17 +3034,22 @@ function renderMyRisks(risks) {
   if (countEl) countEl.textContent = risks.length;
 
   tbody.innerHTML = risks.map(r => {
-    const sev   = r.severity || 'medium';
-    const tags  = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
-    const owner = r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned';
+    const uuid      = r._uuid || r.id;
+    const ref       = r.risk_ref || r.id;
+    const sev       = r.severity || r.sev || 'medium';
+    const tags      = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
+    const ownerFull = r.owner
+      ? `${r.owner.first_name} ${r.owner.last_name}`
+      : (r.owner_full || 'Unassigned');
+    const nameEsc   = (r.name || '').replace(/'/g, "&#39;").replace(/"/g, '&quot;');
     return `
-      <tr class="risk-row" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:'${r.name.replace(/'/g,"\\'")}',sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:'${owner}',likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||'null'},decision:'${r.decision||''}'})">
-        <td class="col-id">${r.risk_ref}</td>
+      <tr class="risk-row" onclick="openRisk({id:'${ref}',uuid:'${uuid}',name:'${nameEsc}',sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:'${ownerFull}',likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||r.residual||'null'},decision:'${r.decision||''}'})" >
+        <td class="col-id">${ref}</td>
         <td class="col-name">${r.name}</td>
         <td class="col-sev"><span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span></td>
         <td class="col-status">${r.status}</td>
         <td class="col-tags">${tags}</td>
-        <td class="col-owner">${owner}</td>
+        <td class="col-owner">${ownerFull}</td>
       </tr>`;
   }).join('');
 }
@@ -3014,7 +3073,7 @@ async function loadAndRenderRisks() {
     if (el('countLow'))      el('countLow').textContent      = counts.low;
     if (el('countPending'))  el('countPending').textContent  = counts.pending;
 
-    // Mettre à jour RISKS pour openFiltered (summary card click)
+    // Mettre à jour RISKS pour filterTable (summary card click)
     if (typeof RISKS !== 'undefined') {
       RISKS.length = 0;
       risks.forEach(r => RISKS.push({

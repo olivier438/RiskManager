@@ -34,34 +34,6 @@ async function listRisks(filters = {}) {
   return data || [];
 }
 
-async function getRisk(riskId) {
-  const sb  = getClient();
-  const env = getEnvId();
-
-  const { data, error } = await sb
-    .from(`${P}risks`)
-    .select(`
-      *,
-      owner:owner_id(id, first_name, last_name),
-      assignee:assigned_to(id, first_name, last_name),
-      rm_risk_tags(tag, source),
-      rm_risk_journal(
-        id, entry_text, created_at,
-        author:author_id(first_name, last_name)
-      ),
-      rm_risk_versions(
-        id, version_number, change_summary, changed_at,
-        changed_by(first_name, last_name)
-      )
-    `)
-    .eq('id', riskId)
-    .eq('environment_id', env)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
 async function createRisk(riskData) {
   const sb   = getClient();
   const env  = getEnvId();
@@ -273,23 +245,24 @@ async function getRisk(riskUuid) {
   const sb  = getClient();
   const env = getEnvId();
 
-  const { data, error } = await sb
+  const { data: risk, error } = await sb
     .from(`${P}risks`)
-    .select(`
-      *,
-      owner:owner_id(id, first_name, last_name),
-      rm_risk_tags(tag, source),
-      rm_risk_journal(
-        id, entry_text, created_at,
-        author:author_id(first_name, last_name)
-      )
-    `)
+    .select('*, owner:owner_id(id, first_name, last_name), rm_risk_tags(tag, source)')
     .eq('id', riskUuid)
     .eq('environment_id', env)
     .single();
 
   if (error) throw error;
-  return data;
+
+  // Journal séparé — Supabase ne résout pas toujours les FK imbriquées
+  const { data: journal } = await sb
+    .from(`${P}risk_journal`)
+    .select('id, entry_text, created_at, author:author_id(first_name, last_name)')
+    .eq('risk_id', riskUuid)
+    .order('created_at', { ascending: false });
+
+  risk.rm_risk_journal = journal || [];
+  return risk;
 }
 
 // ── ADD JOURNAL ENTRY ──

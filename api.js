@@ -601,7 +601,7 @@ async function listRSFeed(limit = 20) {
 
   const { data, error } = await sb
     .from('risks')
-    .select('id, titre, type, cvss_score, menace, scenario, produits, cve_id, source_url, created_at')
+    .select('id, titre, type, cvss_score, impact, menace, scenario, produits, cve_id, source_url, created_at, disponibilite, integrite, confidentialite')
     .eq('triage', 'significant')
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -609,7 +609,7 @@ async function listRSFeed(limit = 20) {
   if (error) throw error;
 
   return (data || []).map(r => {
-    // Sévérité depuis cvss_score, fallback sur impact (1-5)
+    // Sévérité depuis cvss_score, fallback sur CIA booleans
     const score = parseFloat(r.cvss_score);
     let sev;
     if (!isNaN(score) && score > 0) {
@@ -618,12 +618,10 @@ async function listRSFeed(limit = 20) {
           : score >= 4.0 ? 'medium'
           : 'low';
     } else {
-      // Fallback sur champ impact RS (1-5)
-      const imp = parseInt(r.impact);
-      sev = imp >= 5 ? 'critical'
-          : imp >= 4 ? 'high'
-          : imp >= 3 ? 'medium'
-          : imp >= 1 ? 'low'
+      // Fallback CIA : confidentialite + integrite = high, une seule = medium
+      const flags = [r.confidentialite, r.integrite, r.disponibilite].filter(Boolean).length;
+      sev = flags >= 2 ? 'high'
+          : flags === 1 ? 'medium'
           : 'medium';
     }
 
@@ -637,20 +635,28 @@ async function listRSFeed(limit = 20) {
       });
     }
 
-    // Source badge — déduit depuis cve_id, menace et type
+    // Source badge — déduit depuis cve_id et menace
     let source;
+    const menaceLower = (r.menace || '').toLowerCase();
+
     if (r.cve_id) {
       source = 'CVE · ' + r.cve_id;
+    } else if (
+      menaceLower.includes('fuite') || menaceLower.includes('breach') ||
+      menaceLower.includes('leak') || menaceLower.includes('exfiltration') ||
+      menaceLower.includes('collecte') || menaceLower.includes('vol de données') ||
+      menaceLower.includes('données personnelles')
+    ) {
+      source = 'DATALEAK · ' + r.menace.split(' ').slice(0, 2).join(' ').toUpperCase();
+    } else if (
+      menaceLower.includes('conformité') || menaceLower.includes('nis2') ||
+      menaceLower.includes('dora') || menaceLower.includes('iso') ||
+      menaceLower.includes('rgpd') || menaceLower.includes('transparence') ||
+      menaceLower.includes('règlement') || menaceLower.includes('non-transparence')
+    ) {
+      source = 'GRC · ' + r.menace.split(' ').slice(0, 2).join(' ').toUpperCase();
     } else {
-      const menaceLower = (r.menace || '').toLowerCase();
-      if (menaceLower.includes('fuite') || menaceLower.includes('breach') || menaceLower.includes('leak') || menaceLower.includes('vol de données')) {
-        source = 'DATALEAK';
-      } else if (menaceLower.includes('règlement') || menaceLower.includes('conformité') || menaceLower.includes('nis2') || menaceLower.includes('dora') || menaceLower.includes('iso')) {
-        source = 'GRC';
-      } else {
-        source = 'CYBERSEC';
-      }
-      if (r.menace) source += ' · ' + r.menace.split(' ').slice(0, 2).join(' ').toUpperCase();
+      source = 'CYBERSEC · ' + (r.menace || '').split(' ').slice(0, 2).join(' ').toUpperCase();
     }
 
     // Temps relatif

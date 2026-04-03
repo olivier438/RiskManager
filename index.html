@@ -8,51 +8,66 @@
 </head>
 <body class="page-login">
 
-<div class="env-badge beta env-badge-fixed" id="envBadge">BETA</div>
+<div class="env-badge beta env-badge-fixed">BETA</div>
 
 <div class="login-card">
 
   <div class="login-header">
     <div class="logo-row">
-      <div class="logo-icon">
-        <svg viewBox="0 0 16 16">
-          <rect x="2" y="2" width="5" height="5" rx="0.5"/>
-          <rect x="9" y="2" width="5" height="5" rx="0.5"/>
-          <rect x="2" y="9" width="5" height="5" rx="0.5"/>
-          <path d="M9 11.5h5M11.5 9v5"/>
-        </svg>
-      </div>
-      <span class="logo-name">Risk<span>Manager</span></span>
+      <span class="logo-text">RM</span>
+      <span class="logo-label">Risk Manager</span>
     </div>
-    <div class="login-sub">Secure access — GRC Risk Platform</div>
+    <div class="logo-sub">ONE CIRCLE IT SOLUTIONS</div>
   </div>
 
-  <div class="login-divider"></div>
-
-  <div class="field">
-    <label>Email</label>
-    <input type="email" id="inputEmail" placeholder="user@organisation.be" autocomplete="email">
-  </div>
-
-  <div class="field">
-    <label>Password</label>
-    <input type="password" id="inputPassword" placeholder="••••••••••••" autocomplete="current-password"
-      onkeydown="if(event.key==='Enter') doLogin()">
-  </div>
+  <input type="email"    class="login-input" id="inputEmail"    placeholder="Email" autocomplete="email">
+  <input type="password" class="login-input" id="inputPassword" placeholder="Password" autocomplete="current-password">
 
   <button class="btn-login" id="btnLogin" onclick="doLogin()">Authenticate</button>
-
   <div class="error-msg" id="errorMsg"></div>
 
   <div class="login-footer">
     <span>ONE CIRCLE IT SOLUTIONS</span>
-    <span id="versionTag">v0.1.0 · BETA</span>
+    <span>v1.0.0 · BETA</span>
   </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
-<script src="app.js"></script>
+<script>
+
+(async () => {
+  const sb = getClient();
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) window.location.href = 'dashboard.html';
+})();
+
+async function doLogin() {
+  const email    = document.getElementById('inputEmail').value.trim();
+  const password = document.getElementById('inputPassword').value;
+  const btn      = document.getElementById('btnLogin');
+  const err      = document.getElementById('errorMsg');
+
+  if (!email || !password) { err.textContent = 'Email and password required'; return; }
+
+  btn.textContent = 'Authenticating...';
+  btn.disabled    = true;
+  err.textContent = '';
+
+  try {
+    await login(email, password);
+    window.location.href = 'dashboard.html';
+  } catch (e) {
+    err.textContent = 'Invalid credentials';
+    btn.textContent = 'Authenticate';
+    btn.disabled    = false;
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+</script>
 </body>
 </html>

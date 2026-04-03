@@ -878,11 +878,32 @@ function setMktCat(cat) {
   renderMarketplace();
 }
 
-function getMktCategoryFromSource(source) {
-  const s = (source || '').toUpperCase();
+function getMktCategoryFromSource(item) {
+  // Utiliser le champ type de la DB en priorité
+  const type = (item.type || '').toLowerCase();
+  if (type === 'grc')      return 'grc';
+  if (type === 'dataleak') return 'dataleak';
+  // Fallback sur le badge source
+  const s = (item.source || '').toUpperCase();
   if (s.startsWith('DATALEAK')) return 'dataleak';
   if (s.startsWith('GRC'))      return 'grc';
   return 'cybersec';
+}
+
+const MKT_PAGE_SIZE = 50;
+let mktPage = 0;
+
+function setMktCat(cat) {
+  mktCat = cat;
+  mktPage = 0;
+  document.querySelectorAll('.mkt-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  renderMarketplace();
+}
+
+function setMktPage(page) {
+  mktPage = page;
+  renderMarketplace();
+  document.getElementById('mktGrid')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderMarketplace() {
@@ -894,9 +915,8 @@ function renderMarketplace() {
     return;
   }
 
-  // Compter par catégorie
   const counts = { cybersec:0, dataleak:0, grc:0 };
-  RS_FEED.forEach(r => counts[getMktCategoryFromSource(r.source)]++);
+  RS_FEED.forEach(r => counts[getMktCategoryFromSource(r)]++);
   const el = id => document.getElementById(id);
   if (el('mktCountAll'))   el('mktCountAll').textContent   = RS_FEED.length;
   if (el('mktCountCyber')) el('mktCountCyber').textContent = counts.cybersec;
@@ -905,16 +925,20 @@ function renderMarketplace() {
 
   const filtered = mktCat === 'all'
     ? RS_FEED
-    : RS_FEED.filter(r => getMktCategoryFromSource(r.source) === mktCat);
+    : RS_FEED.filter(r => getMktCategoryFromSource(r) === mktCat);
 
   if (filtered.length === 0) {
     grid.innerHTML = '<div class="initial-state" style="grid-column:1/-1"><div class="empty-icon">◈</div><div class="empty-text">No threats in this category</div></div>';
     return;
   }
 
-  grid.innerHTML = filtered.map((r, i) => {
+  const totalPages = Math.ceil(filtered.length / MKT_PAGE_SIZE);
+  mktPage = Math.min(mktPage, totalPages - 1);
+  const pageItems = filtered.slice(mktPage * MKT_PAGE_SIZE, (mktPage + 1) * MKT_PAGE_SIZE);
+
+  const cards = pageItems.map((r, i) => {
     const imported = MKT_IMPORTED.has(r.id);
-    const cat = getMktCategoryFromSource(r.source);
+    const cat = getMktCategoryFromSource(r);
     const catColor = cat === 'dataleak' ? 'var(--medium)' : cat === 'grc' ? 'var(--accent-hi)' : 'var(--critical)';
     return `
       <div class="mkt-card" style="animation-delay:${Math.min(i,10)*0.03}s;border-left:2px solid ${catColor}">
@@ -935,7 +959,25 @@ function renderMarketplace() {
         </button>
       </div>`;
   }).join('');
+
+  const pagination = filtered.length > MKT_PAGE_SIZE ? `
+    <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 0;margin-top:4px;border-top:1px solid var(--border);">
+      <button onclick="setMktPage(${mktPage - 1})" ${mktPage === 0 ? 'disabled' : ''}
+        style="font-family:var(--mono);font-size:10px;padding:6px 14px;border-radius:2px;border:1px solid var(--border-hi);background:none;color:${mktPage === 0 ? 'var(--border-hi)' : 'var(--muted)'};cursor:${mktPage === 0 ? 'default' : 'pointer'};">
+        ← Prev
+      </button>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.06em;">
+        ${mktPage + 1} / ${totalPages} · <span style="color:var(--text)">${filtered.length}</span> threats
+      </span>
+      <button onclick="setMktPage(${mktPage + 1})" ${mktPage >= totalPages - 1 ? 'disabled' : ''}
+        style="font-family:var(--mono);font-size:10px;padding:6px 14px;border-radius:2px;border:1px solid var(--border-hi);background:none;color:${mktPage >= totalPages - 1 ? 'var(--border-hi)' : 'var(--muted)'};cursor:${mktPage >= totalPages - 1 ? 'default' : 'pointer'};">
+        Next →
+      </button>
+    </div>` : '';
+
+  grid.innerHTML = cards + pagination;
 }
+
 
 async function importMktItem(rsId, btn) {
   const rs = RS_FEED.find(x => x.id === rsId);
@@ -1340,7 +1382,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Charger RISKS + RS_FEED depuis Supabase
 async function reloadSearchData() {
   try {
-    const [risks, feed] = await Promise.all([listRisks(), listRSFeed()]);
+    const [risks, feed] = await Promise.all([listRisks(), listRSFeed(500)]);
 
     RISKS.length = 0;
     risks.forEach(r => {

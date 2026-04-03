@@ -1054,11 +1054,7 @@ function toggleLangMenu() {
   document.getElementById('langMenu')?.classList.toggle('open');
 }
 
-function toggleRoleMenu() {
-  document.getElementById('roleMenu')?.classList.toggle('open');
-}
-
-function toggleAppMenu() {
+  function toggleAppMenu() {
   const menu = document.getElementById('appMenu');
   if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
@@ -1705,6 +1701,26 @@ document.addEventListener('click', e => {
   .summary-card:hover { border-color: var(--border-hi); background: var(--card-hi); }
   .feed-item { cursor: pointer; }
   .pending-item { cursor: pointer; }
+
+  /* Status badge in panel */
+  .status-mono {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  /* Fade up animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 </style>
 
 <script>
@@ -1756,18 +1772,6 @@ document.addEventListener('click', e => {
   // 'risk_manager' | 'analyst' | 'admin'
   // Role set by Supabase in init block below
   window._currentRole = 'risk_owner'; // default until Supabase loads
-
-  // ── JOURNAL (mock, à brancher sur Supabase) ──
-  const JOURNAL = {
-    'RM-0012': [
-      { ts:'2026-04-01 21:14', author:'O. Delvigne', text:'VPN endpoint non patché depuis 6 mois. Ticket IT #4521 ouvert mais sans priorité.' },
-      { ts:'2026-04-01 22:41', author:'O. Delvigne', text:'Contacté l\'équipe réseau. Rollback impossible avant vendredi. Risque actif en attendant.' },
-      { ts:'2026-04-01 23:15', author:'O. Delvigne', text:'CVE-2025-3284 confirmée sur cette version. CVSS 9.1. Exploit public disponible.' },
-    ],
-    'RM-0009': [
-      { ts:'2026-04-01 18:30', author:'O. Delvigne', text:'Windows Server 2016 en fin de support étendu. Pas de budget migration prévu pour 2026.' },
-    ],
-  };
 
   // ── PANEL ──
   window.openPanel = function openPanel(title, subtitle, bodyHTML) {
@@ -1821,7 +1825,7 @@ document.addEventListener('click', e => {
     `;
   }
 
-  async function addJournalEntry(riskUuid) {
+  window.addJournalEntry = async function addJournalEntry(riskUuid) {
     const input = document.getElementById('jnInput');
     const text  = input?.value.trim();
     if (!text) return;
@@ -2062,26 +2066,6 @@ document.addEventListener('click', e => {
     }
   } // end openRisk
 
-  function calcGross() {
-    const l = parseInt(document.getElementById('editLikelihood')?.value) || 0;
-    const i = parseInt(document.getElementById('editImpact')?.value) || 0;
-    const el = document.getElementById('editGross');
-    if (el && l && i) {
-      const score = l * i;
-      const sev = score >= 16 ? 'critical' : score >= 9 ? 'high' : score >= 4 ? 'medium' : 'low';
-      const colors = { critical:'var(--critical)', high:'var(--high)', medium:'var(--medium)', low:'var(--low)' };
-      el.textContent = score;
-      el.style.color = colors[sev];
-    }
-  }
-
-  function submitAnalysis(riskId) {
-    const btn = event.target;
-    btn.textContent = '✓ Submitted';
-    btn.disabled = true;
-    btn.style.background = 'var(--low)';
-  }
-
   function openPulseSearch() {
     const desc = document.getElementById('pulseDesc')?.textContent || '';
     const keyword = desc.split('·')[0].trim().split(' ').slice(0,2).join(' ');
@@ -2092,35 +2076,33 @@ document.addEventListener('click', e => {
   // ── RS IMPORTED DRAFTS (mock, à brancher Supabase) ──
   const RS_IMPORTED = new Set();
 
-  window.importFromRS = function importFromRS(item) {
+  window.importFromRS = async function importFromRS(item) {
     if (RS_IMPORTED.has(item.id)) return;
-    RS_IMPORTED.add(item.id);
 
-    // Crée un nouveau DRAFT dans RISKS depuis le feed RS
-    const newId = `RM-${String(100 + RISKS.length).padStart(4,'0')}`;
-    RISKS.push({
-      id: newId,
-      name: item.name,
-      sev: item.sev,
-      status: 'DRAFT',
-      tags: item.tags,
-      owner: 'You',
-      owner_full: 'Olivier Delvigne',
-      likelihood: null, impact: null, residual: null, decision: null,
-      desc: item.desc,
-      _fromRS: item.id,
-    });
-
-    // Feedback visuel dans le panel
     const btn = document.getElementById(`importBtn-${item.id}`);
-    if (btn) {
-      btn.textContent = '✓ Imported as DRAFT';
-      btn.disabled = true;
-      btn.style.background = 'var(--low)';
-    }
+    if (btn) { btn.disabled = true; btn.textContent = 'Importing...'; }
 
-    // Notification toast
-    showToast(`${newId} created as DRAFT from RS feed`);
+    try {
+      const risk = await createRisk({
+        name:        item.name,
+        description: item.desc || null,
+        status:      'DRAFT',
+        tags:        item.tags || [],
+        rs_source_id: item.id,
+      });
+
+      RS_IMPORTED.add(item.id);
+
+      if (btn) { btn.textContent = `✓ ${risk.risk_ref} created`; btn.style.background = 'var(--low)'; }
+
+      showToast(`${risk.risk_ref} created as DRAFT from RS feed`);
+      await loadAndRenderRisks();
+
+    } catch (err) {
+      console.error('Import RS error:', err);
+      if (btn) { btn.disabled = false; btn.textContent = '⊕ Import as Risk →'; }
+      alert('Error: ' + err.message);
+    }
   }
 
   window.showToast = function showToast(msg) {
@@ -2266,15 +2248,6 @@ document.addEventListener('click', e => {
     });
   });
 
-  // ── BIND RISK ROWS ──
-  document.querySelectorAll('.risk-row').forEach(row => {
-    const id = row.querySelector('.col-id')?.textContent.trim();
-    row.addEventListener('click', () => {
-      const risk = RISKS.find(r => r.id === id);
-      if (risk) openRisk(risk);
-    });
-  });
-
   // ── BIND FEED ITEMS ──
   document.querySelectorAll('.feed-item').forEach((item, i) => {
     item.addEventListener('click', () => openFeed(FEED[i]));
@@ -2311,9 +2284,15 @@ document.addEventListener('click', e => {
     });
   });
 
-  // ── URL RESTORE ──
+  // ── URL RESTORE (après chargement des risques) ──
   const urlRisk = new URLSearchParams(location.search).get('risk');
-  if (urlRisk) { const r = RISKS.find(x => x.id === urlRisk); if (r) openRisk(r); }
+  if (urlRisk) {
+    // Attendre que loadAndRenderRisks() ait peuplé RISKS
+    setTimeout(() => {
+      const r = RISKS.find(x => x.id === urlRisk);
+      if (r) openRisk(r);
+    }, 1000);
+  }
 
   // ── I18N INIT ──
   i18n.init();
@@ -2942,10 +2921,6 @@ document.addEventListener('click', e => {
 </style>
 
 <script>
-  // Role label updated by Supabase init
-</script>
-
-<script>
 // Theme button label init
 document.addEventListener('DOMContentLoaded', function() {
   var saved = localStorage.getItem('rm-theme') || 'dark';
@@ -2965,51 +2940,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const user = await requireAuth();
     if (!user) return;
 
-    // Mettre à jour le nom dans la topbar si présent
-    const userNameEl = document.getElementById('userDisplayName');
+    // Mettre à jour le nom et avatar dans la topbar
+    const userNameEl = document.getElementById('userName');
     if (userNameEl) userNameEl.textContent = `${user.first_name} ${user.last_name}`;
 
-    const roleEl = document.getElementById('userRoleDisplay');
-    if (roleEl) roleEl.textContent = user.role.toUpperCase().replace('_', ' ');
+    const avatarEl = document.getElementById('userAvatar');
+    if (avatarEl) avatarEl.textContent = `${user.first_name[0]}${user.last_name[0]}`;
 
-    // Charger les vrais risques depuis Supabase
-    const risks = await listRisks();
-    if (risks.length > 0) {
-      // Remplacer les mock data par les données réelles
-      window._REAL_RISKS = risks.map(r => ({
-        id:         r.risk_ref,
-        uuid:       r.id,
-        name:       r.name,
-        sev:        r.severity || 'medium',
-        status:     r.status,
-        tags:       (r.rm_risk_tags || []).map(t => t.tag),
-        owner:      r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned',
-        likelihood: r.likelihood,
-        impact:     r.impact,
-        residual:   r.residual_risk,
-        decision:   r.decision,
-        owner_full: r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned',
-      }));
-
-      // Recharger le dashboard avec les vraies données
-      if (typeof renderDashboard === 'function') {
-        renderDashboard(window._REAL_RISKS);
-      }
-    }
-
-    // Mettre à jour le rôle courant
+    // Rôle depuis Supabase
     window._currentRole = user.role;
 
-    // Afficher le rôle réel dans la topbar
     const roleLabels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
     const roleDisplayEl = document.getElementById('userRole');
-    if (roleDisplayEl) roleDisplayEl.textContent = roleLabels[user.role] || user.role.toUpperCase();
+    if (roleDisplayEl) roleDisplayEl.textContent = roleLabels[user.role] || user.role.toUpperCase().replace('_',' ');
 
     // Settings visible uniquement pour risk_leader
     const settingsLinkEl = document.getElementById('settingsLink');
     if (settingsLinkEl) settingsLinkEl.style.display = user.role === 'risk_leader' ? 'block' : 'none';
 
-    // Charger et afficher les risques réels
+    // Charger et afficher les risques (une seule fois)
     await loadAndRenderRisks();
 
   } catch (err) {
@@ -3051,16 +3000,36 @@ async function loadAndRenderRisks() {
     const risks = await listRisks();
     renderMyRisks(risks);
 
-    // Mettre à jour RISKS pour les autres fonctions du dashboard
+    // ── SUMMARY ROW — compteurs réels ──
+    const counts = { critical:0, high:0, medium:0, low:0, pending:0 };
+    risks.forEach(r => {
+      const sev = r.severity || 'medium';
+      if (counts[sev] !== undefined) counts[sev]++;
+      if (r.status === 'PENDING APPROVAL') counts.pending++;
+    });
+    const el = id => document.getElementById(id);
+    if (el('countCritical')) el('countCritical').textContent = counts.critical;
+    if (el('countHigh'))     el('countHigh').textContent     = counts.high;
+    if (el('countMedium'))   el('countMedium').textContent   = counts.medium;
+    if (el('countLow'))      el('countLow').textContent      = counts.low;
+    if (el('countPending'))  el('countPending').textContent  = counts.pending;
+
+    // Mettre à jour RISKS pour openFiltered (summary card click)
     if (typeof RISKS !== 'undefined') {
       RISKS.length = 0;
       risks.forEach(r => RISKS.push({
-        id: r.risk_ref, uuid: r.id, name: r.name,
-        sev: r.severity || 'medium', status: r.status,
-        tags: (r.rm_risk_tags || []).map(t => t.tag),
-        owner: 'You', likelihood: r.likelihood,
-        impact: r.impact, residual: r.residual_risk,
-        decision: r.decision, owner_full: 'Olivier Delvigne',
+        id:         r.risk_ref,
+        uuid:       r.id,
+        name:       r.name,
+        sev:        r.severity || 'medium',
+        status:     r.status,
+        tags:       (r.rm_risk_tags || []).map(t => t.tag),
+        owner:      'You',
+        likelihood: r.likelihood,
+        impact:     r.impact,
+        residual:   r.residual_risk,
+        decision:   r.decision,
+        owner_full: r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned',
       }));
     }
   } catch (err) {

@@ -2577,8 +2577,8 @@ document.addEventListener('click', e => {
     <div class="nr-modal-footer">
       <button class="nr-btn-cancel" onclick="closeNewRiskModal()" data-i18n="btn.cancel">Cancel</button>
       <div style="display:flex;gap:8px">
-        <button class="nr-btn-draft" data-i18n="btn.save_draft">Save as Draft</button>
-        <button class="nr-btn-submit" data-i18n="btn.submit">Submit for Analysis →</button>
+        <button class="nr-btn-draft" onclick="submitNewRisk('DRAFT')">Save as Draft</button>
+        <button class="nr-btn-submit" onclick="submitNewRisk('IN ANALYSIS')">Submit for Analysis →</button>
       </div>
     </div>
 
@@ -2953,6 +2953,49 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('Dashboard init error:', err);
   }
 })();
+
+// ── NEW RISK SUBMIT ──
+async function submitNewRisk(status = 'DRAFT') {
+  const name       = document.getElementById('nrName')?.value.trim();
+  const desc       = document.getElementById('nrDescription')?.value.trim();
+  const asset      = document.getElementById('nrAsset')?.value.trim();
+  const likelihood = parseInt(document.getElementById('nrLikelihood')?.value) || null;
+  const impact     = parseInt(document.getElementById('nrImpact')?.value) || null;
+
+  if (!name) { alert('Risk name is required'); return; }
+
+  document.querySelectorAll('.nr-btn-draft, .nr-btn-submit').forEach(b => {
+    b.disabled = true; b.textContent = 'Saving...';
+  });
+
+  try {
+    const tags = [...(window.DETECTED_TAGS || new Set())];
+    const risk = await createRisk({ name, description: desc, asset, likelihood, impact, status, tags });
+
+    closeNewRiskModal();
+
+    const toast = document.createElement('div');
+    toast.textContent = `✓ ${risk.risk_ref} created`;
+    Object.assign(toast.style, {
+      position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+      background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
+      fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+      zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+    });
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+
+  } catch (err) {
+    console.error('Create risk error:', err);
+    alert('Error: ' + err.message);
+  } finally {
+    document.querySelectorAll('.nr-btn-draft, .nr-btn-submit').forEach(b => { b.disabled = false; });
+    const d = document.querySelector('.nr-btn-draft');
+    const s = document.querySelector('.nr-btn-submit');
+    if (d) d.textContent = 'Save as Draft';
+    if (s) s.textContent = 'Submit for Analysis →';
+  }
+}
 </script>
 </body>
 </html>

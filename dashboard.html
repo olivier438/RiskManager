@@ -1995,15 +1995,16 @@ document.addEventListener('click', e => {
         description: item.desc || null,
         status:      'DRAFT',
         tags:        item.tags || [],
-        rs_source_id: item.id,
       });
 
       RS_IMPORTED.add(item.id);
-
-      if (btn) { btn.textContent = `✓ ${risk.risk_ref} created`; btn.style.background = 'var(--low)'; }
-
-      showToast(`${risk.risk_ref} created as DRAFT from RS feed`);
       await loadAndRenderRisks();
+
+      // Fermer le panel feed et ouvrir directement le nouveau risque
+      closePanel();
+      setTimeout(() => openRisk({ id: risk.risk_ref, uuid: risk.id, name: risk.name, sev: risk.severity || 'medium', status: 'DRAFT' }), 150);
+
+      showToast(`✓ ${risk.risk_ref} created — opening...`);
 
     } catch (err) {
       console.error('Import RS error:', err);
@@ -2218,6 +2219,18 @@ document.addEventListener('click', e => {
   });
 
   // ── RENDER FEED ──
+  // Couleurs par type de menace
+  const FEED_TYPE_COLORS = {
+    'CYBERSEC': { border:'rgba(192,57,43,0.5)',  bg:'rgba(192,57,43,0.04)',  badge:'#c0392b' },
+    'DATALEAK': { border:'rgba(130,60,180,0.5)', bg:'rgba(130,60,180,0.04)', badge:'#8a3cb4' },
+    'GRC':      { border:'rgba(29,111,164,0.5)', bg:'rgba(29,111,164,0.04)', badge:'#1d6fa4' },
+  };
+
+  function getFeedTypeColor(source) {
+    const key = Object.keys(FEED_TYPE_COLORS).find(k => source.toUpperCase().startsWith(k));
+    return FEED_TYPE_COLORS[key] || { border:'var(--border)', bg:'transparent', badge:'var(--muted)' };
+  }
+
   function renderFeed(items) {
     const list = document.getElementById('liveFeedList');
     if (!list) return;
@@ -2227,20 +2240,22 @@ document.addEventListener('click', e => {
       return;
     }
 
-    list.innerHTML = items.map((item, i) => `
-      <div class="feed-item" onclick="openFeed(FEED[${i}])">
-        <div class="feed-item-top">
-          ${i < 3 ? '<div class="feed-new"></div>' : ''}
-          <span class="feed-name">${item.name}</span>
-          <span class="severity ${item.sev}">${item.sev.charAt(0).toUpperCase()+item.sev.slice(1)}</span>
-        </div>
-        <div class="feed-item-bot">
-          <span class="feed-source">${item.source}</span>
-          <div class="risk-tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-          <span class="feed-time">${item.time}</span>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = items.map((item, i) => {
+      const c = getFeedTypeColor(item.source);
+      return `
+        <div class="feed-item" onclick="openFeed(FEED[${i}])" style="border-left:2px solid ${c.border};background:${c.bg}">
+          <div class="feed-item-top">
+            ${i < 3 ? '<div class="feed-new"></div>' : ''}
+            <span class="feed-name">${item.name}</span>
+            <span class="severity ${item.sev}">${item.sev.charAt(0).toUpperCase()+item.sev.slice(1)}</span>
+          </div>
+          <div class="feed-item-bot">
+            <span class="feed-source" style="color:${c.badge}">${item.source}</span>
+            <div class="risk-tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+            <span class="feed-time">${item.time}</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   // ── PULSE BAR — mise à jour depuis données réelles ──
@@ -2980,9 +2995,8 @@ function renderMyRisks(risks) {
     const ownerFull = r.owner
       ? `${r.owner.first_name} ${r.owner.last_name}`
       : (r.owner_full || 'Unassigned');
-    const nameEsc   = (r.name || '').replace(/'/g, "&#39;").replace(/"/g, '&quot;');
     return `
-      <tr class="risk-row" onclick="openRisk({id:'${ref}',uuid:'${uuid}',name:'${nameEsc}',sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:'${ownerFull}',likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||r.residual||'null'},decision:'${r.decision||''}'})" >
+      <tr class="risk-row" onclick="openRisk({id:'${ref}',uuid:'${uuid}',name:${JSON.stringify(r.name||'')},sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:${JSON.stringify(ownerFull)},likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||r.residual||'null'},decision:${JSON.stringify(r.decision||'')}})">
         <td class="col-id">${ref}</td>
         <td class="col-name">${r.name}</td>
         <td class="col-sev"><span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span></td>
@@ -3010,7 +3024,7 @@ function renderPendingTeam(risks) {
     const tags     = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
     const analyst  = r.assignee ? `${r.assignee.first_name} ${r.assignee.last_name}` : 'Unassigned';
     const updated  = r.updated_at ? timeAgo(r.updated_at) : '';
-    const nameEsc  = (r.name || '').replace(/'/g, "&#39;");
+    // nameEsc handled via JSON.stringify inline
 
     return `
       <div class="pending-item" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:'${nameEsc}',sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'',owner_full:'${analyst}'})">

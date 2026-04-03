@@ -1808,15 +1808,14 @@ document.addEventListener('click', e => {
   }
 
   // ── JOURNAL HTML ──
-  function journalHTML(riskId) {
-    const entries = JOURNAL[riskId] || [];
+  function journalHTML(riskUuid, entries = []) {
     const list = entries.slice().reverse().map(e => `
       <div class="jn-entry">
         <div class="jn-meta">
-          <span class="jn-author">${e.author}</span>
-          <span class="jn-ts">${e.ts}</span>
+          <span class="jn-author">${e.author?.first_name || 'Unknown'} ${e.author?.last_name || ''}</span>
+          <span class="jn-ts">${e.created_at?.slice(0,16).replace('T',' ') || ''}</span>
         </div>
-        <div class="jn-text">${e.text}</div>
+        <div class="jn-text">${e.entry_text}</div>
       </div>
     `).join('');
 
@@ -1825,145 +1824,121 @@ document.addEventListener('click', e => {
         <div class="sp-section-title">Analysis Journal</div>
         <div class="jn-input-row">
           <textarea class="jn-input" id="jnInput" placeholder="Add a note — findings, research, contacts, CVEs..." rows="2"></textarea>
-          <button class="jn-btn" onclick="addJournalEntry('${riskId}')">Add</button>
+          <button class="jn-btn" onclick="addJournalEntry('${riskUuid}')">Add</button>
         </div>
-        <div class="jn-list" id="jnList-${riskId}">
+        <div class="jn-list" id="jnList-${riskUuid}">
           ${list || '<div class="jn-empty">No entries yet.</div>'}
         </div>
       </div>
     `;
   }
 
-  function addJournalEntry(riskId) {
+  async function addJournalEntry(riskUuid) {
     const input = document.getElementById('jnInput');
-    const text = input?.value.trim();
+    const text  = input?.value.trim();
     if (!text) return;
 
-    if (!JOURNAL[riskId]) JOURNAL[riskId] = [];
-    const now = new Date();
-    const ts = now.toISOString().slice(0,16).replace('T',' ');
-    JOURNAL[riskId].push({ ts, author:'O. Delvigne', text });
+    const btn = document.querySelector('.jn-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
-    // Re-render list
-    const list = document.getElementById(`jnList-${riskId}`);
-    if (list) {
-      list.innerHTML = JOURNAL[riskId].slice().reverse().map(e => `
-        <div class="jn-entry">
-          <div class="jn-meta">
-            <span class="jn-author">${e.author}</span>
-            <span class="jn-ts">${e.ts}</span>
-          </div>
-          <div class="jn-text">${e.text}</div>
-        </div>
-      `).join('');
+    try {
+      const entry = await addJournalEntryAPI(riskUuid, text);
+
+      const list = document.getElementById(`jnList-${riskUuid}`);
+      if (list) {
+        const user = getUser();
+        const newEntry = `
+          <div class="jn-entry" style="animation:fadeUp 0.2s ease both">
+            <div class="jn-meta">
+              <span class="jn-author">${user?.first_name || ''} ${user?.last_name || ''}</span>
+              <span class="jn-ts">${new Date().toISOString().slice(0,16).replace('T',' ')}</span>
+            </div>
+            <div class="jn-text">${text}</div>
+          </div>`;
+        list.innerHTML = newEntry + list.innerHTML;
+        // Retirer le "No entries yet"
+        const empty = list.querySelector('.jn-empty');
+        if (empty) empty.remove();
+      }
+
+      input.value = '';
+      input.focus();
+    } catch (err) {
+      console.error('Journal entry error:', err);
+      alert('Error saving note: ' + err.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Add'; }
     }
-    input.value = '';
-    input.focus();
   }
 
   // ── RISK DETAIL ──
-  function openRisk(risk) {
+  async function openRisk(risk) {
+    // Ouvrir le panel immédiatement avec les données de base
     const brut = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : '—';
     const isAnalyst = window._currentRole === 'analyst';
-    const isRM = window._currentRole === 'risk_manager';
+    const isRM      = window._currentRole === 'risk_manager' || window._currentRole === 'admin';
 
-    // Section identification commune
     const sectionIdentification = `
       <div class="sp-section">
-        <div class="sp-section-title">${i18n.t('detail.section.identification')}</div>
-        <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.risk_name')}</div><div class="sp-field-value">${risk.name}</div></div>
-        <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.severity')}</div><div class="sp-field-value">${sevBadge(risk.sev)}</div></div>
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.status')}</div><div class="sp-field-value" style="font-family:var(--mono);font-size:11px;color:var(--muted)">${risk.status}</div></div>
-        </div>
-        <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.tags')}</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${tagHTML(risk.tags)}</div></div>
-      </div>
-    `;
+        <div class="sp-section-title">Identification</div>
+        <div class="sp-field"><div class="sp-field-label">Risk Name</div><div class="sp-field-value">${risk.name}</div></div>
+        <div class="sp-field"><div class="sp-field-label">Tags</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${(risk.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
+      </div>`;
 
-    // Section analyse — éditable pour analyst, read-only pour RM
-    const sectionAnalysis = isAnalyst ? `
+    const sectionAnalysis = `
       <div class="sp-section">
-        <div class="sp-section-title">${i18n.t('detail.section.analysis')} <span style="color:var(--accent-hi);font-size:9px;margin-left:6px">EDITABLE</span></div>
+        <div class="sp-section-title">Analysis</div>
         <div class="sp-row">
-          <div class="sp-field">
-            <div class="sp-field-label">${i18n.t('detail.likelihood')}</div>
-            <select class="sp-select" id="editLikelihood" onchange="calcGross()">
-              ${[1,2,3,4,5].map(n => `<option value="${n}" ${risk.likelihood===n?'selected':''}>${n}</option>`).join('')}
-            </select>
-          </div>
-          <div class="sp-field">
-            <div class="sp-field-label">${i18n.t('detail.impact')}</div>
-            <select class="sp-select" id="editImpact" onchange="calcGross()">
-              ${[1,2,3,4,5].map(n => `<option value="${n}" ${risk.impact===n?'selected':''}>${n}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="sp-field">
-          <div class="sp-field-label">${i18n.t('detail.gross_risk')} (auto)</div>
-          <div class="sp-field-value" id="editGross" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div>
-        </div>
-        <div class="sp-field">
-          <div class="sp-field-label">Scenario</div>
-          <textarea class="sp-textarea" placeholder="Describe the attack scenario..." rows="3">${risk.scenario || ''}</textarea>
-        </div>
-        <div class="sp-field">
-          <div class="sp-field-label">Existing controls</div>
-          <textarea class="sp-textarea" placeholder="List existing controls..." rows="2">${risk.controls || ''}</textarea>
-        </div>
-        <div class="sp-field">
-          <div class="sp-field-label">Proposed treatment measures</div>
-          <textarea class="sp-textarea" placeholder="Propose treatment measures..." rows="2">${risk.measures || ''}</textarea>
-        </div>
-      </div>
-    ` : `
-      <div class="sp-section">
-        <div class="sp-section-title">${i18n.t('detail.section.analysis')}</div>
-        <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.likelihood')}</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.likelihood ?? '—'}</div></div>
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.impact')}</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.impact ?? '—'}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Likelihood</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.likelihood ?? '—'}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Impact</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.impact ?? '—'}</div></div>
         </div>
         <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.gross_risk')}</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div></div>
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.residual_risk')}</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--low)">${risk.residual ?? '—'}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Gross Risk</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Residual</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--low)">${risk.residual ?? '—'}</div></div>
         </div>
-        <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.decision')}</div><div class="sp-field-value">${risk.decision ?? i18n.t('detail.not_defined')}</div></div>
-      </div>
-    `;
+        <div class="sp-field"><div class="sp-field-label">Decision</div><div class="sp-field-value">${risk.decision ?? 'Not defined'}</div></div>
+      </div>`;
 
-    // Section governance
     const sectionGovernance = `
       <div class="sp-section">
-        <div class="sp-section-title">${i18n.t('detail.section.governance')}</div>
+        <div class="sp-section-title">Governance</div>
         <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.owner')}</div><div class="sp-field-value">${risk.owner_full}</div></div>
-          <div class="sp-field"><div class="sp-field-label">${i18n.t('detail.visibility')}</div><div class="sp-field-value">${i18n.t('visibility.team')}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Owner</div><div class="sp-field-value">${risk.owner_full || risk.owner || '—'}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Status</div><div class="sp-field-value"><span class="status-mono">${risk.status}</span></div></div>
         </div>
-      </div>
-    `;
+      </div>`;
 
-    // Actions selon rôle
-    const sectionActions = isAnalyst ? `
+    const sectionActions = isRM ? `
       <div class="sp-actions">
-        <button class="sp-btn primary" onclick="submitAnalysis('${risk.id}')">Submit for Review →</button>
-      </div>
-    ` : `
-      <div class="sp-actions">
-        <button class="sp-btn primary">${i18n.t('btn.edit')}</button>
+        <button class="sp-btn primary" onclick="changeStatus('${risk.uuid || risk.id}', '${risk.status}')">Change Status</button>
         ${risk.status === 'PENDING APPROVAL' ? `
-          <button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)">Approve</button>
-          <button class="sp-btn" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)">Reject</button>
+          <button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="changeStatus('${risk.uuid || risk.id}','MONITORED')">✓ Approve</button>
+          <button class="sp-btn" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="changeStatus('${risk.uuid || risk.id}','IN TREATMENT')">✗ Reject</button>
         ` : ''}
-        ${isRM ? `<button class="sp-btn" style="background:var(--surface);border:1px solid var(--border-hi);color:var(--muted)">Assign →</button>` : ''}
-      </div>
-    `;
+      </div>` : `
+      <div class="sp-actions">
+        <button class="sp-btn primary" onclick="submitAnalysisSupabase('${risk.uuid || risk.id}')">Submit for Review →</button>
+      </div>`;
 
-    openPanel(risk.id, `${risk.status} · ${risk.sev.toUpperCase()}`,
-      sectionIdentification +
-      sectionAnalysis +
-      sectionGovernance +
-      journalHTML(risk.id) +
+    openPanel(
+      risk.id,
+      `${risk.status} · ${(risk.sev||'').toUpperCase()}`,
+      sectionIdentification + sectionAnalysis + sectionGovernance +
+      '<div id="journalPlaceholder"><div class="sp-section"><div class="sp-section-title">Analysis Journal</div><div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px">Loading...</div></div></div>' +
       sectionActions
     );
+
+    // Charger le journal depuis Supabase de façon async
+    if (risk.uuid) {
+      try {
+        const fullRisk = await getRisk(risk.uuid);
+        const journal  = fullRisk?.rm_risk_journal || [];
+        const ph = document.getElementById('journalPlaceholder');
+        if (ph) ph.outerHTML = journalHTML(risk.uuid, journal);
+      } catch (err) {
+        console.error('Load journal error:', err);
+      }
+    }
   }
 
   function calcGross() {

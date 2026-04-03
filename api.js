@@ -267,3 +267,101 @@ async function listUsers() {
   if (error) throw error;
   return data || [];
 }
+
+// ── GET RISK DETAIL ──
+async function getRisk(riskUuid) {
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { data, error } = await sb
+    .from(`${P}risks`)
+    .select(`
+      *,
+      owner:owner_id(id, first_name, last_name),
+      rm_risk_tags(tag, source),
+      rm_risk_journal(
+        id, entry_text, created_at,
+        author:author_id(first_name, last_name)
+      )
+    `)
+    .eq('id', riskUuid)
+    .eq('environment_id', env)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ── ADD JOURNAL ENTRY ──
+async function addJournalEntryAPI(riskUuid, text) {
+  const sb   = getClient();
+  const env  = getEnvId();
+  const user = getUser();
+
+  const { data, error } = await sb
+    .from(`${P}risk_journal`)
+    .insert({
+      risk_id:        riskUuid,
+      environment_id: env,
+      author_id:      user.id,
+      entry_text:     text,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ── CHANGE STATUS ──
+async function changeStatus(riskUuid, currentStatus) {
+  const statuses = ['DRAFT','IN ANALYSIS','IN REVIEW','IN TREATMENT','PENDING APPROVAL','MONITORED'];
+  const current  = statuses.indexOf(currentStatus);
+  const next     = statuses[(current + 1) % statuses.length];
+
+  const newStatus = prompt(`Change status to:`, next);
+  if (!newStatus || !statuses.includes(newStatus)) return;
+
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) throw error;
+
+  await loadAndRenderRisks();
+
+  const toast = document.createElement('div');
+  toast.textContent = `✓ Status → ${newStatus}`;
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--accent)', color:'#fff', fontFamily:'var(--mono)',
+    fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+    zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+// ── SUBMIT FOR REVIEW ──
+async function submitAnalysisSupabase(riskUuid) {
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({ status: 'IN REVIEW', updated_at: new Date().toISOString() })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  const btn = event?.target;
+  if (btn) { btn.textContent = '✓ Submitted for Review'; btn.disabled = true; btn.style.background = 'var(--low)'; }
+
+  await loadAndRenderRisks();
+}

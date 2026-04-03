@@ -17,12 +17,13 @@ async function listRisks(filters = {}) {
       id, risk_ref, name, severity, status,
       likelihood, impact, gross_risk, residual_risk,
       decision, visibility, review_date, asset,
-      rs_source_id, created_at, updated_at,
+      rs_source_id, assigned_to, created_at, updated_at,
       owner:owner_id(first_name, last_name),
       assignee:assigned_to(first_name, last_name),
       rm_risk_tags(tag, source)
     `)
     .eq('environment_id', env)
+    .neq('status', 'ARCHIVED')
     .order('created_at', { ascending: false });
 
   if (filters.status)   q = q.eq('status', filters.status);
@@ -514,4 +515,34 @@ function recalcGross() {
     el.textContent = '—';
     el.style.color = 'var(--muted)';
   }
+}
+
+// ── ARCHIVE RISK (risk_leader only) ──
+async function archiveRisk(riskUuid) {
+  if (!confirm('Archive this risk? It will no longer appear in the active register.')) return;
+
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({ status: 'ARCHIVED', updated_at: new Date().toISOString() })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  closePanel();
+  await loadAndRenderRisks();
+
+  const toast = document.createElement('div');
+  toast.textContent = '✓ Risk archived';
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--muted)', color:'#fff', fontFamily:'var(--mono)',
+    fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+    zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
 }

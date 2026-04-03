@@ -38,10 +38,10 @@
 <script src="auth.js"></script>
 <script>
 
-// Force logout à chaque visite du login
+// Force logout global à chaque visite du login
 (async () => {
   const sb = getClient();
-  await sb.auth.signOut();
+  await sb.auth.signOut({ scope: 'global' });
 })();
 
 async function doLogin() {

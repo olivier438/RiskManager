@@ -1651,6 +1651,8 @@ document.addEventListener('click', e => {
   // ── DATA ──
   // RISKS — peuplé dynamiquement par loadAndRenderRisks() depuis Supabase
   const RISKS = [];
+  // RISKS_MAP — lookup par UUID pour onclick propre (pas de JSON dans attributs HTML)
+  const RISKS_MAP = new Map();
 
   // FEED — peuplé dynamiquement depuis Risk Studio (Supabase)
   let FEED = [];
@@ -2987,8 +2989,17 @@ function renderMyRisks(risks) {
       : (r.owner_full || 'Unassigned');
     // Encoder pour attribut HTML onclick — JSON.stringify puis échapper les guillemets doubles
     const enc = s => JSON.stringify(s||'').replace(/"/g, '&quot;');
+    // Stocker dans RISKS_MAP pour lookup propre depuis onclick
+    RISKS_MAP.set(uuid, {
+      id: ref, uuid, name: r.name, sev, status: r.status,
+      tags: (r.rm_risk_tags||[]).map(t=>t.tag),
+      owner: 'You', owner_full: ownerFull,
+      likelihood: r.likelihood, impact: r.impact,
+      residual: r.residual_risk||r.residual,
+      decision: r.decision,
+    });
     return `
-      <tr class="risk-row" onclick="openRisk({id:'${ref}',uuid:'${uuid}',name:${enc(r.name)},sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:${enc(ownerFull)},likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||r.residual||'null'},decision:${enc(r.decision)}})">
+      <tr class="risk-row" onclick="openRisk(RISKS_MAP.get('${uuid}'))">
         <td class="col-id">${ref}</td>
         <td class="col-name">${r.name}</td>
         <td class="col-sev"><span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span></td>
@@ -3017,9 +3028,13 @@ function renderPendingTeam(risks) {
     const analyst  = r.assignee ? `${r.assignee.first_name} ${r.assignee.last_name}` : 'Unassigned';
     const updated  = r.updated_at ? timeAgo(r.updated_at) : '';
     const enc      = s => JSON.stringify(s||'').replace(/"/g, '&quot;');
-
+    RISKS_MAP.set(r.id, {
+      id: r.risk_ref, uuid: r.id, name: r.name, sev,
+      status: r.status, tags: (r.rm_risk_tags||[]).map(t=>t.tag),
+      owner: '', owner_full: analyst,
+    });
     return `
-      <div class="pending-item" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:${enc(r.name)},sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'',owner_full:${enc(analyst)}})">
+      <div class="pending-item" onclick="openRisk(RISKS_MAP.get('${r.id}'))">
         <div class="pending-item-top">
           <span class="risk-id">${r.risk_ref}</span>
           <span class="pending-name">${r.name}</span>
@@ -3055,6 +3070,9 @@ async function loadAndRenderRisks() {
     ]);
 
     renderMyRisks(risks);
+
+    // Vider RISKS_MAP — sera repeuplé par renderMyRisks
+    RISKS_MAP.clear();
     renderPendingTeam(pending);
 
     // ── SUMMARY ROW — compteurs réels ──

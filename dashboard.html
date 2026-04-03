@@ -2286,14 +2286,14 @@ document.addEventListener('click', e => {
   i18n.init();
 
   // ── NEW RISK MODAL ──
-  document.querySelectorAll('.btn-new').forEach(btn => {
-    btn.addEventListener('click', openNewRiskModal);
-  });
-
   window.openNewRiskModal = function openNewRiskModal() {
     document.getElementById('newRiskModal').classList.add('open');
     document.getElementById('nrName').focus();
   }
+
+  document.querySelectorAll('.btn-new').forEach(btn => {
+    btn.addEventListener('click', openNewRiskModal);
+  });
 
   window.closeNewRiskModal = function closeNewRiskModal() {
     document.getElementById('newRiskModal').classList.remove('open');

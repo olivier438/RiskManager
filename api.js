@@ -287,14 +287,13 @@ async function addJournalEntryAPI(riskUuid, text) {
 }
 
 // ── CHANGE STATUS ──
-async function changeStatus(riskUuid, currentStatus) {
-  const statuses = ['DRAFT','IN ANALYSIS','IN REVIEW','IN TREATMENT','PENDING APPROVAL','MONITORED'];
-  const current  = statuses.indexOf(currentStatus);
-  const next     = statuses[(current + 1) % statuses.length];
+async function applyStatus(riskUuid) {
+  const select = document.getElementById('statusSelect');
+  if (!select) return;
+  await applyStatusDirect(riskUuid, select.value);
+}
 
-  const newStatus = prompt(`Change status to:`, next);
-  if (!newStatus || !statuses.includes(newStatus)) return;
-
+async function applyStatusDirect(riskUuid, newStatus) {
   const sb  = getClient();
   const env = getEnvId();
 
@@ -304,8 +303,9 @@ async function changeStatus(riskUuid, currentStatus) {
     .eq('id', riskUuid)
     .eq('environment_id', env);
 
-  if (error) throw error;
+  if (error) { alert('Error: ' + error.message); return; }
 
+  closePanel();
   await loadAndRenderRisks();
 
   const toast = document.createElement('div');
@@ -337,4 +337,181 @@ async function submitAnalysisSupabase(riskUuid) {
   if (btn) { btn.textContent = '✓ Submitted for Review'; btn.disabled = true; btn.style.background = 'var(--low)'; }
 
   await loadAndRenderRisks();
+}
+
+// ── RECALC GROSS RISK ──
+function recalcGross() {
+  const l = parseInt(document.getElementById('editLikelihood')?.value) || 0;
+  const i = parseInt(document.getElementById('editImpact')?.value) || 0;
+  const el = document.getElementById('grossDisplay');
+  if (!el) return;
+  if (l && i) {
+    const score = l * i;
+    const sev = score >= 16 ? 'critical' : score >= 9 ? 'high' : score >= 4 ? 'medium' : 'low';
+    const colors = { critical:'var(--critical)', high:'var(--high)', medium:'var(--medium)', low:'var(--low)' };
+    el.textContent = `${score}`;
+    el.style.color  = colors[sev];
+  } else {
+    el.textContent = '—';
+    el.style.color  = 'var(--muted)';
+  }
+}
+
+// ── SAVE RISK EDITS ──
+async function saveRiskEdits(riskUuid) {
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const name       = document.getElementById('editName')?.value.trim();
+  const asset      = document.getElementById('editAsset')?.value.trim();
+  const desc       = document.getElementById('editDesc')?.value.trim();
+  const likelihood = parseInt(document.getElementById('editLikelihood')?.value) || null;
+  const impact     = parseInt(document.getElementById('editImpact')?.value) || null;
+  const residual   = parseInt(document.getElementById('editResidual')?.value) || null;
+  const decision   = document.getElementById('editDecision')?.value || null;
+
+  if (!name) { alert('Risk name is required'); return; }
+
+  const gross = likelihood && impact ? likelihood * impact : null;
+  const severity = gross
+    ? gross >= 16 ? 'critical' : gross >= 9 ? 'high' : gross >= 4 ? 'medium' : 'low'
+    : null;
+
+  const btn = document.querySelector('[onclick*="saveRiskEdits"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({
+      name, asset: asset || null,
+      description: desc || null,
+      likelihood, impact,
+      gross_risk:    gross,
+      residual_risk: residual,
+      severity, decision: decision || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) {
+    alert('Error: ' + error.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Save changes →'; }
+    return;
+  }
+
+  // Version + audit
+  await createVersion(riskUuid, 'Risk edited', { name, likelihood, impact, decision });
+  await auditLog('RISK_UPDATED', 'risk', riskUuid, null, { name, likelihood, impact, severity, decision });
+
+  await loadAndRenderRisks();
+  closePanel();
+
+  const toast = document.createElement('div');
+  toast.textContent = '✓ Risk updated';
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
+    fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+    zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+// ── TAKE RISK (analyst self-assign) ──
+async function takeRisk(riskUuid) {
+  const sb   = getClient();
+  const env  = getEnvId();
+  const user = getUser();
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({ assigned_to: user.id, updated_at: new Date().toISOString() })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  // Ajouter une note journal
+  await addJournalEntryAPI(riskUuid, `Risk taken by ${user.first_name} ${user.last_name}`);
+
+  closePanel();
+  await loadAndRenderRisks();
+
+  const toast = document.createElement('div');
+  toast.textContent = '✓ Risk assigned to you';
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
+    fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+    zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+// ── SAVE RISK EDITS ──
+async function saveRiskEdits(riskUuid) {
+  const name      = document.getElementById('editName')?.value.trim();
+  const desc      = document.getElementById('editDesc')?.value.trim();
+  const asset     = document.getElementById('editAsset')?.value.trim();
+  const likelihood = parseInt(document.getElementById('editLikelihood')?.value) || null;
+  const impact     = parseInt(document.getElementById('editImpact')?.value) || null;
+  const residual   = parseInt(document.getElementById('editResidual')?.value) || null;
+  const decision   = document.getElementById('editDecision')?.value || null;
+
+  if (!name) { alert('Risk name is required'); return; }
+
+  const gross = likelihood && impact ? likelihood * impact : null;
+  const severity = gross
+    ? gross >= 16 ? 'critical' : gross >= 9 ? 'high' : gross >= 4 ? 'medium' : 'low'
+    : null;
+
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({
+      name, description: desc, asset,
+      likelihood, impact, gross_risk: gross,
+      residual_risk: residual, decision,
+      severity, updated_at: new Date().toISOString()
+    })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  await loadAndRenderRisks();
+
+  const toast = document.createElement('div');
+  toast.textContent = '✓ Risk saved';
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
+    fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+    zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+// ── RECALC GROSS RISK (live) ──
+function recalcGross() {
+  const l = parseInt(document.getElementById('editLikelihood')?.value) || 0;
+  const i = parseInt(document.getElementById('editImpact')?.value) || 0;
+  const el = document.getElementById('grossDisplay');
+  if (!el) return;
+  if (l && i) {
+    const score = l * i;
+    const sev   = score >= 16 ? 'critical' : score >= 9 ? 'high' : score >= 4 ? 'medium' : 'low';
+    const colors = { critical:'var(--critical)', high:'var(--high)', medium:'var(--medium)', low:'var(--low)' };
+    el.textContent  = score;
+    el.style.color  = colors[sev];
+  } else {
+    el.textContent = '—';
+    el.style.color = 'var(--muted)';
+  }
 }

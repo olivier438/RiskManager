@@ -1979,16 +1979,28 @@ document.addEventListener('click', e => {
           </select>
           <button class="sp-btn primary" onclick="applyStatus('${risk.uuid || risk.id}')">Apply →</button>
         </div>
-        ${risk.status === 'PENDING APPROVAL' ? `
+        ${risk.status === 'IN REVIEW' ? `
           <div style="display:flex;gap:8px">
             <button class="sp-btn" style="flex:1;background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid || risk.id}','MONITORED')">✓ Approve</button>
-            <button class="sp-btn" style="flex:1;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="applyStatusDirect('${risk.uuid || risk.id}','IN TREATMENT')">✗ Reject</button>
-          </div>
-        ` : ''}
-      </div>` : `
+            <button class="sp-btn" style="flex:1;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="applyStatusDirect('${risk.uuid || risk.id}','IN ANALYSIS')">✗ Reject</button>
+          </div>` : ''}
+      </div>`
+
+    : isAnalyst ? `
       <div class="sp-actions">
-        <button class="sp-btn primary" onclick="submitAnalysisSupabase('${risk.uuid || risk.id}')">Submit for Review →</button>
-      </div>`;
+        ${risk.status === 'IN ANALYSIS' && !risk.assigned_to ? `
+          <button class="sp-btn primary" onclick="takeRisk('${risk.uuid || risk.id}')">Take this risk →</button>` : ''}
+        ${risk.status === 'IN ANALYSIS' && risk.assigned_to ? `
+          <button class="sp-btn primary" onclick="submitAnalysisSupabase('${risk.uuid || risk.id}')">Submit for Review →</button>` : ''}
+      </div>`
+
+    : isRiskOwner ? `
+      <div class="sp-actions">
+        ${risk.status === 'DRAFT' ? `
+          <button class="sp-btn primary" onclick="applyStatusDirect('${risk.uuid || risk.id}','IN ANALYSIS')">Submit to pool →</button>` : ''}
+      </div>`
+
+    : '';
 
     openPanel(
       risk.id,

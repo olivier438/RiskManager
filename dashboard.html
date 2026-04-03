@@ -949,8 +949,8 @@ const i18n = (() => {
     'pending.view_all':'View all pending',
     'severity.critical':'Critical','severity.high':'High','severity.medium':'Medium','severity.low':'Low',
     'status.draft':'DRAFT','status.in_analysis':'IN ANALYSIS','status.in_review':'IN REVIEW',
-    'status.in_treatment':'IN TREATMENT','status.pending_approval':'PENDING APPROVAL',
-    'status.monitored':'MONITORED','status.pending':'PENDING',
+    'status.in_treatment':'IN TREATMENT','status.treated':'TREATED',
+    'status.pending_approval':'PENDING APPROVAL','status.monitored':'MONITORED',
     'risk.new.title':'New Risk','risk.new.sub':'Private by default',
     'risk.new.section.identification':'Identification','risk.new.section.analysis':'Analysis',
     'risk.new.section.scoring':'Scoring','risk.new.section.governance':'Governance',
@@ -1748,8 +1748,8 @@ document.addEventListener('click', e => {
     { id:'RM-0007', name:'No MFA on admin accounts',                    sev:'critical', status:'PENDING APPROVAL', tags:['#iam','#mfa'],                 owner:'You',  likelihood:4, impact:5, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
     { id:'RM-0005', name:'Supplier contract missing security clauses',   sev:'medium',   status:'IN REVIEW',       tags:['#supply-chain'],               owner:'You',  likelihood:2, impact:3, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
     { id:'RM-0003', name:'Backup untested for 8 months',                sev:'high',     status:'DRAFT',           tags:['#backup','#bcm'],              owner:'You',  likelihood:3, impact:5, residual:3, decision:'Reduce', owner_full:'Olivier Delvigne' },
-    { id:'RM-0014', name:'Cloud storage bucket publicly exposed',        sev:'high',     status:'PENDING',         tags:['#cloud','#data-exposure'],     owner:'J. Masson',  likelihood:4, impact:4, residual:null, decision:null, owner_full:'Julie Masson' },
-    { id:'RM-0013', name:'Absence of formal asset inventory',           sev:'medium',   status:'PENDING',         tags:['#asset-management'],           owner:'T. Lecomte', likelihood:2, impact:3, residual:null, decision:null, owner_full:'Thomas Lecomte' },
+    { id:'RM-0014', name:'Cloud storage bucket publicly exposed',        sev:'high',     status:'IN ANALYSIS',         tags:['#cloud','#data-exposure'],     owner:'J. Masson',  likelihood:4, impact:4, residual:null, decision:null, owner_full:'Julie Masson' },
+    { id:'RM-0013', name:'Absence of formal asset inventory',           sev:'medium',   status:'IN ANALYSIS',         tags:['#asset-management'],           owner:'T. Lecomte', likelihood:2, impact:3, residual:null, decision:null, owner_full:'Thomas Lecomte' },
     { id:'RM-0002', name:'Legacy firewall rules not reviewed since 2023',sev:'medium',   status:'MONITORED',       tags:['#firewall','#network'],        owner:'J. Masson',  likelihood:2, impact:3, residual:2, decision:'Accept', owner_full:'Julie Masson' },
     { id:'RM-0001', name:'No formal incident response plan',            sev:'low',      status:'MONITORED',       tags:['#irt','#process'],             owner:'You',  likelihood:1, impact:4, residual:1, decision:'Accept', owner_full:'Olivier Delvigne' },
   ];
@@ -1974,12 +1974,15 @@ document.addEventListener('click', e => {
         </div>
         <div class="sp-field">
           <div class="sp-field-label">Decision</div>
-          ${canEdit
-            ? `<select id="editDecision" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
-                <option value="">Not defined</option>
-                ${['Reduce','Accept','Transfer','Avoid'].map(d=>`<option value="${d}" ${risk.decision===d?'selected':''}>${d}</option>`).join('')}
-              </select>`
-            : `<div class="sp-field-value">${risk.decision ?? 'Not defined'}</div>`}
+          ${risk.status === 'IN TREATMENT'
+            ? (canEdit
+                ? `<select id="editDecision" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
+                    <option value="">Not defined</option>
+                    ${['Reduce','Accept','Transfer'].map(d=>`<option value="${d}" ${risk.decision===d?'selected':''}>${d}</option>`).join('')}
+                  </select>`
+                : `<div class="sp-field-value">${risk.decision ?? 'Not defined'}</div>`)
+            : `<div class="sp-field-value" style="color:var(--muted);font-size:11px;font-family:var(--mono)">Available in IN TREATMENT</div>`
+          }
         </div>
         ${canEdit ? `<div style="text-align:right;margin-top:8px"><button class="sp-btn primary" onclick="saveRiskEdits('${risk.uuid||risk.id}')">Save changes →</button></div>` : ''}
       </div>`;
@@ -1995,12 +1998,12 @@ document.addEventListener('click', e => {
       </div>`;
 
     // ── ACTIONS selon rôle ──
+    // TREATED n'est pas dans le dropdown libre — accessible uniquement via bouton contextuel
     const statuses = [
       { value:'DRAFT',            key:'status.draft' },
       { value:'IN ANALYSIS',      key:'status.in_analysis' },
       { value:'IN REVIEW',        key:'status.in_review' },
       { value:'IN TREATMENT',     key:'status.in_treatment' },
-      { value:'PENDING APPROVAL', key:'status.pending_approval' },
       { value:'MONITORED',        key:'status.monitored' },
     ];
     const statusOptions = statuses.map(s =>
@@ -2017,7 +2020,6 @@ document.addEventListener('click', e => {
         </div>` : '';
 
     } else if (isAnalyst || isLeader) {
-      // Analyst + Leader — statut + actions workflow
       sectionActions = `
         <div class="sp-actions" style="flex-direction:column;gap:8px;align-items:stretch">
           <div style="display:flex;gap:8px;align-items:center">
@@ -2026,15 +2028,33 @@ document.addEventListener('click', e => {
             </select>
             <button class="sp-btn primary" onclick="applyStatus('${risk.uuid||risk.id}')">Apply →</button>
           </div>
+
           ${risk.status === 'IN ANALYSIS' && !risk.assigned_to ? `
             <button class="sp-btn" style="background:rgba(29,111,164,0.15);border:1px solid rgba(29,111,164,0.4);color:var(--accent-hi)" onclick="takeRisk('${risk.uuid||risk.id}')">Take this risk →</button>` : ''}
+
           ${risk.status === 'IN REVIEW' ? `
             <div style="display:flex;gap:8px">
-              <button class="sp-btn" style="flex:1;background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','MONITORED')">✓ Approve</button>
-              <button class="sp-btn" style="flex:1;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="applyStatusDirect('${risk.uuid||risk.id}','IN ANALYSIS')">✗ Reject</button>
+              <button class="sp-btn" style="flex:1;background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','IN TREATMENT')">✓ Approve → Treatment</button>
+              <button class="sp-btn" style="flex:1;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="applyStatusDirect('${risk.uuid||risk.id}','IN ANALYSIS')">✗ Reject → Analysis</button>
             </div>` : ''}
+
+          ${risk.status === 'IN TREATMENT' ? `
+            <div style="padding:8px;background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--muted);">
+              ${!risk.decision
+                ? '⚠ Select a decision above before marking as treated'
+                : `Decision: <strong style="color:var(--text)">${risk.decision}</strong>`}
+            </div>
+            ${risk.decision === 'Accept'
+              ? `<button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','MONITORED')">✓ Accept → Move to Monitored</button>`
+              : risk.decision
+                ? `<button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','TREATED')">✓ Mark as Treated</button>`
+                : ''}` : ''}
+
+          ${risk.status === 'TREATED' ? `
+            <button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','MONITORED')">→ Move to Monitored</button>` : ''}
+
           ${canArchive ? `
-            <button class="sp-btn" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:10px" onclick="archiveRisk('${risk.uuid||risk.id}')">Archive risk</button>` : ''}
+            <button class="sp-btn" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;margin-top:4px" onclick="archiveRisk('${risk.uuid||risk.id}')">Archive risk</button>` : ''}
         </div>`;
     }
 

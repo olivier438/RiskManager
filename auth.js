@@ -106,5 +106,8 @@ function getUser()        { return currentUser; }
 function getEnvironment() { return currentEnv; }
 function getRole()        { return currentRole; }
 function getEnvId()       { return currentEnv?.id || currentUser?.environment_id; }
-function isAdmin()        { return currentRole === 'admin'; }
-function isRiskManager()  { return currentRole === 'risk_manager' || currentRole === 'admin'; }
+function isAdmin()        { return currentRole === 'risk_leader'; }
+function isRiskManager()  { return currentRole === 'risk_leader'; }
+function isRiskLeader()   { return currentRole === 'risk_leader'; }
+function isRiskOwner()    { return currentRole === 'risk_owner' || currentRole === 'risk_leader'; }
+function isAnalyst()      { return currentRole === 'analyst'; }

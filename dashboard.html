@@ -1064,12 +1064,12 @@ function toggleAppMenu() {
 }
 
 function setRole(role) {
-  const labels = { admin:'ADMIN', risk_manager:'RISK MANAGER', analyst:'ANALYST' };
+  const labels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
   document.getElementById('userRole').textContent = labels[role] || role.toUpperCase();
   document.getElementById('roleMenu')?.classList.remove('open');
   window._currentRole = role;
   const sl = document.getElementById('settingsLink');
-  if (sl) sl.style.display = role === 'admin' ? 'block' : 'none';
+  if (sl) sl.style.display = role === 'risk_leader' ? 'block' : 'none';
 }
 
 document.addEventListener('click', e => {
@@ -1130,11 +1130,11 @@ document.addEventListener('click', e => {
         <div class="user-name" id="userName">Olivier Delvigne</div>
         <div class="user-role-wrap">
           <button class="user-role-btn" id="userRoleBtn" onclick="event.stopPropagation();toggleRoleMenu()">
-            <span id="userRole">ADMIN</span> ▾
+            <span id="userRole">RISK LEADER</span> ▾
           </button>
           <div class="role-menu" id="roleMenu">
-            <button onclick="setRole('admin')">ADMIN</button>
-            <button onclick="setRole('risk_manager')">RISK MANAGER</button>
+            <button onclick="setRole('risk_leader')">RISK LEADER</button>
+            <button onclick="setRole('risk_owner')">RISK OWNER</button>
             <button onclick="setRole('analyst')">ANALYST</button>
           </div>
         </div>
@@ -1766,7 +1766,7 @@ document.addEventListener('click', e => {
 
   // ── ROLE (à brancher sur Supabase Auth) ──
   // 'risk_manager' | 'analyst' | 'admin'
-  const CURRENT_ROLE = 'admin'; // défaut
+  const CURRENT_ROLE = 'risk_leader'; // will be overridden by Supabase // défaut
   window._currentRole = CURRENT_ROLE;
 
   // ── JOURNAL (mock, à brancher sur Supabase) ──
@@ -1873,15 +1873,33 @@ document.addEventListener('click', e => {
 
   // ── RISK DETAIL ──
   async function openRisk(risk) {
-    // Ouvrir le panel immédiatement avec les données de base
     const brut = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : '—';
-    const isAnalyst = window._currentRole === 'analyst';
-    const isRM      = window._currentRole === 'risk_manager' || window._currentRole === 'admin';
+    const isAnalyst    = window._currentRole === 'analyst';
+    const isRiskOwner  = window._currentRole === 'risk_owner' || window._currentRole === 'risk_leader';
+    const isRiskLeader = window._currentRole === 'risk_leader';
+    const canEdit      = risk.uuid && (isRiskOwner || isAnalyst || isRiskLeader);
 
     const sectionIdentification = `
       <div class="sp-section">
         <div class="sp-section-title">Identification</div>
-        <div class="sp-field"><div class="sp-field-label">Risk Name</div><div class="sp-field-value">${risk.name}</div></div>
+        <div class="sp-field">
+          <div class="sp-field-label">Risk Name</div>
+          ${canEdit
+            ? `<input type="text" id="editName" value="${(risk.name||'').replace(/"/g,'&quot;')}" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
+            : `<div class="sp-field-value">${risk.name}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Asset</div>
+          ${canEdit
+            ? `<input type="text" id="editAsset" value="${(risk.asset||'').replace(/"/g,'&quot;')}" placeholder="Affected asset..." style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
+            : `<div class="sp-field-value">${risk.asset || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Description</div>
+          ${canEdit
+            ? `<textarea id="editDesc" rows="3" placeholder="Describe the risk..." style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;resize:vertical;">${risk.description||''}</textarea>`
+            : `<div class="sp-field-value">${risk.description || '—'}</div>`}
+        </div>
         <div class="sp-field"><div class="sp-field-label">Tags</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${(risk.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
       </div>`;
 
@@ -1889,14 +1907,47 @@ document.addEventListener('click', e => {
       <div class="sp-section">
         <div class="sp-section-title">Analysis</div>
         <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">Likelihood</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.likelihood ?? '—'}</div></div>
-          <div class="sp-field"><div class="sp-field-label">Impact</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.impact ?? '—'}</div></div>
+          <div class="sp-field">
+            <div class="sp-field-label">Likelihood</div>
+            ${canEdit
+              ? `<select id="editLikelihood" onchange="recalcGross()" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
+                  <option value="">—</option>
+                  ${[1,2,3,4,5].map(n=>`<option value="${n}" ${risk.likelihood==n?'selected':''}>${n}</option>`).join('')}
+                </select>`
+              : `<div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.likelihood ?? '—'}</div>`}
+          </div>
+          <div class="sp-field">
+            <div class="sp-field-label">Impact</div>
+            ${canEdit
+              ? `<select id="editImpact" onchange="recalcGross()" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
+                  <option value="">—</option>
+                  ${[1,2,3,4,5].map(n=>`<option value="${n}" ${risk.impact==n?'selected':''}>${n}</option>`).join('')}
+                </select>`
+              : `<div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.impact ?? '—'}</div>`}
+          </div>
         </div>
         <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">Gross Risk</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div></div>
-          <div class="sp-field"><div class="sp-field-label">Residual</div><div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--low)">${risk.residual ?? '—'}</div></div>
+          <div class="sp-field"><div class="sp-field-label">Gross Risk</div><div class="sp-field-value" id="grossDisplay" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div></div>
+          <div class="sp-field">
+            <div class="sp-field-label">Residual</div>
+            ${canEdit
+              ? `<select id="editResidual" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
+                  <option value="">—</option>
+                  ${[1,2,3,4,5,6,7,8,9,10,12,15,16,20,25].map(n=>`<option value="${n}" ${risk.residual==n?'selected':''}>${n}</option>`).join('')}
+                </select>`
+              : `<div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--low)">${risk.residual ?? '—'}</div>`}
+          </div>
         </div>
-        <div class="sp-field"><div class="sp-field-label">Decision</div><div class="sp-field-value">${risk.decision ?? 'Not defined'}</div></div>
+        <div class="sp-field">
+          <div class="sp-field-label">Decision</div>
+          ${canEdit
+            ? `<select id="editDecision" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
+                <option value="">Not defined</option>
+                ${['Reduce','Accept','Transfer','Avoid'].map(d=>`<option value="${d}" ${risk.decision===d?'selected':''}>${d}</option>`).join('')}
+              </select>`
+            : `<div class="sp-field-value">${risk.decision ?? 'Not defined'}</div>`}
+        </div>
+        ${canEdit ? `<div style="text-align:right;margin-top:8px"><button class="sp-btn primary" onclick="saveRiskEdits('${risk.uuid||risk.id}')">Save changes →</button></div>` : ''}
       </div>`;
 
     const sectionGovernance = `
@@ -1920,7 +1971,7 @@ document.addEventListener('click', e => {
       `<option value="${s.value}" ${s.value === risk.status ? 'selected' : ''}>${i18n.t(s.key)}</option>`
     ).join('');
 
-    const sectionActions = isRM ? `
+    const sectionActions = isRiskLeader ? `
       <div class="sp-actions" style="flex-direction:column;gap:8px;align-items:stretch">
         <div style="display:flex;gap:8px;align-items:center">
           <select id="statusSelect" style="flex:1;background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;">
@@ -2841,7 +2892,7 @@ document.addEventListener('click', e => {
 
 <script>
   (function initRole() {
-    const labels = { admin:'ADMIN', risk_manager:'RISK MANAGER', analyst:'ANALYST' };
+    const labels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
     const roleEl = document.getElementById('userRole');
     if (roleEl) roleEl.textContent = labels[window._currentRole] || window._currentRole.toUpperCase();
     const sl = document.getElementById('settingsLink');

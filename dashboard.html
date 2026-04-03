@@ -1164,32 +1164,39 @@ document.addEventListener('click', e => {
 
   <!-- SUMMARY ROW -->
   <div class="summary-row">
-    <div class="summary-card">
+    <div class="summary-card" data-filter="critical">
       <div class="summary-val critical" id="countCritical">3</div>
       <div class="summary-info">
         <div class="summary-label" data-i18n="summary.critical">Critical</div>
         <div class="summary-sub" data-i18n="summary.critical.sub">Immediate action required</div>
       </div>
     </div>
-    <div class="summary-card">
+    <div class="summary-card" data-filter="high">
       <div class="summary-val high" id="countHigh">7</div>
       <div class="summary-info">
         <div class="summary-label" data-i18n="summary.high">High</div>
         <div class="summary-sub" data-i18n="summary.high.sub">Treatment in progress</div>
       </div>
     </div>
-    <div class="summary-card">
+    <div class="summary-card" data-filter="medium">
       <div class="summary-val medium" id="countMedium">12</div>
       <div class="summary-info">
         <div class="summary-label" data-i18n="summary.medium">Medium</div>
         <div class="summary-sub" data-i18n="summary.medium.sub">Under monitoring</div>
       </div>
     </div>
-    <div class="summary-card">
+    <div class="summary-card" data-filter="low">
       <div class="summary-val low" id="countLow">5</div>
       <div class="summary-info">
         <div class="summary-label" data-i18n="summary.low">Low</div>
         <div class="summary-sub" data-i18n="summary.low.sub">Accepted or closed</div>
+      </div>
+    </div>
+    <div class="summary-card" data-filter="draft" style="border-style:dashed;opacity:0.8">
+      <div class="summary-val neutral" id="countDraft" style="color:var(--muted)">0</div>
+      <div class="summary-info">
+        <div class="summary-label" style="color:var(--muted)">Drafts</div>
+        <div class="summary-sub">Pending submission</div>
       </div>
     </div>
   </div>
@@ -2096,7 +2103,7 @@ document.addEventListener('click', e => {
       high:     { color:'var(--high)',     border:'rgba(212,112,10,0.4)', bg:'rgba(212,112,10,0.08)' },
       medium:   { color:'var(--medium)',   border:'rgba(184,150,10,0.4)', bg:'rgba(184,150,10,0.08)' },
       low:      { color:'var(--low)',      border:'rgba(26,122,74,0.4)',  bg:'rgba(26,122,74,0.08)' },
-      pending:  { color:'var(--muted)',    border:'var(--border-hi)',     bg:'var(--surface)' },
+      draft:    { color:'var(--muted)',    border:'var(--border-hi)',     bg:'var(--surface)' },
     };
 
     // Mettre à jour le badge filtre
@@ -2127,8 +2134,8 @@ document.addEventListener('click', e => {
     // Filtrer les risques et passer à renderMyRisks
     // RISKS est peuplé par loadAndRenderRisks avec les bons champs
     const filtered = sev
-      ? RISKS.filter(r => sev === 'pending'
-          ? r.status === 'PENDING APPROVAL'
+      ? RISKS.filter(r => sev === 'draft'
+          ? r.status === 'DRAFT'
           : r.sev === sev)
       : RISKS;
 
@@ -2200,20 +2207,10 @@ document.addEventListener('click', e => {
     svg.innerHTML = ticks + makeLine(highByMonth, '#d4700a') + makeLine(criticalByMonth, '#c0392b');
   })();
   document.querySelectorAll('.summary-card').forEach(card => {
-    const key = card.querySelector('.summary-label')?.getAttribute('data-i18n') || '';
+    const sev = card.getAttribute('data-filter');
+    if (!sev) return;
     card.addEventListener('click', () => {
-      const sev = key === 'summary.critical' ? 'critical'
-                : key === 'summary.high'     ? 'high'
-                : key === 'summary.medium'   ? 'medium'
-                : key === 'summary.low'      ? 'low'
-                : null;
-      if (!sev) return;
-      // Toggle : clic sur la tile active → clear filter
-      if (_activeFilter === sev) {
-        filterTable(null);
-      } else {
-        filterTable(sev);
-      }
+      _activeFilter === sev ? filterTable(null) : filterTable(sev);
     });
   });
 
@@ -3076,16 +3073,18 @@ async function loadAndRenderRisks() {
     renderPendingTeam(pending);
 
     // ── SUMMARY ROW — compteurs réels ──
-    const counts = { critical:0, high:0, medium:0, low:0 };
+    const counts = { critical:0, high:0, medium:0, low:0, draft:0 };
     risks.forEach(r => {
       const sev = r.severity || 'medium';
       if (counts[sev] !== undefined) counts[sev]++;
+      if (r.status === 'DRAFT') counts.draft++;
     });
     const el = id => document.getElementById(id);
     if (el('countCritical')) el('countCritical').textContent = counts.critical;
     if (el('countHigh'))     el('countHigh').textContent     = counts.high;
     if (el('countMedium'))   el('countMedium').textContent   = counts.medium;
     if (el('countLow'))      el('countLow').textContent      = counts.low;
+    if (el('countDraft'))    el('countDraft').textContent    = counts.draft;
 
     // Mettre à jour RISKS pour filterTable (summary card click)
     if (typeof RISKS !== 'undefined') {

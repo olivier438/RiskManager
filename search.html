@@ -85,13 +85,171 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
 /* ── MAIN ── */
 .main { flex: 1; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 
-/* ── SEARCH BOX ── */
-.search-box {
+/* ── UNIFIED BLOCK ── */
+.unified-block {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
+
+/* ── TAB BAR ── */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px 24px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--accent-hi);
+  border-bottom-color: var(--accent-hi);
+  background: rgba(29,111,164,0.05);
+}
+
+.tab-icon { font-size: 13px; }
+
+.tab-live-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--low);
+  animation: pulseAnim 2s infinite;
+  flex-shrink: 0;
+}
+
+/* ── TAB CONTENT ── */
+.tab-content { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── MARKETPLACE CATEGORIES ── */
+.mkt-cats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mkt-cat {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border-hi);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mkt-cat:hover { color: var(--text); border-color: var(--accent); }
+.mkt-cat.active { color: var(--accent-hi); border-color: rgba(35,135,200,0.5); background: rgba(29,111,164,0.1); }
+
+.mkt-count {
+  font-size: 9px;
+  color: var(--muted);
+  background: var(--surface);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.mkt-cat.active .mkt-count { color: var(--accent-hi); }
+
+/* ── MARKETPLACE GRID ── */
+.mkt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.mkt-grid::-webkit-scrollbar { width: 4px; }
+.mkt-grid::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+/* ── MARKETPLACE CARD ── */
+.mkt-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s;
+  animation: fadeUp 0.2s ease both;
+}
+.mkt-card:hover { border-color: var(--border-hi); }
+
+.mkt-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.mkt-card-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.4;
+}
+.mkt-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mkt-card-source {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.mkt-card-time {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.mkt-card-btn {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(29,111,164,0.4);
+  background: rgba(29,111,164,0.08);
+  color: var(--accent-hi);
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  text-align: center;
+}
+.mkt-card-btn:hover { background: rgba(29,111,164,0.18); }
+.mkt-card-btn.imported { background: rgba(26,122,74,0.1); border-color: rgba(26,122,74,0.4); color: var(--low); cursor: default; }
 
 .search-input-row {
   display: flex;
@@ -482,93 +640,126 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
 <!-- MAIN -->
 <div class="main">
 
-  <!-- SEARCH BOX -->
-  <div class="search-box">
+  <!-- ── UNIFIED BLOCK ── -->
+  <div class="unified-block">
 
-    <div class="search-input-row">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="searchInput"
-        placeholder="Search risks — name, description, tags, asset, owner..."
-        oninput="onSearchInput()" onkeydown="if(event.key==='Enter') doSearch()">
-      <button class="search-btn" onclick="doSearch()">Search</button>
-      <button class="search-btn" style="background:var(--low);margin-left:4px;" onclick="openNewRisk()">+ New Risk</button>
+    <!-- TABS -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabSearch" onclick="setTab('search')">
+        <span class="tab-icon">⌕</span> Search
+      </button>
+      <button class="tab-btn" id="tabMarket" onclick="setTab('market')">
+        <span class="tab-icon">◈</span> Threat Marketplace
+        <span class="tab-live-dot"></span>
+      </button>
     </div>
 
-    <!-- HISTORIQUE RECHERCHES -->
-    <div id="searchHistory" style="display:none;margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-      <span style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);flex-shrink:0;">Recent</span>
-      <div id="historyPills" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
-      <button onclick="clearHistory()" style="font-family:var(--mono);font-size:9px;color:var(--muted);background:none;border:none;cursor:pointer;margin-left:4px;letter-spacing:0.04em;" onmouseover="this.style.color='var(--critical)'" onmouseout="this.style.color='var(--muted)'">✕ Clear</button>
-    </div>
+    <!-- ── TAB CONTENT : SEARCH ── -->
+    <div class="tab-content" id="tabContentSearch">
 
-    <!-- SCOPE TOGGLE -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <span class="filter-label">Scope</span>
-      <div style="display:flex;gap:4px;" id="scopeGroup">
-        <button class="scope-btn active" data-scope="client" onclick="setScope('client')">Client Register</button>
-        <button class="scope-btn" data-scope="rs" onclick="setScope('rs')">Risk Studio</button>
-        <button class="scope-btn" data-scope="all" onclick="setScope('all')">All Sources</button>
+      <div class="search-input-row">
+        <span class="search-icon">⌕</span>
+        <input type="text" class="search-input" id="searchInput"
+          placeholder="Search risks — name, description, tags, asset, owner..."
+          oninput="onSearchInput()" onkeydown="if(event.key==='Enter') doSearch()">
+        <button class="search-btn" onclick="doSearch()">Search</button>
       </div>
-    </div>
 
-    <div class="journal-option">
-      <div class="custom-check" id="journalCheck" onclick="toggleJournalOption()"></div>
-      <span class="journal-label" onclick="toggleJournalOption()">Include journal notes in search</span>
-      <span class="journal-warning" id="journalWarning" style="display:none">· slower · searches analyst notes</span>
-    </div>
-
-    <div class="filters-row" id="clientFilters">
-      <span class="filter-label">Filters</span>
-      <select class="filter-select" id="filterSev" onchange="doSearch()">
-        <option value="">All severities</option>
-        <option value="critical">Critical</option>
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
-      </select>
-      <select class="filter-select" id="filterStatus" onchange="doSearch()">
-        <option value="">All statuses</option>
-        <option value="DRAFT">Draft</option>
-        <option value="IN ANALYSIS">In Analysis</option>
-        <option value="IN REVIEW">In Review</option>
-        <option value="IN TREATMENT">In Treatment</option>
-        <option value="PENDING APPROVAL">Pending Approval</option>
-        <option value="MONITORED">Monitored</option>
-      </select>
-      <select class="filter-select" id="filterOwner" onchange="doSearch()">
-        <option value="">All owners</option>
-        <option value="You">Olivier Delvigne</option>
-        <option value="J. Masson">J. Masson</option>
-        <option value="T. Lecomte">T. Lecomte</option>
-      </select>
-      <button class="filter-reset" onclick="resetFilters()">✕ Reset</button>
-    </div>
-  </div>
-
-  <!-- RS SECTION -->
-  <div class="rs-section" id="rsSection">
-    <div class="rs-header">
-      <div class="rs-dot"></div>
-      <span class="rs-title">Risk Studio — Similar risks found</span>
-    </div>
-    <div class="rs-results" id="rsResults"></div>
-  </div>
-
-  <!-- RESULTS -->
-  <div>
-    <div class="results-header" id="resultsHeader" style="display:none;margin-bottom:10px">
-      <span class="results-count" id="resultsCount"></span>
-    </div>
-    <div class="results-list" id="resultsList">
-      <div class="initial-state">
-        <div class="initial-text">TYPE TO SEARCH YOUR RISK REGISTER</div>
-        <div class="empty-sub" style="margin-top:8px">Searches within your environment only · HamburgerLAND</div>
+      <!-- HISTORIQUE -->
+      <div id="searchHistory" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);flex-shrink:0;">Recent</span>
+        <div id="historyPills" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+        <button onclick="clearHistory()" style="font-family:var(--mono);font-size:9px;color:var(--muted);background:none;border:none;cursor:pointer;margin-left:4px;letter-spacing:0.04em;" onmouseover="this.style.color='var(--critical)'" onmouseout="this.style.color='var(--muted)'">✕ Clear</button>
       </div>
+
+      <!-- SCOPE -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span class="filter-label">Scope</span>
+        <div style="display:flex;gap:4px;" id="scopeGroup">
+          <button class="scope-btn active" data-scope="client" onclick="setScope('client')">Client Register</button>
+          <button class="scope-btn" data-scope="rs" onclick="setScope('rs')">Risk Studio</button>
+          <button class="scope-btn" data-scope="all" onclick="setScope('all')">All Sources</button>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters-row" id="clientFilters">
+        <span class="filter-label">Filters</span>
+        <select class="filter-select" id="filterSev" onchange="doSearch()">
+          <option value="">All severities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select class="filter-select" id="filterStatus" onchange="doSearch()">
+          <option value="">All statuses</option>
+          <option value="DRAFT">Draft</option>
+          <option value="IN ANALYSIS">In Analysis</option>
+          <option value="IN REVIEW">In Review</option>
+          <option value="IN TREATMENT">In Treatment</option>
+          <option value="PENDING APPROVAL">Pending Approval</option>
+          <option value="MONITORED">Monitored</option>
+        </select>
+        <select class="filter-select" id="filterOwner" onchange="doSearch()">
+          <option value="">All owners</option>
+        </select>
+        <button class="filter-reset" onclick="resetFilters()">✕ Reset</button>
+      </div>
+
+      <!-- RS SUGGESTIONS -->
+      <div class="rs-section" id="rsSection">
+        <div class="rs-header">
+          <div class="rs-dot"></div>
+          <span class="rs-title">Risk Studio — Similar threats found</span>
+        </div>
+        <div class="rs-results" id="rsResults"></div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="results-header" id="resultsHeader" style="display:none;margin-bottom:10px">
+        <span class="results-count" id="resultsCount"></span>
+      </div>
+      <div class="results-list" id="resultsList">
+        <div class="initial-state">
+          <div class="initial-text">TYPE TO SEARCH YOUR RISK REGISTER</div>
+          <div class="empty-sub" style="margin-top:8px">Client register + Risk Studio · All sources</div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- ── TAB CONTENT : THREAT MARKETPLACE ── -->
+    <div class="tab-content" id="tabContentMarket" style="display:none;">
+
+      <!-- CATEGORY TABS -->
+      <div class="mkt-cats" id="mktCats">
+        <button class="mkt-cat active" data-cat="all" onclick="setMktCat('all')">
+          All <span class="mkt-count" id="mktCountAll">—</span>
+        </button>
+        <button class="mkt-cat" data-cat="cybersec" onclick="setMktCat('cybersec')">
+          🔴 CyberSec <span class="mkt-count" id="mktCountCyber">—</span>
+        </button>
+        <button class="mkt-cat" data-cat="dataleak" onclick="setMktCat('dataleak')">
+          🟡 DataLeak <span class="mkt-count" id="mktCountData">—</span>
+        </button>
+        <button class="mkt-cat" data-cat="grc" onclick="setMktCat('grc')">
+          🔵 GRC <span class="mkt-count" id="mktCountGrc">—</span>
+        </button>
+      </div>
+
+      <!-- MARKET GRID -->
+      <div class="mkt-grid" id="mktGrid">
+        <div class="initial-state">
+          <div class="initial-text">LOADING THREATS...</div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
 </div>
-
 <!-- SLIDE PANEL -->
 <div class="sp-overlay" id="spOverlay" onclick="closePanel()"></div>
 <div class="slide-panel" id="slidePanel">
@@ -663,6 +854,114 @@ function renderHistory() {
 function applyHistory(q) {
   document.getElementById('searchInput').value = q;
   doSearch();
+}
+
+// ── TAB SWITCHER ──
+let currentTab = 'search';
+
+function setTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabSearch').classList.toggle('active', tab === 'search');
+  document.getElementById('tabMarket').classList.toggle('active', tab === 'market');
+  document.getElementById('tabContentSearch').style.display = tab === 'search' ? 'flex' : 'none';
+  document.getElementById('tabContentMarket').style.display = tab === 'market' ? 'flex' : 'none';
+  if (tab === 'market') renderMarketplace();
+}
+
+// ── THREAT MARKETPLACE ──
+let mktCat = 'all';
+const MKT_IMPORTED = new Set();
+
+function setMktCat(cat) {
+  mktCat = cat;
+  document.querySelectorAll('.mkt-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  renderMarketplace();
+}
+
+function getMktCategoryFromSource(source) {
+  const s = (source || '').toUpperCase();
+  if (s.startsWith('DATALEAK')) return 'dataleak';
+  if (s.startsWith('GRC'))      return 'grc';
+  return 'cybersec';
+}
+
+function renderMarketplace() {
+  const grid = document.getElementById('mktGrid');
+  if (!grid) return;
+
+  if (RS_FEED.length === 0) {
+    grid.innerHTML = '<div class="initial-state" style="grid-column:1/-1"><div class="initial-text">LOADING THREATS...</div></div>';
+    return;
+  }
+
+  // Compter par catégorie
+  const counts = { cybersec:0, dataleak:0, grc:0 };
+  RS_FEED.forEach(r => counts[getMktCategoryFromSource(r.source)]++);
+  const el = id => document.getElementById(id);
+  if (el('mktCountAll'))   el('mktCountAll').textContent   = RS_FEED.length;
+  if (el('mktCountCyber')) el('mktCountCyber').textContent = counts.cybersec;
+  if (el('mktCountData'))  el('mktCountData').textContent  = counts.dataleak;
+  if (el('mktCountGrc'))   el('mktCountGrc').textContent   = counts.grc;
+
+  const filtered = mktCat === 'all'
+    ? RS_FEED
+    : RS_FEED.filter(r => getMktCategoryFromSource(r.source) === mktCat);
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="initial-state" style="grid-column:1/-1"><div class="empty-icon">◈</div><div class="empty-text">No threats in this category</div></div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map((r, i) => {
+    const imported = MKT_IMPORTED.has(r.id);
+    const cat = getMktCategoryFromSource(r.source);
+    const catColor = cat === 'dataleak' ? 'var(--medium)' : cat === 'grc' ? 'var(--accent-hi)' : 'var(--critical)';
+    return `
+      <div class="mkt-card" style="animation-delay:${Math.min(i,10)*0.03}s;border-left:2px solid ${catColor}">
+        <div class="mkt-card-top">
+          <span class="sev-pill ${r.sev}">${r.sev.charAt(0).toUpperCase()+r.sev.slice(1)}</span>
+          <span class="mkt-card-name">${r.name}</span>
+        </div>
+        <div class="mkt-card-meta">
+          <span class="mkt-card-source">${r.source}</span>
+          ${(r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}
+          <span class="mkt-card-time">${r.time}</span>
+        </div>
+        <button class="mkt-card-btn ${imported ? 'imported' : ''}"
+          id="mktBtn-${r.id}"
+          onclick="${imported ? '' : `importMktItem('${r.id}',this)`}"
+          ${imported ? 'disabled' : ''}>
+          ${imported ? '✓ In Register' : '⊕ Add to Register →'}
+        </button>
+      </div>`;
+  }).join('');
+}
+
+async function importMktItem(rsId, btn) {
+  const rs = RS_FEED.find(x => x.id === rsId);
+  if (!rs || MKT_IMPORTED.has(rsId)) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Importing...';
+
+  try {
+    const risk = await createRisk({
+      name: rs.name,
+      description: rs.desc || null,
+      status: 'DRAFT',
+      tags: rs.tags || [],
+      rs_source_id: rs.id,
+    });
+    MKT_IMPORTED.add(rsId);
+    btn.textContent = `✓ ${risk.risk_ref}`;
+    btn.classList.add('imported');
+    showToast(`${risk.risk_ref} added to register`);
+    await reloadSearchData();
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '⊕ Add to Register →';
+    alert('Error: ' + err.message);
+  }
 }
 
 // ── SEARCH ──

@@ -1782,7 +1782,7 @@ document.addEventListener('click', e => {
   };
 
   // ── PANEL ──
-  function openPanel(title, subtitle, bodyHTML) {
+  window.openPanel = function openPanel(title, subtitle, bodyHTML) {
     document.getElementById('spTitle').textContent = title;
     document.getElementById('spSubtitle').textContent = subtitle;
     document.getElementById('spBody').innerHTML = bodyHTML;
@@ -1792,7 +1792,7 @@ document.addEventListener('click', e => {
     if (id) history.replaceState(null,'',`?risk=${id}`);
   }
 
-  function closePanel() {
+  window.closePanel = function closePanel() {
     document.getElementById('spOverlay').classList.remove('open');
     document.getElementById('slidePanel').classList.remove('open');
     history.replaceState(null,'','?');
@@ -1872,7 +1872,7 @@ document.addEventListener('click', e => {
   }
 
   // ── RISK DETAIL ──
-  async function openRisk(risk) {
+  window.openRisk = async function openRisk(risk) {
     const brut       = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : '—';
     const role       = window._currentRole;
     const isOwner    = role === 'risk_owner';
@@ -2202,7 +2202,7 @@ document.addEventListener('click', e => {
   // ── RS IMPORTED DRAFTS (mock, à brancher Supabase) ──
   const RS_IMPORTED = new Set();
 
-  function importFromRS(item) {
+  window.importFromRS = function importFromRS(item) {
     if (RS_IMPORTED.has(item.id)) return;
     RS_IMPORTED.add(item.id);
 
@@ -2233,7 +2233,7 @@ document.addEventListener('click', e => {
     showToast(`${newId} created as DRAFT from RS feed`);
   }
 
-  function showToast(msg) {
+  window.showToast = function showToast(msg) {
     const t = document.createElement('div');
     t.textContent = msg;
     Object.assign(t.style, {
@@ -2433,12 +2433,12 @@ document.addEventListener('click', e => {
     btn.addEventListener('click', openNewRiskModal);
   });
 
-  function openNewRiskModal() {
+  window.openNewRiskModal = function openNewRiskModal() {
     document.getElementById('newRiskModal').classList.add('open');
     document.getElementById('nrName').focus();
   }
 
-  function closeNewRiskModal() {
+  window.closeNewRiskModal = function closeNewRiskModal() {
     document.getElementById('newRiskModal').classList.remove('open');
     document.getElementById('newRiskForm').reset();
     document.getElementById('nrTagsDetected').innerHTML = '';

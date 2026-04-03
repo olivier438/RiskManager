@@ -38,10 +38,10 @@
 <script src="auth.js"></script>
 <script>
 
+// Force logout à chaque visite du login
 (async () => {
   const sb = getClient();
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) window.location.href = 'dashboard.html';
+  await sb.auth.signOut();
 })();
 
 async function doLogin() {
@@ -60,7 +60,8 @@ async function doLogin() {
     await login(email, password);
     window.location.href = 'dashboard.html';
   } catch (e) {
-    err.textContent = 'Invalid credentials';
+    console.error('Login error:', e);
+    err.textContent = e.message || 'Invalid credentials';
     btn.textContent = 'Authenticate';
     btn.disabled    = false;
   }

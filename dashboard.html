@@ -2028,139 +2028,8 @@ document.addEventListener('click', e => {
       sectionActions
     );
 
-    const sectionIdentification = `
-      <div class="sp-section">
-        <div class="sp-section-title">Identification</div>
-        <div class="sp-field">
-          <div class="sp-field-label">Risk Name</div>
-          ${canEdit
-            ? `<input type="text" id="editName" value="${(risk.name||'').replace(/"/g,'&quot;')}" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
-            : `<div class="sp-field-value">${risk.name}</div>`}
-        </div>
-        <div class="sp-field">
-          <div class="sp-field-label">Asset</div>
-          ${canEdit
-            ? `<input type="text" id="editAsset" value="${(risk.asset||'').replace(/"/g,'&quot;')}" placeholder="Affected asset..." style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
-            : `<div class="sp-field-value">${risk.asset || '—'}</div>`}
-        </div>
-        <div class="sp-field">
-          <div class="sp-field-label">Description</div>
-          ${canEdit
-            ? `<textarea id="editDesc" rows="3" placeholder="Describe the risk..." style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;resize:vertical;">${risk.description||''}</textarea>`
-            : `<div class="sp-field-value">${risk.description || '—'}</div>`}
-        </div>
-        <div class="sp-field"><div class="sp-field-label">Tags</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${(risk.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
-      </div>`;
-
-    const sectionAnalysis = `
-      <div class="sp-section">
-        <div class="sp-section-title">Analysis</div>
-        <div class="sp-row">
-          <div class="sp-field">
-            <div class="sp-field-label">Likelihood</div>
-            ${canEdit
-              ? `<select id="editLikelihood" onchange="recalcGross()" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
-                  <option value="">—</option>
-                  ${[1,2,3,4,5].map(n=>`<option value="${n}" ${risk.likelihood==n?'selected':''}>${n}</option>`).join('')}
-                </select>`
-              : `<div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.likelihood ?? '—'}</div>`}
-          </div>
-          <div class="sp-field">
-            <div class="sp-field-label">Impact</div>
-            ${canEdit
-              ? `<select id="editImpact" onchange="recalcGross()" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
-                  <option value="">—</option>
-                  ${[1,2,3,4,5].map(n=>`<option value="${n}" ${risk.impact==n?'selected':''}>${n}</option>`).join('')}
-                </select>`
-              : `<div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600">${risk.impact ?? '—'}</div>`}
-          </div>
-        </div>
-        <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">Gross Risk</div><div class="sp-field-value" id="grossDisplay" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--high)">${brut}</div></div>
-          <div class="sp-field">
-            <div class="sp-field-label">Residual</div>
-            ${canEdit
-              ? `<select id="editResidual" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
-                  <option value="">—</option>
-                  ${[1,2,3,4,5,6,7,8,9,10,12,15,16,20,25].map(n=>`<option value="${n}" ${risk.residual==n?'selected':''}>${n}</option>`).join('')}
-                </select>`
-              : `<div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--low)">${risk.residual ?? '—'}</div>`}
-          </div>
-        </div>
-        <div class="sp-field">
-          <div class="sp-field-label">Decision</div>
-          ${canEdit
-            ? `<select id="editDecision" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
-                <option value="">Not defined</option>
-                ${['Reduce','Accept','Transfer','Avoid'].map(d=>`<option value="${d}" ${risk.decision===d?'selected':''}>${d}</option>`).join('')}
-              </select>`
-            : `<div class="sp-field-value">${risk.decision ?? 'Not defined'}</div>`}
-        </div>
-        ${canEdit ? `<div style="text-align:right;margin-top:8px"><button class="sp-btn primary" onclick="saveRiskEdits('${risk.uuid||risk.id}')">Save changes →</button></div>` : ''}
-      </div>`;
-
-    const sectionGovernance = `
-      <div class="sp-section">
-        <div class="sp-section-title">Governance</div>
-        <div class="sp-row">
-          <div class="sp-field"><div class="sp-field-label">Owner</div><div class="sp-field-value">${risk.owner_full || risk.owner || '—'}</div></div>
-          <div class="sp-field"><div class="sp-field-label">Status</div><div class="sp-field-value"><span class="status-mono">${risk.status}</span></div></div>
-        </div>
-      </div>`;
-
-    const statuses = [
-      { value:'DRAFT',            key:'status.draft' },
-      { value:'IN ANALYSIS',      key:'status.in_analysis' },
-      { value:'IN REVIEW',        key:'status.in_review' },
-      { value:'IN TREATMENT',     key:'status.in_treatment' },
-      { value:'PENDING APPROVAL', key:'status.pending_approval' },
-      { value:'MONITORED',        key:'status.monitored' },
-    ];
-    const statusOptions = statuses.map(s =>
-      `<option value="${s.value}" ${s.value === risk.status ? 'selected' : ''}>${i18n.t(s.key)}</option>`
-    ).join('');
-
-    const sectionActions = isRiskLeader ? `
-      <div class="sp-actions" style="flex-direction:column;gap:8px;align-items:stretch">
-        <div style="display:flex;gap:8px;align-items:center">
-          <select id="statusSelect" style="flex:1;background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;">
-            ${statusOptions}
-          </select>
-          <button class="sp-btn primary" onclick="applyStatus('${risk.uuid || risk.id}')">Apply →</button>
-        </div>
-        ${risk.status === 'IN REVIEW' ? `
-          <div style="display:flex;gap:8px">
-            <button class="sp-btn" style="flex:1;background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid || risk.id}','MONITORED')">✓ Approve</button>
-            <button class="sp-btn" style="flex:1;background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--critical)" onclick="applyStatusDirect('${risk.uuid || risk.id}','IN ANALYSIS')">✗ Reject</button>
-          </div>` : ''}
-      </div>`
-
-    : isAnalyst ? `
-      <div class="sp-actions">
-        ${risk.status === 'IN ANALYSIS' && !risk.assigned_to ? `
-          <button class="sp-btn primary" onclick="takeRisk('${risk.uuid || risk.id}')">Take this risk →</button>` : ''}
-        ${risk.status === 'IN ANALYSIS' && risk.assigned_to ? `
-          <button class="sp-btn primary" onclick="submitAnalysisSupabase('${risk.uuid || risk.id}')">Submit for Review →</button>` : ''}
-      </div>`
-
-    : isRiskOwner ? `
-      <div class="sp-actions">
-        ${risk.status === 'DRAFT' ? `
-          <button class="sp-btn primary" onclick="applyStatusDirect('${risk.uuid || risk.id}','IN ANALYSIS')">Submit to pool →</button>` : ''}
-      </div>`
-
-    : '';
-
-    openPanel(
-      risk.id,
-      `${risk.status} · ${(risk.sev||'').toUpperCase()}`,
-      sectionIdentification + sectionAnalysis + sectionGovernance +
-      '<div id="journalPlaceholder"><div class="sp-section"><div class="sp-section-title">Analysis Journal</div><div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px">Loading...</div></div></div>' +
-      sectionActions
-    );
-
     // Charger le journal depuis Supabase de façon async
-    if (risk.uuid) {
+    if (canJournal && risk.uuid) {
       try {
         const fullRisk = await getRisk(risk.uuid);
         const journal  = fullRisk?.rm_risk_journal || [];
@@ -2170,7 +2039,7 @@ document.addEventListener('click', e => {
         console.error('Load journal error:', err);
       }
     }
-  }
+  } // end openRisk
 
   function calcGross() {
     const l = parseInt(document.getElementById('editLikelihood')?.value) || 0;

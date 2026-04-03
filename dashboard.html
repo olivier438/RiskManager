@@ -1233,47 +1233,8 @@ document.addEventListener('click', e => {
               <th data-i18n="table.owner">Owner</th>
             </tr>
           </thead>
-          <tbody>
-            <tr class="risk-row">
-              <td class="col-id">RM-0012</td>
-              <td class="col-name">Unauthorised access via VPN endpoint</td>
-              <td class="col-sev"><span class="severity critical">Critical</span></td>
-              <td class="col-status">IN TREATMENT</td>
-              <td class="col-tags"><span class="tag">#access-control</span><span class="tag">#vpn</span></td>
-              <td class="col-owner">You</td>
-            </tr>
-            <tr class="risk-row">
-              <td class="col-id">RM-0009</td>
-              <td class="col-name">Unpatched Windows Server 2016 on DMZ</td>
-              <td class="col-sev"><span class="severity high">High</span></td>
-              <td class="col-status">IN ANALYSIS</td>
-              <td class="col-tags"><span class="tag">#patch</span><span class="tag">#server</span></td>
-              <td class="col-owner">You</td>
-            </tr>
-            <tr class="risk-row">
-              <td class="col-id">RM-0007</td>
-              <td class="col-name">No MFA on admin accounts</td>
-              <td class="col-sev"><span class="severity critical">Critical</span></td>
-              <td class="col-status">PENDING APPROVAL</td>
-              <td class="col-tags"><span class="tag">#iam</span><span class="tag">#mfa</span></td>
-              <td class="col-owner">You</td>
-            </tr>
-            <tr class="risk-row">
-              <td class="col-id">RM-0005</td>
-              <td class="col-name">Supplier contract missing security clauses</td>
-              <td class="col-sev"><span class="severity medium">Medium</span></td>
-              <td class="col-status">IN REVIEW</td>
-              <td class="col-tags"><span class="tag">#supply-chain</span></td>
-              <td class="col-owner">You</td>
-            </tr>
-            <tr class="risk-row">
-              <td class="col-id">RM-0003</td>
-              <td class="col-name">Backup untested for 8 months</td>
-              <td class="col-sev"><span class="severity high">High</span></td>
-              <td class="col-status">DRAFT</td>
-              <td class="col-tags"><span class="tag">#backup</span><span class="tag">#bcm</span></td>
-              <td class="col-owner">You</td>
-            </tr>
+          <tbody id="myRisksBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2949,10 +2910,64 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mettre à jour le rôle courant
     window._currentRole = user.role;
 
+    // Charger et afficher les risques réels
+    await loadAndRenderRisks();
+
   } catch (err) {
     console.error('Dashboard init error:', err);
   }
 })();
+
+function renderMyRisks(risks) {
+  const tbody = document.getElementById('myRisksBody');
+  const countEl = document.getElementById('myRisksCount');
+  if (!tbody) return;
+
+  if (!risks || risks.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No risks yet — create your first risk</td></tr>';
+    if (countEl) countEl.textContent = '0';
+    return;
+  }
+
+  if (countEl) countEl.textContent = risks.length;
+
+  tbody.innerHTML = risks.map(r => {
+    const sev   = r.severity || 'medium';
+    const tags  = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
+    const owner = r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned';
+    return `
+      <tr class="risk-row" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:'${r.name.replace(/'/g,"\\'")}',sev:'${sev}',status:'${r.status}',tags:[],owner:'You',owner_full:'${owner}'})">
+        <td class="col-id">${r.risk_ref}</td>
+        <td class="col-name">${r.name}</td>
+        <td class="col-sev"><span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span></td>
+        <td class="col-status">${r.status}</td>
+        <td class="col-tags">${tags}</td>
+        <td class="col-owner">${owner}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function loadAndRenderRisks() {
+  try {
+    const risks = await listRisks();
+    renderMyRisks(risks);
+
+    // Mettre à jour RISKS pour les autres fonctions du dashboard
+    if (typeof RISKS !== 'undefined') {
+      RISKS.length = 0;
+      risks.forEach(r => RISKS.push({
+        id: r.risk_ref, uuid: r.id, name: r.name,
+        sev: r.severity || 'medium', status: r.status,
+        tags: (r.rm_risk_tags || []).map(t => t.tag),
+        owner: 'You', likelihood: r.likelihood,
+        impact: r.impact, residual: r.residual_risk,
+        decision: r.decision, owner_full: 'Olivier Delvigne',
+      }));
+    }
+  } catch (err) {
+    console.error('Load risks error:', err);
+  }
+}
 
 // ── NEW RISK SUBMIT ──
 async function submitNewRisk(status = 'DRAFT') {
@@ -2984,6 +2999,9 @@ async function submitNewRisk(status = 'DRAFT') {
     });
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
+
+    // Recharger la liste
+    await loadAndRenderRisks();
 
   } catch (err) {
     console.error('Create risk error:', err);

@@ -1972,18 +1972,6 @@ document.addEventListener('click', e => {
               : `<div class="sp-field-value" style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--low)">${risk.residual ?? '—'}</div>`}
           </div>
         </div>
-        <div class="sp-field">
-          <div class="sp-field-label">Decision</div>
-          ${risk.status === 'IN TREATMENT'
-            ? (canEdit
-                ? `<select id="editDecision" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:100%;">
-                    <option value="">Not defined</option>
-                    ${['Reduce','Accept','Transfer'].map(d=>`<option value="${d}" ${risk.decision===d?'selected':''}>${d}</option>`).join('')}
-                  </select>`
-                : `<div class="sp-field-value">${risk.decision ?? 'Not defined'}</div>`)
-            : `<div class="sp-field-value" style="color:var(--muted);font-size:11px;font-family:var(--mono)">Available in IN TREATMENT</div>`
-          }
-        </div>
         ${canEdit ? `<div style="text-align:right;margin-top:8px"><button class="sp-btn primary" onclick="saveRiskEdits('${risk.uuid||risk.id}')">Save changes →</button></div>` : ''}
       </div>`;
 
@@ -2022,12 +2010,24 @@ document.addEventListener('click', e => {
     } else if (isAnalyst || isLeader) {
       sectionActions = `
         <div class="sp-actions" style="flex-direction:column;gap:8px;align-items:stretch">
+
           <div style="display:flex;gap:8px;align-items:center">
             <select id="statusSelect" style="flex:1;background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;">
               ${statusOptions}
             </select>
             <button class="sp-btn primary" onclick="applyStatus('${risk.uuid||risk.id}')">Apply →</button>
           </div>
+
+          ${risk.status === 'IN TREATMENT' ? `
+            <div class="sp-field">
+              <div class="sp-field-label" style="margin-bottom:4px">Decision</div>
+              ${canEdit
+                ? `<select id="editDecision" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;width:100%;">
+                    <option value="">— Select a decision —</option>
+                    ${['Reduce','Accept','Transfer'].map(d=>`<option value="${d}" ${risk.decision===d?'selected':''}>${d}</option>`).join('')}
+                  </select>`
+                : `<div style="font-family:var(--mono);font-size:11px;color:var(--text);padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:3px">${risk.decision || '— Not defined —'}</div>`}
+            </div>` : ''}
 
           ${risk.status === 'IN ANALYSIS' && !risk.assigned_to ? `
             <button class="sp-btn" style="background:rgba(29,111,164,0.15);border:1px solid rgba(29,111,164,0.4);color:var(--accent-hi)" onclick="takeRisk('${risk.uuid||risk.id}')">Take this risk →</button>` : ''}
@@ -2039,16 +2039,12 @@ document.addEventListener('click', e => {
             </div>` : ''}
 
           ${risk.status === 'IN TREATMENT' ? `
-            <div style="padding:8px;background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--muted);">
-              ${!risk.decision
-                ? '⚠ Select a decision above before marking as treated'
-                : `Decision: <strong style="color:var(--text)">${risk.decision}</strong>`}
-            </div>
             ${risk.decision === 'Accept'
               ? `<button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','MONITORED')">✓ Accept → Move to Monitored</button>`
               : risk.decision
-                ? `<button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','TREATED')">✓ Mark as Treated</button>`
-                : ''}` : ''}
+                ? `<button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="saveAndTreat('${risk.uuid||risk.id}')">✓ Save & Mark as Treated</button>`
+                : `<div style="padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--muted)">⚠ Select a decision to proceed</div>`}
+          ` : ''}
 
           ${risk.status === 'TREATED' ? `
             <button class="sp-btn" style="background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.4);color:var(--low)" onclick="applyStatusDirect('${risk.uuid||risk.id}','MONITORED')">→ Move to Monitored</button>` : ''}

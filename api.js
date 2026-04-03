@@ -369,7 +369,13 @@ async function saveRiskEdits(riskUuid) {
   const likelihood = parseInt(document.getElementById('editLikelihood')?.value) || null;
   const impact     = parseInt(document.getElementById('editImpact')?.value) || null;
   const residual   = parseInt(document.getElementById('editResidual')?.value) || null;
-  const decision   = document.getElementById('editDecision')?.value || null;
+
+  // Décision uniquement si IN TREATMENT
+  const currentStatus = document.getElementById('statusSelect')?.value
+    || document.querySelector('.status-mono')?.textContent?.trim();
+  const decision = currentStatus === 'IN TREATMENT'
+    ? (document.getElementById('editDecision')?.value || null)
+    : undefined; // undefined → pas mis à jour en DB
 
   if (!name) { alert('Risk name is required'); return; }
 
@@ -381,17 +387,20 @@ async function saveRiskEdits(riskUuid) {
   const btn = document.querySelector('[onclick*="saveRiskEdits"]');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
+  const updatePayload = {
+    name, asset: asset || null,
+    description: desc || null,
+    likelihood, impact,
+    gross_risk:    gross,
+    residual_risk: residual,
+    severity, updated_at: new Date().toISOString(),
+  };
+  // N'inclure la décision que si on est en IN TREATMENT
+  if (decision !== undefined) updatePayload.decision = decision || null;
+
   const { error } = await sb
     .from(`${P}risks`)
-    .update({
-      name, asset: asset || null,
-      description: desc || null,
-      likelihood, impact,
-      gross_risk:    gross,
-      residual_risk: residual,
-      severity, decision: decision || null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq('id', riskUuid)
     .eq('environment_id', env);
 
@@ -500,4 +509,39 @@ async function archiveRisk(riskUuid) {
   });
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2000);
+}
+
+// ── SAVE DECISION + MARK AS TREATED ──
+async function saveAndTreat(riskUuid) {
+  const decision = document.getElementById('editDecision')?.value;
+  if (!decision) { alert('Please select a decision first'); return; }
+
+  const sb  = getClient();
+  const env = getEnvId();
+
+  const { error } = await sb
+    .from(`${P}risks`)
+    .update({
+      decision,
+      status: 'TREATED',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', riskUuid)
+    .eq('environment_id', env);
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  closePanel();
+  await loadAndRenderRisks();
+
+  const toast = document.createElement('div');
+  toast.textContent = `✓ Decision: ${decision} — Risk treated`;
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
+    fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+    zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
 }

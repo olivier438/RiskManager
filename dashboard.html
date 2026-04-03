@@ -2902,5 +2902,57 @@ document.addEventListener('DOMContentLoaded', function() {
   if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
 });
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script>
+// ── INIT — Auth + chargement des données réelles ──
+(async () => {
+  try {
+    const user = await requireAuth();
+    if (!user) return;
+
+    // Mettre à jour le nom dans la topbar si présent
+    const userNameEl = document.getElementById('userDisplayName');
+    if (userNameEl) userNameEl.textContent = `${user.first_name} ${user.last_name}`;
+
+    const roleEl = document.getElementById('userRoleDisplay');
+    if (roleEl) roleEl.textContent = user.role.toUpperCase().replace('_', ' ');
+
+    // Charger les vrais risques depuis Supabase
+    const risks = await listRisks();
+    if (risks.length > 0) {
+      // Remplacer les mock data par les données réelles
+      window._REAL_RISKS = risks.map(r => ({
+        id:         r.risk_ref,
+        uuid:       r.id,
+        name:       r.name,
+        sev:        r.severity || 'medium',
+        status:     r.status,
+        tags:       (r.rm_risk_tags || []).map(t => t.tag),
+        owner:      r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned',
+        likelihood: r.likelihood,
+        impact:     r.impact,
+        residual:   r.residual_risk,
+        decision:   r.decision,
+        owner_full: r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned',
+      }));
+
+      // Recharger le dashboard avec les vraies données
+      if (typeof renderDashboard === 'function') {
+        renderDashboard(window._REAL_RISKS);
+      }
+    }
+
+    // Mettre à jour le rôle courant
+    window._currentRole = user.role;
+
+  } catch (err) {
+    console.error('Dashboard init error:', err);
+  }
+})();
+</script>
 </body>
 </html>

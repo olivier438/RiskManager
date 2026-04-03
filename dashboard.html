@@ -1187,13 +1187,6 @@ document.addEventListener('click', e => {
         <div class="summary-sub" data-i18n="summary.low.sub">Accepted or closed</div>
       </div>
     </div>
-    <div class="summary-card">
-      <div class="summary-val neutral" id="countPending">2</div>
-      <div class="summary-info">
-        <div class="summary-label" data-i18n="summary.pending">Pending</div>
-        <div class="summary-sub" data-i18n="summary.pending.sub">Awaiting approval</div>
-      </div>
-    </div>
   </div>
 
   <!-- 3-COL GRID -->
@@ -2292,7 +2285,12 @@ document.addEventListener('click', e => {
   document.querySelectorAll('.summary-card').forEach(card => {
     const key = card.querySelector('.summary-label')?.getAttribute('data-i18n') || '';
     card.addEventListener('click', () => {
-      const sev = key.replace('summary.', '');
+      const sev = key === 'summary.critical' ? 'critical'
+                : key === 'summary.high'     ? 'high'
+                : key === 'summary.medium'   ? 'medium'
+                : key === 'summary.low'      ? 'low'
+                : null;
+      if (!sev) return;
       // Toggle : clic sur la tile active → clear filter
       if (_activeFilter === sev) {
         filterTable(null);
@@ -3060,18 +3058,16 @@ async function loadAndRenderRisks() {
     renderMyRisks(risks);
 
     // ── SUMMARY ROW — compteurs réels ──
-    const counts = { critical:0, high:0, medium:0, low:0, pending:0 };
+    const counts = { critical:0, high:0, medium:0, low:0 };
     risks.forEach(r => {
       const sev = r.severity || 'medium';
       if (counts[sev] !== undefined) counts[sev]++;
-      if (r.status === 'PENDING APPROVAL') counts.pending++;
     });
     const el = id => document.getElementById(id);
     if (el('countCritical')) el('countCritical').textContent = counts.critical;
     if (el('countHigh'))     el('countHigh').textContent     = counts.high;
     if (el('countMedium'))   el('countMedium').textContent   = counts.medium;
     if (el('countLow'))      el('countLow').textContent      = counts.low;
-    if (el('countPending'))  el('countPending').textContent  = counts.pending;
 
     // Mettre à jour RISKS pour filterTable (summary card click)
     if (typeof RISKS !== 'undefined') {

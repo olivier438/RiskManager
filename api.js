@@ -157,9 +157,9 @@ async function addTags(riskId, tags, source = 'manual') {
   if (error) console.error('Tag insert error:', error.message);
 }
 
-// ── JOURNAL ──
+// ── JOURNAL (internal) ──
 
-async function addJournalEntry(riskId, text) {
+async function _addJournalInternal(riskId, text) {
   const sb   = getClient();
   const env  = getEnvId();
   const user = getUser();

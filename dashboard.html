@@ -2981,7 +2981,7 @@ function renderMyRisks(risks) {
     const tags  = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
     const owner = r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned';
     return `
-      <tr class="risk-row" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:'${r.name.replace(/'/g,"\\'")}',sev:'${sev}',status:'${r.status}',tags:[],owner:'You',owner_full:'${owner}'})">
+      <tr class="risk-row" onclick="openRisk({id:'${r.risk_ref}',uuid:'${r.id}',name:'${r.name.replace(/'/g,"\\'")}',sev:'${sev}',status:'${r.status}',tags:${JSON.stringify((r.rm_risk_tags||[]).map(t=>t.tag))},owner:'You',owner_full:'${owner}',likelihood:${r.likelihood||'null'},impact:${r.impact||'null'},residual:${r.residual_risk||'null'},decision:'${r.decision||''}'})">
         <td class="col-id">${r.risk_ref}</td>
         <td class="col-name">${r.name}</td>
         <td class="col-sev"><span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span></td>

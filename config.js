@@ -1,20 +1,23 @@
 /* ============================================
    RISK MANAGER — config.js
    ONE CIRCLE IT SOLUTIONS
-   NE JAMAIS COMMITTER LES VRAIES CLÉS
+   Beta — Supabase backend
    ============================================ */
 
 const CONFIG = {
-  ENV: window.location.hostname.includes('beta') || !window.location.hostname.includes('www') ? 'beta' : 'prod',
+  ENV: 'beta',
 
-  SUPABASE_URL:  'VOTRE_SUPABASE_URL',
-  SUPABASE_ANON: 'VOTRE_SUPABASE_ANON_KEY',
+  // Supabase
+  SUPABASE_URL:  'https://xzbcmpsabbjmlbathdpl.supabase.co',
+  SUPABASE_ANON: 'sb_publishable_c0pZ8a5R9TadUNxyopIFEA_5M6_5R5C',
 
-  RS_API_URL:    'https://api.riskstudio.io/v1',
-  RS_API_TOKEN:  'VOTRE_RS_API_TOKEN',
+  // Tables prefix
+  TABLE_PREFIX: 'rm_',
 
-  GROQ_ENDPOINT: 'https://api.groq.com/openai/v1/chat/completions',
-  GROQ_MODEL:    'llama3-8b-8192',
+  // RS Feed
+  RS_API_URL: 'https://api.riskstudio.io/v1',
 
-  APP_VERSION:   '0.1.0',
+  // App
+  APP_VERSION: '1.0.0-beta',
+  APP_NAME:    'Risk Manager',
 };

@@ -2969,12 +2969,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Afficher le rôle réel dans la topbar
     const roleLabels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
-    const roleEl = document.getElementById('userRole');
-    if (roleEl) roleEl.textContent = roleLabels[user.role] || user.role.toUpperCase();
+    const roleDisplayEl = document.getElementById('userRole');
+    if (roleDisplayEl) roleDisplayEl.textContent = roleLabels[user.role] || user.role.toUpperCase();
 
     // Settings visible uniquement pour risk_leader
-    const sl = document.getElementById('settingsLink');
-    if (sl) sl.style.display = user.role === 'risk_leader' ? 'block' : 'none';
+    const settingsLinkEl = document.getElementById('settingsLink');
+    if (settingsLinkEl) settingsLinkEl.style.display = user.role === 'risk_leader' ? 'block' : 'none';
 
     // Charger et afficher les risques réels
     await loadAndRenderRisks();

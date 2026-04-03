@@ -1625,6 +1625,9 @@ document.addEventListener('click', e => {
 </style>
 
 <script>
+  // ── GLOBALS — accessibles depuis tous les script blocks ──
+  const RISKS_MAP = new Map(); // lookup UUID → risk object, pour onclick propre
+
   // ── ENV ──
   const ENV = window.location.hostname.includes('beta') || !window.location.hostname.includes('www') ? 'beta' : 'prod';
   const badge = document.getElementById('envBadge');
@@ -1651,9 +1654,6 @@ document.addEventListener('click', e => {
   // ── DATA ──
   // RISKS — peuplé dynamiquement par loadAndRenderRisks() depuis Supabase
   const RISKS = [];
-  // RISKS_MAP — lookup par UUID pour onclick propre (pas de JSON dans attributs HTML)
-  const RISKS_MAP = new Map();
-  window.RISKS_MAP = RISKS_MAP;
 
   // FEED — peuplé dynamiquement depuis Risk Studio (Supabase)
   let FEED = [];

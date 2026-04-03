@@ -3070,10 +3070,9 @@ async function loadAndRenderRisks() {
       listPendingRisks(),
     ]);
 
-    renderMyRisks(risks);
-
-    // Vider RISKS_MAP — sera repeuplé par renderMyRisks
+    // Vider RISKS_MAP avant de repeupler
     RISKS_MAP.clear();
+    renderMyRisks(risks);
     renderPendingTeam(pending);
 
     // ── SUMMARY ROW — compteurs réels ──

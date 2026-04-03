@@ -1063,14 +1063,7 @@ function toggleAppMenu() {
   if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
 
-function setRole(role) {
-  const labels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
-  document.getElementById('userRole').textContent = labels[role] || role.toUpperCase();
-  document.getElementById('roleMenu')?.classList.remove('open');
-  window._currentRole = role;
-  const sl = document.getElementById('settingsLink');
-  if (sl) sl.style.display = role === 'risk_leader' ? 'block' : 'none';
-}
+// Role is set by Supabase — no manual switcher
 
 document.addEventListener('click', e => {
   const dd = document.getElementById('langDropdown');
@@ -1129,14 +1122,9 @@ document.addEventListener('click', e => {
       <div>
         <div class="user-name" id="userName">Olivier Delvigne</div>
         <div class="user-role-wrap">
-          <button class="user-role-btn" id="userRoleBtn" onclick="event.stopPropagation();toggleRoleMenu()">
-            <span id="userRole">RISK LEADER</span> ▾
-          </button>
-          <div class="role-menu" id="roleMenu">
-            <button onclick="setRole('risk_leader')">RISK LEADER</button>
-            <button onclick="setRole('risk_owner')">RISK OWNER</button>
-            <button onclick="setRole('analyst')">ANALYST</button>
-          </div>
+          <span class="user-role-btn" id="userRoleBtn" style="cursor:default">
+            <span id="userRole">RISK LEADER</span>
+          </span>
         </div>
       </div>
     </div>
@@ -1766,8 +1754,8 @@ document.addEventListener('click', e => {
 
   // ── ROLE (à brancher sur Supabase Auth) ──
   // 'risk_manager' | 'analyst' | 'admin'
-  const CURRENT_ROLE = 'risk_leader'; // will be overridden by Supabase // défaut
-  window._currentRole = CURRENT_ROLE;
+  // Role set by Supabase in init block below
+  window._currentRole = 'risk_owner'; // default until Supabase loads
 
   // ── JOURNAL (mock, à brancher sur Supabase) ──
   const JOURNAL = {
@@ -2921,13 +2909,7 @@ document.addEventListener('click', e => {
 </style>
 
 <script>
-  (function initRole() {
-    const labels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
-    const roleEl = document.getElementById('userRole');
-    if (roleEl) roleEl.textContent = labels[window._currentRole] || window._currentRole.toUpperCase();
-    const sl = document.getElementById('settingsLink');
-    if (sl) sl.style.display = window._currentRole === 'admin' ? 'block' : 'none';
-  })();
+  // Role label updated by Supabase init
 </script>
 
 <script>
@@ -2984,6 +2966,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mettre à jour le rôle courant
     window._currentRole = user.role;
+
+    // Afficher le rôle réel dans la topbar
+    const roleLabels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
+    const roleEl = document.getElementById('userRole');
+    if (roleEl) roleEl.textContent = roleLabels[user.role] || user.role.toUpperCase();
+
+    // Settings visible uniquement pour risk_leader
+    const sl = document.getElementById('settingsLink');
+    if (sl) sl.style.display = user.role === 'risk_leader' ? 'block' : 'none';
 
     // Charger et afficher les risques réels
     await loadAndRenderRisks();

@@ -340,23 +340,6 @@ async function submitAnalysisSupabase(riskUuid) {
   await loadAndRenderRisks();
 }
 
-// ── RECALC GROSS RISK ──
-function recalcGross() {
-  const l = parseInt(document.getElementById('editLikelihood')?.value) || 0;
-  const i = parseInt(document.getElementById('editImpact')?.value) || 0;
-  const el = document.getElementById('grossDisplay');
-  if (!el) return;
-  if (l && i) {
-    const score = l * i;
-    const sev = score >= 16 ? 'critical' : score >= 9 ? 'high' : score >= 4 ? 'medium' : 'low';
-    const colors = { critical:'var(--critical)', high:'var(--high)', medium:'var(--medium)', low:'var(--low)' };
-    el.textContent = `${score}`;
-    el.style.color  = colors[sev];
-  } else {
-    el.textContent = '—';
-    el.style.color  = 'var(--muted)';
-  }
-}
 
 // ── SAVE RISK EDITS ──
 async function saveRiskEdits(riskUuid) {
@@ -569,31 +552,6 @@ async function listPendingRisks() {
 }
 
 // ── PENDING ACTION (Approve/Reject depuis le panel) ──
-async function pendingAction(riskUuid, newStatus, btn) {
-  const item = btn?.closest('.pending-item');
-  if (item) { item.style.opacity = '0.5'; item.style.pointerEvents = 'none'; }
-
-  const sb  = getClient();
-  const env = getEnvId();
-
-  const { error } = await sb
-    .from(`${P}risks`)
-    .update({ status: newStatus, updated_at: new Date().toISOString() })
-    .eq('id', riskUuid)
-    .eq('environment_id', env);
-
-  if (error) {
-    if (item) { item.style.opacity = '1'; item.style.pointerEvents = ''; }
-    alert('Error: ' + error.message);
-    return;
-  }
-
-  const label = newStatus === 'MONITORED' ? '✓ Approved' : '✗ Rejected';
-  if (btn) btn.textContent = label;
-
-  // Recharger les deux panels
-  await loadAndRenderRisks();
-}
 
 // ── RISK STUDIO FEED ──
 async function listRSFeed(limit = 20) {

@@ -1086,6 +1086,11 @@ document.addEventListener('click', e => {
   (function applyTheme() {
     const saved = localStorage.getItem('rm-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
+    // Label du bouton — mis à jour au DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
+    });
   })();
 </script>
 </head>
@@ -1644,17 +1649,8 @@ document.addEventListener('click', e => {
   }, 1000);
 
   // ── DATA ──
-  const RISKS = [
-    { id:'RM-0012', name:'Unauthorised access via VPN endpoint',        sev:'critical', status:'IN TREATMENT',    tags:['#access-control','#vpn'],      owner:'You',  likelihood:4, impact:5, residual:3, decision:'Reduce', owner_full:'Olivier Delvigne' },
-    { id:'RM-0009', name:'Unpatched Windows Server 2016 on DMZ',        sev:'high',     status:'IN ANALYSIS',     tags:['#patch','#server'],            owner:'You',  likelihood:3, impact:4, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
-    { id:'RM-0007', name:'No MFA on admin accounts',                    sev:'critical', status:'PENDING APPROVAL', tags:['#iam','#mfa'],                 owner:'You',  likelihood:4, impact:5, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
-    { id:'RM-0005', name:'Supplier contract missing security clauses',   sev:'medium',   status:'IN REVIEW',       tags:['#supply-chain'],               owner:'You',  likelihood:2, impact:3, residual:2, decision:'Reduce', owner_full:'Olivier Delvigne' },
-    { id:'RM-0003', name:'Backup untested for 8 months',                sev:'high',     status:'DRAFT',           tags:['#backup','#bcm'],              owner:'You',  likelihood:3, impact:5, residual:3, decision:'Reduce', owner_full:'Olivier Delvigne' },
-    { id:'RM-0014', name:'Cloud storage bucket publicly exposed',        sev:'high',     status:'IN ANALYSIS',         tags:['#cloud','#data-exposure'],     owner:'J. Masson',  likelihood:4, impact:4, residual:null, decision:null, owner_full:'Julie Masson' },
-    { id:'RM-0013', name:'Absence of formal asset inventory',           sev:'medium',   status:'IN ANALYSIS',         tags:['#asset-management'],           owner:'T. Lecomte', likelihood:2, impact:3, residual:null, decision:null, owner_full:'Thomas Lecomte' },
-    { id:'RM-0002', name:'Legacy firewall rules not reviewed since 2023',sev:'medium',   status:'MONITORED',       tags:['#firewall','#network'],        owner:'J. Masson',  likelihood:2, impact:3, residual:2, decision:'Accept', owner_full:'Julie Masson' },
-    { id:'RM-0001', name:'No formal incident response plan',            sev:'low',      status:'MONITORED',       tags:['#irt','#process'],             owner:'You',  likelihood:1, impact:4, residual:1, decision:'Accept', owner_full:'Olivier Delvigne' },
-  ];
+  // RISKS — peuplé dynamiquement par loadAndRenderRisks() depuis Supabase
+  const RISKS = [];
 
   // FEED — peuplé dynamiquement depuis Risk Studio (Supabase)
   let FEED = [];
@@ -2924,15 +2920,6 @@ document.addEventListener('click', e => {
   }
   .nr-btn-submit:hover { background: var(--accent-hi); }
 </style>
-
-<script>
-// Theme button label init
-document.addEventListener('DOMContentLoaded', function() {
-  var saved = localStorage.getItem('rm-theme') || 'dark';
-  var btn = document.getElementById('themeToggleBtn');
-  if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
-});
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>

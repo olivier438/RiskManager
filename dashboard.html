@@ -1653,6 +1653,7 @@ document.addEventListener('click', e => {
   const RISKS = [];
   // RISKS_MAP — lookup par UUID pour onclick propre (pas de JSON dans attributs HTML)
   const RISKS_MAP = new Map();
+  window.RISKS_MAP = RISKS_MAP;
 
   // FEED — peuplé dynamiquement depuis Risk Studio (Supabase)
   let FEED = [];

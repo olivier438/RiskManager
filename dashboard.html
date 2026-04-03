@@ -1861,6 +1861,40 @@ document.addEventListener('click', e => {
 
   // ── RISK DETAIL ──
   window.openRisk = async function openRisk(risk) {
+    // Charger les données complètes depuis Supabase si on a l'UUID
+    if (risk.uuid) {
+      try {
+        const full = await getRisk(risk.uuid);
+        if (full) {
+          // full data prend la priorité sur l'objet onclick
+          risk = {
+            id:          risk.id,
+            uuid:        risk.uuid,
+            name:        full.name,
+            sev:         full.severity || risk.sev,
+            status:      full.status,
+            tags:        (full.rm_risk_tags || []).map(t => t.tag),
+            owner:       risk.owner,
+            owner_full:  risk.owner_full,
+            description: full.description,
+            asset:       full.asset,
+            threat_source:     full.threat_source,
+            vulnerability:     full.vulnerability,
+            scenario:          full.scenario,
+            existing_controls: full.existing_controls,
+            proposed_measures: full.proposed_measures,
+            likelihood:  full.likelihood,
+            impact:      full.impact,
+            residual:    full.residual_risk,
+            decision:    full.decision,
+            assigned_to: full.assigned_to,
+            rm_risk_journal: full.rm_risk_journal || [],
+          };
+        }
+      } catch (err) {
+        console.error('Load full risk error:', err);
+      }
+    }
     const brut       = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : '—';
     const role       = window._currentRole;
     const isOwner    = role === 'risk_owner';
@@ -2016,11 +2050,10 @@ document.addEventListener('click', e => {
       sectionActions
     );
 
-    // Charger le journal depuis Supabase de façon async
+    // Journal — données déjà chargées dans risk.rm_risk_journal
     if (canJournal && risk.uuid) {
       try {
-        const fullRisk = await getRisk(risk.uuid);
-        const journal  = fullRisk?.rm_risk_journal || [];
+        const journal = risk.rm_risk_journal || [];
         const ph = document.getElementById('journalPlaceholder');
         if (ph) ph.outerHTML = journalHTML(risk.uuid, journal);
       } catch (err) {

@@ -1,66 +1,68 @@
 /* ============================================
    RISK MANAGER — auth.js
-   Gestion auth via Supabase
+   ONE CIRCLE IT SOLUTIONS
+   Auth via Supabase
    ============================================ */
 
-let _supabase = null;
+let _supabase   = null;
+let currentUser = null;
+let currentEnv  = null;
+let currentRole = null;
 
-function getSupabase() {
+function getClient() {
   if (!_supabase) {
-    _supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON);
+    const { createClient } = window.supabase;
+    _supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
+      auth: {
+        autoRefreshToken:   true,
+        persistSession:     true,
+        detectSessionInUrl: false,
+      },
+    });
   }
   return _supabase;
 }
 
-// ── État de l'utilisateur courant ──
-let currentUser  = null;
-let currentEnv   = null;
-let currentRole  = null;
-
-/**
- * Login
- */
 async function login(email, password) {
-  const sb = getSupabase();
+  const sb = getClient();
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
-
-  // Récupérer le profil RM
   await loadUserProfile(data.user.id);
   return currentUser;
 }
 
-/**
- * Logout
- */
 async function logout() {
-  const sb = getSupabase();
-  await sb.auth.signOut();
+  const sb = getClient();
+  await sb.auth.signOut({ scope: 'global' });
   currentUser = null;
   currentEnv  = null;
   currentRole = null;
+  sessionStorage.clear();
   window.location.href = 'index.html';
 }
 
-/**
- * Charger le profil utilisateur depuis rm_users
- */
 async function loadUserProfile(authUserId) {
-  const sb = getSupabase();
+  const sb = getClient();
   const { data, error } = await sb
     .from('rm_users')
-    .select('*, rm_environments(id, name, risk_prefix)')
+    .select('*')
     .eq('auth_user_id', authUserId)
     .eq('active', true)
     .single();
 
-  if (error || !data) throw new Error('User profile not found');
+  if (error || !data) throw new Error('User profile not found in RM');
 
   currentUser = data;
-  currentEnv  = data.rm_environments;
   currentRole = data.role;
 
-  // Stocker en session
+  const { data: env } = await sb
+    .from('rm_environments')
+    .select('*')
+    .eq('id', data.environment_id)
+    .single();
+
+  currentEnv = env;
+
   sessionStorage.setItem('rm_user', JSON.stringify(currentUser));
   sessionStorage.setItem('rm_env',  JSON.stringify(currentEnv));
 
@@ -68,42 +70,41 @@ async function loadUserProfile(authUserId) {
 }
 
 /**
- * Vérifier si l'utilisateur est connecté
- * À appeler sur chaque page protégée
+ * requireAuth — vérifie la session côté SERVEUR via getUser().
+ * Pas de cache local — vrai appel API Supabase.
+ * Redirige vers index.html si pas authentifié.
  */
 async function requireAuth() {
-  const sb = getSupabase();
-  const { data: { session } } = await sb.auth.getSession();
+  const sb = getClient();
 
-  if (!session) {
+  const { data: { user }, error } = await sb.auth.getUser();
+
+  if (error || !user) {
     window.location.href = 'index.html';
     return null;
   }
 
-  // Charger depuis session storage si dispo
   const cached = sessionStorage.getItem('rm_user');
   if (cached) {
     currentUser = JSON.parse(cached);
-    currentEnv  = JSON.parse(sessionStorage.getItem('rm_env'));
+    currentEnv  = JSON.parse(sessionStorage.getItem('rm_env') || 'null');
     currentRole = currentUser.role;
     return currentUser;
   }
 
-  await loadUserProfile(session.user.id);
-  return currentUser;
+  try {
+    await loadUserProfile(user.id);
+    return currentUser;
+  } catch (e) {
+    console.error('Profile load failed:', e.message);
+    window.location.href = 'index.html';
+    return null;
+  }
 }
 
-/**
- * Getters
- */
 function getUser()        { return currentUser; }
 function getEnvironment() { return currentEnv; }
 function getRole()        { return currentRole; }
-function getEnvId()       { return currentEnv?.id; }
+function getEnvId()       { return currentEnv?.id || currentUser?.environment_id; }
 function isAdmin()        { return currentRole === 'admin'; }
 function isRiskManager()  { return currentRole === 'risk_manager' || currentRole === 'admin'; }
-
-/**
- * Client Supabase pour les autres modules
- */
-function getClient() { return getSupabase(); }

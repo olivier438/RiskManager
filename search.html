@@ -178,9 +178,9 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
 
 /* ── MARKETPLACE GRID ── */
 .mkt-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   max-height: 600px;
   overflow-y: auto;
   padding-right: 4px;
@@ -193,14 +193,15 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 3px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   transition: border-color 0.15s;
-  animation: fadeUp 0.2s ease both;
+  animation: fadeUp 0.15s ease both;
 }
-.mkt-card:hover { border-color: var(--border-hi); }
+.mkt-card:hover { border-color: var(--border-hi); background: var(--card-hi); }
 
 .mkt-card-top {
   display: flex;
@@ -943,21 +944,18 @@ function renderMarketplace() {
     const cat = getMktCategoryFromSource(r);
     const catColor = cat === 'dataleak' ? 'var(--medium)' : cat === 'grc' ? 'var(--accent-hi)' : 'var(--critical)';
     return `
-      <div class="mkt-card" style="animation-delay:${Math.min(i,10)*0.03}s;border-left:2px solid ${catColor}">
-        <div class="mkt-card-top">
-          <span class="sev-pill ${r.sev}">${r.sev.charAt(0).toUpperCase()+r.sev.slice(1)}</span>
-          <span class="mkt-card-name">${r.name}</span>
-        </div>
-        <div class="mkt-card-meta">
-          <span class="mkt-card-source">${r.source}</span>
-          ${(r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}
-          <span class="mkt-card-time">${r.time}</span>
-        </div>
+      <div class="mkt-card" style="animation-delay:${Math.min(i,10)*0.02}s;border-left:2px solid ${catColor}">
+        <span class="sev-pill ${r.sev}" style="flex-shrink:0">${r.sev.charAt(0).toUpperCase()+r.sev.slice(1)}</span>
+        <span style="flex:1;font-size:12px;font-weight:500;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+        ${(r.tags||[]).map(t=>`<span class="tag" style="flex-shrink:0">${t}</span>`).join('')}
+        <span style="font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;white-space:nowrap">${r.source}</span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;white-space:nowrap">${r.time}</span>
         <button class="mkt-card-btn ${imported ? 'imported' : ''}"
           id="mktBtn-${r.id}"
+          style="width:auto;white-space:nowrap;flex-shrink:0;padding:5px 10px"
           onclick="${imported ? '' : `importMktItem('${r.id}',this)`}"
           ${imported ? 'disabled' : ''}>
-          ${imported ? '✓ In Register' : '⊕ Add to Register →'}
+          ${imported ? '✓ In Register' : '⊕ Add →'}
         </button>
       </div>`;
   }).join('');

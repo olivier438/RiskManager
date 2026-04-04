@@ -2896,23 +2896,40 @@ document.addEventListener('click', e => {
 
   function simulateTags(desc) {
     const rules = [
-      [/vpn|tunnel|remote access/i,        '#vpn'],
-      [/password|credential|auth/i,         '#credentials'],
-      [/access|unauthorized|privilege/i,    '#access-control'],
-      [/patch|update|vulnerab/i,            '#patch-management'],
-      [/backup|recovery|restore/i,          '#backup'],
-      [/supplier|vendor|third.party/i,      '#supply-chain'],
-      [/cloud|s3|bucket|azure|aws/i,        '#cloud'],
-      [/phishing|social|email/i,            '#phishing'],
-      [/ransomware|malware|virus/i,         '#malware'],
-      [/firewall|network|dmz/i,             '#network'],
-      [/mfa|two.factor|2fa/i,               '#mfa'],
-      [/iam|identity|role|user management/i,'#iam'],
-      [/data|leak|exposure|breach/i,        '#data-exposure'],
-      [/log|audit|monitor/i,                '#monitoring'],
-      [/encrypt|ssl|tls|cert/i,             '#encryption'],
+      // ── Anglais ──
+      [/vpn|tunnel|remote.?access/i,          '#vpn'],
+      [/password|credential|auth/i,           '#credentials'],
+      [/\baccess\b|unauthorized|privilege/i,  '#access-control'],
+      [/patch|update|vulnerab/i,              '#patch-management'],
+      [/backup|recovery|restore/i,            '#backup'],
+      [/supplier|vendor|third.party/i,        '#supply-chain'],
+      [/cloud|s3|bucket|azure|aws/i,          '#cloud'],
+      [/phishing|social.engineer|email/i,     '#phishing'],
+      [/ransomware|malware|virus/i,           '#malware'],
+      [/firewall|network|dmz/i,               '#network'],
+      [/\bmfa\b|two.factor|2fa/i,             '#mfa'],
+      [/\biam\b|identity|active.?direct|ldap/i,'#iam'],
+      [/data.leak|exfil|breach|exposure/i,   '#data-exposure'],
+      [/log|audit|monitor|siem/i,             '#monitoring'],
+      [/encrypt|ssl|tls|cert/i,               '#encryption'],
+      [/admin|administrat/i,                  '#access-control'],
+      // ── Français ──
+      [/administrat|annuaire|active.?direct/i,'#iam'],
+      [/accès|autorisation|droits/i,          '#access-control'],
+      [/authentif|mot.de.passe/i,             '#credentials'],
+      [/vulnérab|correctif|mise.à.jour/i,     '#patch-management'],
+      [/sauvegarde|reprise|continuité/i,      '#backup'],
+      [/prestataire|fournisseur|sous-trait/i, '#supply-chain'],
+      [/hameçon|phishing|ingénierie.sociale/i,'#phishing'],
+      [/rançon|logiciel.malv|virus/i,         '#malware'],
+      [/réseau|pare-feu|segmentat/i,          '#network'],
+      [/chiffr|certificat/i,                  '#encryption'],
+      [/journal|supervision|surveillance/i,   '#monitoring'],
+      [/fuite|exfiltrat/i,                    '#data-exposure'],
+      [/sensibilis|formation/i,               '#awareness'],
+      [/incident|notif|déclar/i,              '#incident-response'],
     ];
-    return rules.filter(([re]) => re.test(desc)).map(([,tag]) => tag);
+    return [...new Set(rules.filter(([re]) => re.test(desc)).map(([,tag]) => tag))];
   }
 
   function removeTag(el, tag) {
@@ -2924,16 +2941,43 @@ document.addEventListener('click', e => {
   window._envFrameworks = ['NIS2', 'ISO27001']; // défaut, écrasé au chargement
 
   function extractKeywords(text) {
+    // Mapping FR/EN → keywords DB canoniques
+    const frMap = [
+      [/administrat|active.?direct|annuaire|ldap/i, ['admin','administrat','directory','iam','identity']],
+      [/accès|autorisation/i,                        ['access']],
+      [/authentif|mot.de.passe/i,                    ['auth','credential']],
+      [/droits?|privilège|moindre/i,                 ['privilege','permission','role']],
+      [/utilisateur|compte\b/i,                      ['user','identity','credential']],
+      [/vulnérab|correctif/i,                        ['vuln','patch']],
+      [/sauvegarde/i,                                ['backup','restore']],
+      [/prestataire|fournisseur/i,                   ['supplier','vendor','third']],
+      [/réseau|pare-feu|segmentat/i,                 ['network','firewall','segment']],
+      [/chiffr/i,                                    ['crypto','encrypt']],
+      [/journal|supervision/i,                       ['log','audit','monitor']],
+      [/hameçon|ingénierie.sociale/i,                ['phishing','social','awareness']],
+      [/rançon|logiciel.malv/i,                      ['ransomware','malware']],
+      [/fuite|exfiltrat/i,                           ['data','leak']],
+      [/incident|notif|déclar/i,                     ['incident']],
+      [/sensibilis|formation/i,                      ['awareness','training','phishing']],
+    ];
+
     const stop = new Set(['the','a','an','is','are','was','has','have','this','that',
       'with','for','not','but','and','or','to','in','of','on','at','by','from',
       'its','our','their','it','be','been','will','can','may','more','also','via',
-      'due','non','des','les','une','par','sur','qui','que','dans','pour','avec']);
-    return [...new Set(
-      text.toLowerCase()
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length >= 3 && !stop.has(w))
-    )];
+      'due','non','des','les','une','par','sur','qui','que','dans','pour','avec',
+      'plus','son','ses','leur','une','pas','sans','dans','lors','dont']);
+
+    // 1. Extraction FR via regex
+    const mapped = [];
+    frMap.forEach(([re, kws]) => { if (re.test(text)) mapped.push(...kws); });
+
+    // 2. Extraction mots bruts (fallback + EN)
+    const words = text.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length >= 4 && !stop.has(w));
+
+    return [...new Set([...mapped, ...words])];
   }
 
   async function proposeMeasures(tags) {

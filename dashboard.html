@@ -2225,6 +2225,7 @@ document.addEventListener('click', e => {
             decision:          full.decision,
             assigned_to:       full.assigned_to,
             rm_risk_journal:   full.rm_risk_journal || [],
+            framework_measures: full.framework_measures || [],
           };
         }
       } catch (err) {
@@ -2274,6 +2275,31 @@ document.addEventListener('click', e => {
           </div>
         </div>
       </div>
+      ${(risk.framework_measures||[]).length > 0 ? `
+      <div class="sp-section">
+        <div class="sp-section-title">Framework Measures</div>
+        ${(() => {
+          const byFw = {};
+          (risk.framework_measures||[]).forEach(m => {
+            if (!byFw[m.framework]) byFw[m.framework] = [];
+            byFw[m.framework].push(m);
+          });
+          const fwColors = { NIS2:'var(--accent-hi)', ISO27001:'var(--low)', DORA:'var(--medium)' };
+          return Object.entries(byFw).map(([fw, items]) => `
+            <div style="margin-bottom:8px">
+              <div style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;
+                text-transform:uppercase;color:${fwColors[fw]||'var(--muted)'};margin-bottom:4px">${fw}</div>
+              ${items.map(m => `
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:5px 8px;
+                  border-left:2px solid ${fwColors[fw]||'var(--border-hi)'};background:var(--surface);
+                  border-radius:0 3px 3px 0;margin-bottom:3px">
+                  <span style="font-family:var(--mono);font-size:10px;font-weight:600;
+                    color:var(--text);flex-shrink:0">${m.reference}</span>
+                  <span style="font-size:11px;color:var(--muted);line-height:1.4">${m.description}</span>
+                </div>`).join('')}
+            </div>`).join('');
+        })()}
+      </div>` : ''}
       <div class="sp-section">
         <div class="sp-section-title">Governance</div>
         <div class="sp-row">

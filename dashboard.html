@@ -2210,8 +2210,10 @@ document.addEventListener('click', e => {
             sev:               full.severity || risk.sev,
             status:            full.status,
             tags:              (full.rm_risk_tags || []).map(t => t.tag),
-            owner:             risk.owner,
-            owner_full:        risk.owner_full,
+            owner:             full.owner || risk.owner,
+            owner_full:        full.owner
+                                 ? `${full.owner.first_name} ${full.owner.last_name}`
+                                 : (risk.owner_full || 'Unassigned'),
             description:       full.description,
             asset:             full.asset,
             threat_source:     full.threat_source,
@@ -2226,6 +2228,9 @@ document.addEventListener('click', e => {
             assigned_to:       full.assigned_to,
             rm_risk_journal:   full.rm_risk_journal || [],
             framework_measures: full.framework_measures || [],
+            visibility:        full.visibility,
+            review_date:       full.review_date,
+            created_at:        full.created_at,
           };
         }
       } catch (err) {
@@ -2312,6 +2317,41 @@ document.addEventListener('click', e => {
             <div class="sp-field-value">${risk.assigned_to || '—'}</div>
           </div>
         </div>
+        <div class="sp-row">
+          <div class="sp-field">
+            <div class="sp-field-label">Status</div>
+            <div class="sp-field-value"><span class="status-mono">${risk.status || '—'}</span></div>
+          </div>
+          <div class="sp-field">
+            <div class="sp-field-label">Visibility</div>
+            <div class="sp-field-value">
+              <span style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;
+                color:${risk.visibility==='TEAM'?'var(--low)':'var(--muted)'};
+                background:${risk.visibility==='TEAM'?'rgba(26,122,74,0.1)':'var(--surface)'};
+                border:1px solid ${risk.visibility==='TEAM'?'rgba(26,122,74,0.3)':'var(--border-hi)'};
+                padding:2px 8px;border-radius:2px">${risk.visibility || 'PRIVATE'}</span>
+            </div>
+          </div>
+        </div>
+        <div class="sp-row">
+          <div class="sp-field">
+            <div class="sp-field-label">Review Date</div>
+            <div class="sp-field-value" style="font-family:var(--mono);font-size:12px">
+              ${risk.review_date ? new Date(risk.review_date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'}
+            </div>
+          </div>
+          <div class="sp-field">
+            <div class="sp-field-label">Created</div>
+            <div class="sp-field-value" style="font-family:var(--mono);font-size:12px">
+              ${risk.created_at ? new Date(risk.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'}
+            </div>
+          </div>
+        </div>
+        ${risk.decision ? `
+        <div class="sp-field">
+          <div class="sp-field-label">Decision</div>
+          <div class="sp-field-value"><span class="status-mono">${risk.decision}</span></div>
+        </div>` : ''}
       </div>
       ${canEdit ? `<div style="display:flex;justify-content:flex-end;margin-top:4px">
         <button class="sp-btn primary" onclick="saveRiskEdits('${risk.uuid||risk.id}')">Save changes →</button>

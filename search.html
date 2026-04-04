@@ -1384,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Charger RISKS + RS_FEED depuis Supabase
 async function reloadSearchData() {
   try {
-    const [risks, feed, catalog] = await Promise.all([listRisks(), listRSFeed(20), listRSCatalog()]);
+    const [risks, feed, catalog] = await Promise.all([listRisks(), listRSFeed(20), listRSCatalog(1000)]);
 
     RISKS.length = 0;
     risks.forEach(r => {

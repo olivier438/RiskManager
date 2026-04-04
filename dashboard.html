@@ -2920,53 +2920,72 @@ document.addEventListener('click', e => {
     el.remove();
   }
 
-  // Active frameworks → mesures proposées
-  const FRAMEWORK_MEASURES = {
-    '#access-control': { 'NIS2/CyFun':'PR.AC-1, PR.AC-3', 'Framework':'A.8.3, A.5.15' },
-    '#vpn':            { 'NIS2/CyFun':'PR.AC-5',           'Framework':'A.8.20' },
-    '#credentials':    { 'NIS2/CyFun':'PR.AC-1',           'Framework':'A.5.17', 'DORA':'Art. 9.4' },
-    '#mfa':            { 'NIS2/CyFun':'PR.AC-7',           'Framework':'A.8.5' },
-    '#patch-management':{ 'NIS2/CyFun':'PR.IP-12',         'Framework':'A.8.8' },
-    '#backup':         { 'NIS2/CyFun':'PR.IP-4',           'Framework':'A.8.13' },
-    '#supply-chain':   { 'NIS2/CyFun':'ID.SC-2',           'Framework':'A.5.19, A.5.21' },
-    '#cloud':          { 'NIS2/CyFun':'PR.DS-1',           'Framework':'A.5.23' },
-    '#phishing':       { 'NIS2/CyFun':'PR.AT-1',           'Framework':'A.6.3' },
-    '#malware':        { 'NIS2/CyFun':'DE.CM-4',           'Framework':'A.8.7' },
-    '#network':        { 'NIS2/CyFun':'PR.AC-5',           'Framework':'A.8.20, A.8.22' },
-    '#data-exposure':  { 'NIS2/CyFun':'PR.DS-5',           'Framework':'A.8.12', 'DORA':'Art. 9.2' },
-    '#monitoring':     { 'NIS2/CyFun':'DE.CM-1',           'Framework':'A.8.16' },
-    '#encryption':     { 'NIS2/CyFun':'PR.DS-2',           'Framework':'A.8.24' },
-  };
+  // ── FRAMEWORK MEASURES — chargé depuis Supabase ──
+  window._envFrameworks = ['NIS2', 'ISO27001']; // défaut, écrasé au chargement
 
-  const ACTIVE_FRAMEWORKS = ['NIS2/CyFun', 'Framework', 'DORA']; // chargé depuis environment
+  function extractKeywords(text) {
+    const stop = new Set(['the','a','an','is','are','was','has','have','this','that',
+      'with','for','not','but','and','or','to','in','of','on','at','by','from',
+      'its','our','their','it','be','been','will','can','may','more','also','via',
+      'due','non','des','les','une','par','sur','qui','que','dans','pour','avec']);
+    return [...new Set(
+      text.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 3 && !stop.has(w))
+    )];
+  }
 
-  function proposeMeasures(tags) {
+  async function proposeMeasures(tags) {
     const container = document.getElementById('nrMeasures');
-    const seen = new Set();
-    const rows = [];
+    if (!container) return;
+    container.innerHTML = '<div style="font-size:11px;color:var(--muted);font-family:var(--mono)">Analysing...</div>';
 
-    tags.forEach(tag => {
-      const measures = FRAMEWORK_MEASURES[tag];
-      if (!measures) return;
-      ACTIVE_FRAMEWORKS.forEach(fw => {
-        const val = measures[fw];
-        if (!val) return;
-        const key = `${fw}:${val}`;
-        if (seen.has(key)) return;
-        seen.add(key);
-        rows.push(`
-          <div class="nr-measure-row">
-            <span class="nr-measure-fw">${fw}</span>
-            <span class="nr-measure-val">${val}</span>
-            <span class="nr-measure-tag">${tag}</span>
-          </div>
-        `);
+    try {
+      const desc     = document.getElementById('nrDescription')?.value || '';
+      const tagKw    = tags.map(t => t.replace(/^#/, '').split('-')).flat();
+      const descKw   = extractKeywords(desc);
+      const allKw    = [...new Set([...tagKw, ...descKw])];
+      const frameworks = window._envFrameworks;
+
+      const measures = await getMeasuresByKeywords(allKw, frameworks);
+
+      if (!measures.length) {
+        container.innerHTML = '<div style="font-size:11px;color:var(--muted)">No matching measures found for these tags.</div>';
+        return;
+      }
+
+      // Grouper par framework
+      const byFw = {};
+      measures.forEach(m => {
+        if (!byFw[m.framework]) byFw[m.framework] = [];
+        byFw[m.framework].push(m);
       });
-    });
 
-    container.innerHTML = rows.length
-      ? rows.join('')
-      : `<div style="font-size:11px;color:var(--muted)">${i18n.t('risk.new.tags.empty')}</div>`;
+      const fwColors = { NIS2:'var(--accent-hi)', ISO27001:'var(--low)', DORA:'var(--medium)' };
+
+      container.innerHTML = Object.entries(byFw).map(([fw, items]) => `
+        <div style="margin-bottom:10px">
+          <div style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;
+               text-transform:uppercase;color:${fwColors[fw]||'var(--muted)'};margin-bottom:5px">${fw}</div>
+          ${items.map(m => `
+            <label class="nr-measure-row" style="cursor:pointer;display:flex;align-items:flex-start;gap:8px;padding:6px 8px;
+              border-radius:3px;border:1px solid var(--border);background:var(--surface);margin-bottom:4px;transition:border-color 0.15s">
+              <input type="checkbox" class="nr-measure-cb" checked
+                value="${fw}|${m.reference}"
+                data-fw="${fw}" data-ref="${m.reference}" data-desc="${m.description.replace(/"/g,'&quot;')}"
+                style="margin-top:2px;accent-color:${fwColors[fw]||'var(--accent)'};flex-shrink:0">
+              <div style="flex:1;min-width:0">
+                <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text)">${m.reference}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4">${m.description}</div>
+              </div>
+            </label>`).join('')}
+        </div>`).join('');
+
+    } catch (err) {
+      console.error('proposeMeasures error:', err);
+      container.innerHTML = '<div style="font-size:11px;color:var(--muted)">Could not load measures.</div>';
+    }
   }
 
   // ── GROQ STATUS ──
@@ -3442,6 +3461,13 @@ document.addEventListener('click', e => {
     window._currentRole = user.role;
     sbApplyRole(user.role);
 
+    // Charger les frameworks actifs de l'environment
+    try {
+      window._envFrameworks = await getEnvFrameworks();
+    } catch(e) {
+      window._envFrameworks = ['NIS2', 'ISO27001'];
+    }
+
     const roleLabels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
     const roleDisplayEl = document.getElementById('userRole');
     if (roleDisplayEl) roleDisplayEl.textContent = roleLabels[user.role] || user.role.toUpperCase().replace('_',' ');
@@ -3789,28 +3815,29 @@ async function submitNewRisk(status = 'DRAFT') {
 
   if (!name) { alert('Risk name is required'); return; }
 
+  // Collecter les mesures cochées
+  const selectedMeasures = [];
+  document.querySelectorAll('.nr-measure-cb:checked').forEach(cb => {
+    selectedMeasures.push({
+      framework:   cb.dataset.fw,
+      reference:   cb.dataset.ref,
+      description: cb.dataset.desc,
+    });
+  });
+
   document.querySelectorAll('.nr-btn-draft, .nr-btn-submit').forEach(b => {
     b.disabled = true; b.textContent = 'Saving...';
   });
 
   try {
-    const tags = [...(window.DETECTED_TAGS || new Set())];
-    const risk = await createRisk({ name, description: desc, asset, likelihood, impact, status, tags });
+    const tags = [...DETECTED_TAGS];
+    const risk = await createRisk({
+      name, description: desc, asset, likelihood, impact, status, tags,
+      framework_measures: selectedMeasures,
+    });
 
     closeNewRiskModal();
-
-    const toast = document.createElement('div');
-    toast.textContent = `✓ ${risk.risk_ref} created`;
-    Object.assign(toast.style, {
-      position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
-      background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
-      fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
-      zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
-    });
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-
-    // Recharger la liste
+    showToast(`✓ ${risk.risk_ref} created`);
     await loadAndRenderRisks();
 
   } catch (err) {

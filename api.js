@@ -630,7 +630,8 @@ async function listRSFeed(limit = 20) {
       id:     r.id,
       name:   r.titre,
       sev,
-      source: source.slice(0, 30), // max 30 chars
+      source: source.slice(0, 30),
+      type:   r.type || 'cyber', // type brut pour catégorisation marketplace
       tags:   tags.slice(0, 3),
       time,
       desc:   r.scenario || r.menace || '',
@@ -693,4 +694,69 @@ async function pendingAction(riskUuid, newStatus, btn) {
   });
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2500);
+}
+
+// ── RISK STUDIO CATALOG (marketplace — sans filtre triage) ──
+async function listRSCatalog(limit = 1000) {
+  const sb = getClient();
+
+  const { data, error } = await sb
+    .from('risks')
+    .select('id, titre, type, cvss_score, impact, menace, scenario, produits, cve_id, source_url, created_at, disponibilite, integrite, confidentialite')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  // Même mapping que listRSFeed
+  return (data || []).map(r => {
+    const score = parseFloat(r.cvss_score);
+    let sev;
+    if (!isNaN(score) && score > 0) {
+      sev = score >= 9.0 ? 'critical' : score >= 7.0 ? 'high' : score >= 4.0 ? 'medium' : 'low';
+    } else {
+      const flags = [r.confidentialite, r.integrite, r.disponibilite].filter(Boolean).length;
+      sev = flags >= 2 ? 'high' : 'medium';
+    }
+
+    const tags = [];
+    if (r.cve_id) tags.push(`#${r.cve_id.toLowerCase()}`);
+    if (r.produits && Array.isArray(r.produits)) {
+      r.produits.slice(0, 2).forEach(p => {
+        const tag = '#' + p.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        if (tag.length > 1) tags.push(tag);
+      });
+    }
+
+    const diffMs  = Date.now() - new Date(r.created_at).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const time    = diffMin < 60 ? `${diffMin}m ago`
+                  : diffMin < 1440 ? `${Math.floor(diffMin/60)}h ago`
+                  : `${Math.floor(diffMin/1440)}d ago`;
+
+    const menaceLower = (r.menace || '').toLowerCase();
+    let source;
+    if (r.cve_id) {
+      source = 'CVE · ' + r.cve_id;
+    } else if (menaceLower.includes('fuite') || menaceLower.includes('exfiltration') || menaceLower.includes('collecte') || menaceLower.includes('breach')) {
+      source = 'DATALEAK · ' + (r.menace||'').split(' ').slice(0,2).join(' ').toUpperCase();
+    } else if (menaceLower.includes('conformité') || menaceLower.includes('nis2') || menaceLower.includes('transparence') || menaceLower.includes('rgpd')) {
+      source = 'GRC · ' + (r.menace||'').split(' ').slice(0,2).join(' ').toUpperCase();
+    } else {
+      source = 'CYBERSEC · ' + (r.menace||'').split(' ').slice(0,2).join(' ').toUpperCase();
+    }
+
+    return {
+      id:    r.id,
+      name:  r.titre,
+      sev,
+      source: source.slice(0, 35),
+      type:  r.type || 'cyber',
+      tags:  tags.slice(0, 3),
+      time,
+      desc:  r.scenario || r.menace || '',
+      source_url: r.source_url,
+      cvss:  r.cvss_score,
+    };
+  });
 }

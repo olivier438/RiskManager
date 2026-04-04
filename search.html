@@ -780,7 +780,8 @@ document.getElementById('topDate').textContent =
 
 // RISKS & RS_FEED — peuplés dynamiquement par reloadSearchData()
 let RISKS   = [];
-let RS_FEED = [];
+let RS_FEED = [];    // feed dashboard (triage=significant, 20 items)
+let RS_CATALOG = []; // catalogue complet pour le marketplace
 
 // ── STATE ──
 let includeJournal = false;
@@ -910,22 +911,23 @@ function renderMarketplace() {
   const grid = document.getElementById('mktGrid');
   if (!grid) return;
 
-  if (RS_FEED.length === 0) {
+  if (RS_CATALOG.length === 0) {
     grid.innerHTML = '<div class="initial-state" style="grid-column:1/-1"><div class="initial-text">LOADING THREATS...</div></div>';
     return;
   }
 
   const counts = { cybersec:0, dataleak:0, grc:0 };
-  RS_FEED.forEach(r => counts[getMktCategoryFromSource(r)]++);
+  RS_CATALOG.forEach(r => counts[getMktCategoryFromSource(r)]++);
   const el = id => document.getElementById(id);
-  if (el('mktCountAll'))   el('mktCountAll').textContent   = RS_FEED.length;
+  if (el('mktCountAll'))   el('mktCountAll').textContent   = RS_CATALOG.length;
   if (el('mktCountCyber')) el('mktCountCyber').textContent = counts.cybersec;
   if (el('mktCountData'))  el('mktCountData').textContent  = counts.dataleak;
   if (el('mktCountGrc'))   el('mktCountGrc').textContent   = counts.grc;
 
+  
   const filtered = mktCat === 'all'
-    ? RS_FEED
-    : RS_FEED.filter(r => getMktCategoryFromSource(r) === mktCat);
+    ? RS_CATALOG
+    : RS_CATALOG.filter(r => getMktCategoryFromSource(r) === mktCat);
 
   if (filtered.length === 0) {
     grid.innerHTML = '<div class="initial-state" style="grid-column:1/-1"><div class="empty-icon">◈</div><div class="empty-text">No threats in this category</div></div>';
@@ -980,7 +982,7 @@ function renderMarketplace() {
 
 
 async function importMktItem(rsId, btn) {
-  const rs = RS_FEED.find(x => x.id === rsId);
+  const rs = RS_CATALOG.find(x => x.id === rsId) || RS_FEED.find(x => x.id === rsId);
   if (!rs || MKT_IMPORTED.has(rsId)) return;
 
   btn.disabled = true;
@@ -1254,7 +1256,7 @@ function openRSItem(rs) {
 const RS_IMPORTED = new Set();
 async function importRSFromSearch(rsId) {
   if (RS_IMPORTED.has(rsId)) return;
-  const rs = RS_FEED.find(x => x.id === rsId);
+  const rs = RS_CATALOG.find(x => x.id === rsId) || RS_FEED.find(x => x.id === rsId);
   if (!rs) return;
 
   const btn = document.querySelector('.sp-btn.primary');
@@ -1382,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Charger RISKS + RS_FEED depuis Supabase
 async function reloadSearchData() {
   try {
-    const [risks, feed] = await Promise.all([listRisks(), listRSFeed(500)]);
+    const [risks, feed, catalog] = await Promise.all([listRisks(), listRSFeed(20), listRSCatalog()]);
 
     RISKS.length = 0;
     risks.forEach(r => {
@@ -1406,6 +1408,9 @@ async function reloadSearchData() {
 
     RS_FEED.length = 0;
     feed.forEach(f => RS_FEED.push(f));
+
+    RS_CATALOG.length = 0;
+    catalog.forEach(c => RS_CATALOG.push(c));
 
     // Mettre à jour owner filter
     const ownerSelect = document.getElementById('filterOwner');

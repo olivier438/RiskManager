@@ -874,21 +874,15 @@ function setTab(tab) {
 let mktCat = 'all';
 const MKT_IMPORTED = new Set();
 
-function setMktCat(cat) {
-  mktCat = cat;
-  document.querySelectorAll('.mkt-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
-  renderMarketplace();
-}
-
 function getMktCategoryFromSource(item) {
-  // Utiliser le champ type de la DB en priorité
-  const type = (item.type || '').toLowerCase();
-  if (type === 'grc')      return 'grc';
-  if (type === 'dataleak') return 'dataleak';
-  // Fallback sur le badge source
-  const s = (item.source || '').toUpperCase();
-  if (s.startsWith('DATALEAK')) return 'dataleak';
-  if (s.startsWith('GRC'))      return 'grc';
+  // Normalise le champ type DB (data_leak, data-leak, dataleak, breach, leak...)
+  const type = (item.type || '').toLowerCase().replace(/[-_\s]/g, '');
+  if (type === 'grc' || type === 'compliance' || type === 'regulatory') return 'grc';
+  if (type === 'dataleak' || type === 'leak' || type === 'breach' || type === 'exfiltration') return 'dataleak';
+  // Fallback : mots-clés dans le nom / description
+  const text = ((item.name || '') + ' ' + (item.desc || '')).toLowerCase();
+  if (/data.?leak|breach|exfiltrat|fuite|vol.de.données|data.theft/.test(text)) return 'dataleak';
+  if (/\b(gdpr|rgpd|nis2|dora|iso.?27\d{3}|compliance|conformit|reglementaire|regulatory)\b/.test(text)) return 'grc';
   return 'cybersec';
 }
 

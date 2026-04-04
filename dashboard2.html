@@ -1,0 +1,3599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var t=localStorage.getItem("rm-theme")||"dark";document.documentElement.setAttribute("data-theme",t);})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Manager — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #090c10;
+    --surface:    #0d1117;
+    --card:       #111820;
+    --card-hi:    #141e28;
+    --border:     #1c2730;
+    --border-hi:  #2a3a4a;
+    --accent:     #1d6fa4;
+    --accent-hi:  #2387c8;
+    --text:       #cdd9e5;
+    --muted:      #7a95aa;
+    --mono:       'IBM Plex Mono', monospace;
+    --sans:       'IBM Plex Sans', sans-serif;
+
+    --critical:   #c0392b;
+    --high:       #d4700a;
+    --medium:     #b8960a;
+    --low:        #1a7a4a;
+    --info:       var(--accent);
+
+    --calm:       #1a7a4a;
+    --elevated:   #b8960a;
+    --threat:     #c0392b;
+  }
+
+  /* ── LIGHT THEME ── */
+  [data-theme="light"] {
+    --bg:        #f0f4f8;
+    --surface:   #ffffff;
+    --card:      #fafcfe;
+    --card-hi:   #eef3f8;
+    --border:    #d0dae4;
+    --border-hi: #b0bfcc;
+    --accent:    #1d6fa4;
+    --accent-hi: #156091;
+    --text:      #1a2a38;
+    --muted:     #5a7a90;
+    --critical:  #c0392b;
+    --high:      #b85c08;
+    --medium:    #8a6c00;
+    --low:       #156038;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 0;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 32px;
+  }
+
+  .topbar-icon {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .topbar-icon svg {
+    width: 11px; height: 11px;
+    fill: none; stroke: var(--accent);
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .topbar-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  .topbar-name span { color: var(--accent-hi); }
+
+  .topbar-sep {
+    width: 1px; height: 20px;
+    background: var(--border);
+    margin: 0 20px;
+  }
+
+  .topbar-env {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(212,150,10,0.3);
+    background: rgba(212,150,10,0.06);
+    color: #d4960a;
+    margin-right: 16px;
+  }
+
+  .topbar-env.prod {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .topbar-org {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .topbar-chart {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 16px;
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+  }
+
+  .chart-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .chart-label.up   { color: var(--critical); }
+  .chart-label.down { color: var(--low); }
+  .chart-label.flat { color: var(--muted); }
+
+  .chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .legend-dot {
+    width: 6px; height: 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .topbar-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .lang-dropdown {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .lang-current {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 4px 8px;
+    border-radius: 2px;
+    border: 1px solid var(--border-hi);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lang-current:hover { color: var(--text); border-color: var(--accent); }
+
+  .lang-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border-hi);
+    border-radius: 3px;
+    overflow: hidden;
+    z-index: 500;
+    min-width: 140px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .lang-menu.open { display: block; }
+
+  .lang-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+    letter-spacing: 0.04em;
+  }
+  .lang-menu button:hover { background: var(--card-hi); color: var(--text); }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .user-avatar {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .user-name { font-size: 12px; font-weight: 500; color: var(--text); }
+
+  .user-role {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .user-role-wrap { position: relative; }
+
+  .user-role-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .user-role-btn:hover { color: var(--accent-hi); }
+
+  .role-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border-hi);
+    border-radius: 3px;
+    overflow: hidden;
+    z-index: 500;
+    min-width: 130px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .role-menu.open { display: block; }
+  .role-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: background 0.1s, color 0.1s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .role-menu button:hover,
+  .role-menu button:focus { background: var(--card-hi); color: var(--text); }
+  .role-menu button:focus-visible { outline: none; }
+
+  /* ── LAYOUT ── */
+  .main {
+    flex: 1;
+    padding: 20px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── PULSE BAR ── */
+  .pulse-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pulse-bar::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--pulse-color, var(--calm));
+    border-radius: 4px 0 0 4px;
+  }
+
+  .pulse-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pulse-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--pulse-color, var(--calm));
+    box-shadow: 0 0 0 0 var(--pulse-color, var(--calm));
+    animation: pulseAnim 2s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulseAnim {
+    0%   { box-shadow: 0 0 0 0 rgba(26,122,74,0.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(26,122,74,0); }
+    100% { box-shadow: 0 0 0 0 rgba(26,122,74,0); }
+  }
+
+  .pulse-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pulse-color, var(--calm));
+  }
+
+  .pulse-sep { width: 1px; height: 16px; background: var(--border); }
+
+  .pulse-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+
+  .pulse-desc {
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .pulse-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .pulse-updated {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .pulse-events {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pulse-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+
+  .pulse-tag.critical { color: var(--critical); border-color: rgba(192,57,43,0.3); background: rgba(192,57,43,0.06); }
+  .pulse-tag.high     { color: var(--high);     border-color: rgba(212,112,10,0.3); background: rgba(212,112,10,0.06); }
+  .pulse-tag.medium   { color: var(--medium);   border-color: rgba(184,150,10,0.3); background: rgba(184,150,10,0.06); }
+
+  /* ── GRID LAYOUT ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .panel.full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* My Risks — liste full width */
+  .panel.full-width .panel-body {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 220px;
+    padding: 0;
+  }
+
+  .panel.full-width .risk-item {
+    display: grid;
+    grid-template-columns: 72px 1fr 110px auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 16px;
+    border-radius: 0;
+    border-bottom: 1px solid var(--border);
+    background: none;
+  }
+
+  .panel.full-width .risk-item:last-child { border-bottom: none; }
+  .panel.full-width .risk-item:hover { background: var(--card-hi); }
+  .panel.full-width .risk-item-top  { display: contents; }
+  .panel.full-width .risk-item-bot  { display: contents; }
+  .panel.full-width .risk-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  .panel.full-width .risk-tags { display: flex; gap: 4px; }
+  .panel.full-width .risk-status { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.04em; white-space: nowrap; }
+  .panel.full-width .risk-owner { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; text-align: right; }
+
+  /* ── CARD ── */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex: 1;
+  }
+
+  .panel-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--border);
+    padding: 2px 7px;
+    border-radius: 2px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #1a7a4a;
+    animation: pulseAnim 2s infinite;
+    flex-shrink: 0;
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  /* ── RISK TABLE (My Risks) ── */
+  .risk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .risk-table thead tr {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-hi);
+  }
+
+  .risk-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 7px 12px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .risk-table th:first-child { padding-left: 16px; }
+  .risk-table th:last-child  { padding-right: 16px; }
+
+  .risk-row {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .risk-row:last-child { border-bottom: none; }
+  .risk-row:hover { background: var(--card-hi); }
+
+  .risk-row td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .risk-row td:first-child { padding-left: 16px; }
+  .risk-row td:last-child  { padding-right: 16px; }
+
+  .col-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    width: 72px;
+  }
+
+  .col-name {
+    font-weight: 500;
+    color: var(--text);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .col-sev  { width: 80px; }
+  .col-status {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    width: 130px;
+  }
+
+  .col-tags { display: flex; gap: 4px; align-items: center; }
+  .col-owner {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+    width: 60px;
+  }
+
+  /* ── RISK ITEM (autres panels) ── */
+  .risk-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .risk-item:last-child { border-bottom: none; }
+  .risk-item:hover { background: var(--card-hi); }
+
+  .risk-item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .risk-id {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  .risk-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .severity {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+
+  .severity.critical { color: var(--critical); border-color: rgba(192,57,43,0.35); background: rgba(192,57,43,0.08); }
+  .severity.high     { color: var(--high);     border-color: rgba(212,112,10,0.35); background: rgba(212,112,10,0.08); }
+  .severity.medium   { color: var(--medium);   border-color: rgba(184,150,10,0.35); background: rgba(184,150,10,0.08); }
+  .severity.low      { color: var(--low);      border-color: rgba(26,122,74,0.35);  background: rgba(26,122,74,0.08); }
+
+  .risk-item-bot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .risk-status {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .risk-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent-hi);
+    background: rgba(29,111,164,0.1);
+    border: 1px solid rgba(29,111,164,0.2);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  .risk-owner {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* ── LIVE FEED ITEM ── */
+  .feed-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { background: var(--card-hi); }
+
+  .feed-item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .feed-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  .feed-item-bot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .feed-source {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .feed-time {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .feed-new {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent-hi);
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  /* ── PENDING ITEM ── */
+  .pending-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .pending-item:last-child { border-bottom: none; }
+  .pending-item:hover { background: var(--card-hi); }
+
+  .pending-item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .pending-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .pending-item-bot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pending-by {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .pending-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-approve {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(26,122,74,0.4);
+    background: rgba(26,122,74,0.1);
+    color: var(--low);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .btn-approve:hover { background: rgba(26,122,74,0.2); }
+
+  .btn-reject {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(192,57,43,0.3);
+    background: rgba(192,57,43,0.06);
+    color: var(--critical);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .btn-reject:hover { background: rgba(192,57,43,0.14); }
+
+  /* ── PANEL FOOTER ── */
+  .panel-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .btn-link {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--accent-hi);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-transform: uppercase;
+  }
+
+  .btn-link:hover { color: var(--text); }
+
+  .btn-new {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-new:hover { background: var(--accent-hi); }
+
+  /* ── SUMMARY ROW ── */
+  .summary-row {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .summary-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .summary-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .summary-val.critical { color: var(--critical); }
+  .summary-val.high     { color: var(--high); }
+  .summary-val.medium   { color: var(--medium); }
+  .summary-val.low      { color: var(--low); }
+  .summary-val.neutral  { color: var(--text); }
+
+  .summary-info {}
+  .summary-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .summary-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+/* ── I18N MODULE (inline, EN fallback embarqué) ── */
+const i18n = (() => {
+  let _locale = 'en';
+
+  // Strings EN embarquées — fallback si fetch échoue
+  const FALLBACK = {
+    'app.name':'RiskManager','app.tagline':'Secure access — GRC Risk Platform',
+    'summary.critical':'Critical','summary.critical.sub':'Immediate action required',
+    'summary.high':'High','summary.high.sub':'Treatment in progress',
+    'summary.medium':'Medium','summary.medium.sub':'Under monitoring',
+    'summary.low':'Low','summary.low.sub':'Accepted or closed',
+    'summary.pending':'Pending','summary.pending.sub':'Awaiting approval',
+    'panel.my_risks':'My Risks','panel.live_feed':'Risk Studio — Live Feed','panel.pending_team':'Pending — Team',
+    'table.id':'ID','table.risk_name':'Risk Name','table.severity':'Severity',
+    'table.status':'Status','table.tags':'Tags','table.owner':'Owner',
+    'btn.new_risk':'+ New Risk','btn.approve':'Approve','btn.reject':'Reject',
+    'btn.view_all':'View all','btn.edit':'Edit Risk','btn.import':'Import as Risk',
+    'btn.cancel':'Cancel','btn.save_draft':'Save as Draft','btn.submit':'Submit for Analysis →',
+    'feed.open_rs':'Open Risk Studio','feed.import':'Import as risk →',
+    'pending.view_all':'View all pending',
+    'severity.critical':'Critical','severity.high':'High','severity.medium':'Medium','severity.low':'Low',
+    'status.draft':'DRAFT','status.in_analysis':'IN ANALYSIS','status.in_review':'IN REVIEW',
+    'status.in_treatment':'IN TREATMENT','status.treated':'TREATED',
+    'status.pending_approval':'PENDING APPROVAL','status.monitored':'MONITORED',
+    'risk.new.title':'New Risk','risk.new.sub':'Private by default',
+    'risk.new.section.identification':'Identification','risk.new.section.analysis':'Analysis',
+    'risk.new.section.scoring':'Scoring','risk.new.section.governance':'Governance',
+    'risk.new.section.measures':'Framework Measures',
+    'risk.new.name':'Risk Name','risk.new.description':'Description',
+    'risk.new.description.placeholder':'Describe the risk in plain language. Tags will be detected automatically...',
+    'risk.new.asset':'Asset concerned','risk.new.asset.placeholder':'Server, application, process...',
+    'risk.new.threat':'Threat source','risk.new.threat.placeholder':'External attacker, insider...',
+    'risk.new.vuln':'Vulnerability','risk.new.vuln.placeholder':'Unpatched system, weak auth...',
+    'risk.new.scenario':'Scenario','risk.new.scenario.placeholder':'How the threat exploits the vulnerability...',
+    'risk.new.likelihood':'Likelihood','risk.new.impact':'Impact',
+    'risk.new.gross_risk':'Gross Risk (auto)',
+    'risk.new.visibility':'Visibility','risk.new.owner':'Risk Owner',
+    'risk.new.owner.me':'Me','risk.new.owner.assign':'Assign to team...',
+    'risk.new.tags_detected':'Tags detected','risk.new.tags_manual':'Additional tags',
+    'risk.new.tags_manual.placeholder':'#custom-tag  (space to separate)',
+    'risk.new.measures.hint':'Based on your active frameworks · auto-matched from tags',
+    'risk.new.measures.empty':'Start typing the description to detect measures.',
+    'risk.new.tags.empty':'No measures matched yet.',
+    'risk.new.groq.analysing':'Analysing...','risk.new.groq.detected':'{{n}} tag(s) detected',
+    'likelihood.1':'1 — Rare','likelihood.2':'2 — Unlikely','likelihood.3':'3 — Possible',
+    'likelihood.4':'4 — Likely','likelihood.5':'5 — Almost certain',
+    'impact.1':'1 — Negligible','impact.2':'2 — Minor','impact.3':'3 — Moderate',
+    'impact.4':'4 — Major','impact.5':'5 — Catastrophic',
+    'visibility.private':'PRIVATE','visibility.team':'TEAM',
+    'detail.section.identification':'Identification','detail.section.analysis':'Analysis',
+    'detail.section.governance':'Governance','detail.risk_name':'Risk Name',
+    'detail.severity':'Severity','detail.status':'Status','detail.tags':'Tags',
+    'detail.likelihood':'Likelihood','detail.impact':'Impact',
+    'detail.gross_risk':'Gross Risk','detail.residual_risk':'Residual Risk',
+    'detail.decision':'Treatment Decision','detail.owner':'Risk Owner',
+    'detail.visibility':'Visibility','detail.not_defined':'Not defined',
+    'filtered.risks':'Risk(s)','filtered.view':'Filtered view','filtered.empty':'No risks found.',
+    'feed.detail.section':'Threat Intelligence','feed.detail.title':'Title',
+    'feed.detail.severity':'Severity','feed.detail.source':'Source',
+    'feed.detail.tags':'Tags','feed.detail.description':'Description',
+    'pulse.elevated':'ELEVATED','pulse.calm':'CALM','pulse.critical':'CRITICAL',
+  };
+
+  let _strings = { ...FALLBACK };
+
+  async function load(locale = 'en') {
+    try {
+      const res = await fetch(`locales/${locale}.json`);
+      if (!res.ok) throw new Error();
+      _strings = await res.json();
+      _locale = locale;
+      document.documentElement.lang = locale;
+    } catch {
+      _strings = { ...FALLBACK };
+      _locale = 'en';
+    }
+  }
+
+  function t(key, vars = {}) {
+    let str = _strings[key] ?? FALLBACK[key] ?? key;
+    Object.entries(vars).forEach(([k, v]) => { str = str.replace(`{{${k}}}`, v); });
+    return str;
+  }
+
+  function applyDOM() {
+    document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.getAttribute('data-i18n-placeholder')));
+  }
+
+  async function init() {
+    const saved = localStorage.getItem('rm_locale');
+    const browser = navigator.language?.split('-')[0];
+    const supported = ['en','fr','nl','de'];
+    const locale = saved || (supported.includes(browser) ? browser : 'en');
+    if (locale !== 'en') await load(locale);
+    else _locale = 'en';
+    document.documentElement.lang = _locale;
+    applyDOM();
+    renderLangSwitcher();
+  }
+
+  async function setLocale(locale) {
+    localStorage.setItem('rm_locale', locale);
+    await load(locale);
+    applyDOM();
+    renderLangSwitcher();
+  }
+
+  function renderLangSwitcher() {
+    const btn = document.getElementById('langCurrentBtn');
+    if (btn) btn.textContent = _locale.toUpperCase();
+  }
+
+  const AVAILABLE = [
+    { code:'en', label:'English' },
+    { code:'fr', label:'Français' },
+    { code:'nl', label:'Nederlands' },
+    { code:'de', label:'Deutsch' },
+  ];
+
+  return { init, load, t, locale: () => _locale, setLocale, applyDOM, AVAILABLE };
+})();
+
+function toggleLangMenu() {
+  document.getElementById('langMenu')?.classList.toggle('open');
+}
+
+  function toggleAppMenu() {
+  const menu = document.getElementById('appMenu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Role is set by Supabase — no manual switcher
+
+document.addEventListener('click', e => {
+  const dd = document.getElementById('langDropdown');
+  if (dd && !dd.contains(e.target)) document.getElementById('langMenu')?.classList.remove('open');
+  const rb = document.getElementById('userRoleBtn');
+  if (rb && !rb.closest('.user-role-wrap').contains(e.target)) document.getElementById('roleMenu')?.classList.remove('open');
+  const am = document.getElementById('appMenu');
+  if (am && am.style.display === 'block') {
+    const btn = am.previousElementSibling;
+    if (!am.contains(e.target) && !btn?.contains(e.target)) am.style.display = 'none';
+  }
+});
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('rm-theme', next);
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = next === 'light' ? '☀ Light' : '☾ Dark';
+  }
+
+  (function applyTheme() {
+    const saved = localStorage.getItem('rm-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    // Label du bouton — mis à jour au DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
+    });
+  })();
+</script>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <img src="data:image/png;base64,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" alt="RiskManager" style="height:28px;width:auto;display:block;">
+  </div>
+
+  <div class="topbar-env" id="envBadge">BETA</div>
+
+  <div class="topbar-sep"></div>
+
+  <span class="topbar-org" id="orgName">HamburgerLAND — Environment</span>
+
+  <div class="topbar-chart" title="Monthly risk evolution — Critical vs High">
+    <svg id="sparkline" width="200" height="32" viewBox="0 0 200 32"></svg>
+    <div class="chart-legend">
+      <div class="chart-legend-item"><div class="legend-dot" style="background:#c0392b"></div><span data-i18n="severity.critical">Critical</span></div>
+      <div class="chart-legend-item"><div class="legend-dot" style="background:#d4700a"></div><span data-i18n="severity.high">High</span></div>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <span class="topbar-date" id="topDate"></span>
+    <div class="topbar-user">
+      <div class="user-avatar" id="userAvatar">OD</div>
+      <div>
+        <div class="user-name" id="userName">Olivier Delvigne</div>
+        <div class="user-role-wrap">
+          <span class="user-role-btn" id="userRoleBtn" style="cursor:default">
+            <span id="userRole">RISK LEADER</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAMBURGER MENU -->
+    <div style="position:relative;margin-left:8px;">
+      <button onclick="toggleAppMenu()" style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);cursor:pointer;padding:5px 8px;font-size:14px;line-height:1;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--border-hi)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">≡</button>
+      <div id="appMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border-hi);border-radius:3px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:500;overflow:hidden;">
+        <div style="padding:4px 0;">
+          <a href="dashboard.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Work</a>
+          <a href="kpi.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">KPI</a>
+          <a href="search.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Search</a>
+          <a href="status.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Status</a>
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+          <a href="profile.html" style="display:block;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">My Profile</a>
+          <a href="settings.html" id="settingsLink" style="display:none;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Settings</a>
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+          <button onclick="toggleTheme()" id="themeToggleBtn" style="display:block;width:100%;text-align:left;font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);background:none;border:none;cursor:pointer;letter-spacing:0.06em;transition:all 0.1s;" onmouseover="this.style.background='var(--card-hi)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">☾ Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="lang-dropdown" id="langDropdown">
+      <button class="lang-current" onclick="toggleLangMenu()" id="langCurrentBtn">EN</button>
+      <div class="lang-menu" id="langMenu">
+        <button onclick="i18n.setLocale('en')">EN — English</button>
+        <button onclick="i18n.setLocale('fr')">FR — Français</button>
+        <button onclick="i18n.setLocale('nl')">NL — Nederlands</button>
+        <button onclick="i18n.setLocale('de')">DE — Deutsch</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- SUMMARY ROW -->
+  <div class="summary-row">
+    <div class="summary-card" data-filter="critical">
+      <div class="summary-val critical" id="countCritical">3</div>
+      <div class="summary-info">
+        <div class="summary-label" data-i18n="summary.critical">Critical</div>
+        <div class="summary-sub" data-i18n="summary.critical.sub">Immediate action required</div>
+      </div>
+    </div>
+    <div class="summary-card" data-filter="high">
+      <div class="summary-val high" id="countHigh">7</div>
+      <div class="summary-info">
+        <div class="summary-label" data-i18n="summary.high">High</div>
+        <div class="summary-sub" data-i18n="summary.high.sub">Treatment in progress</div>
+      </div>
+    </div>
+    <div class="summary-card" data-filter="medium">
+      <div class="summary-val medium" id="countMedium">12</div>
+      <div class="summary-info">
+        <div class="summary-label" data-i18n="summary.medium">Medium</div>
+        <div class="summary-sub" data-i18n="summary.medium.sub">Under monitoring</div>
+      </div>
+    </div>
+    <div class="summary-card" data-filter="low">
+      <div class="summary-val low" id="countLow">5</div>
+      <div class="summary-info">
+        <div class="summary-label" data-i18n="summary.low">Low</div>
+        <div class="summary-sub" data-i18n="summary.low.sub">Accepted or closed</div>
+      </div>
+    </div>
+    <div class="summary-card" data-filter="draft" style="border-style:dashed;opacity:0.8">
+      <div class="summary-val neutral" id="countDraft" style="color:var(--muted)">0</div>
+      <div class="summary-info">
+        <div class="summary-label" style="color:var(--muted)">Drafts</div>
+        <div class="summary-sub">Pending submission</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3-COL GRID -->
+  <div class="grid">
+
+    <!-- MY RISKS — FULL WIDTH HORIZONTAL -->
+    <div class="panel full-width">
+      <div class="panel-header">
+        <span class="panel-title" data-i18n="panel.my_risks">My Risks</span>
+        <span class="panel-count" id="myRisksCount">0</span>
+        <span id="filterBadge" style="display:none;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:2px;border:1px solid;margin-left:8px;cursor:pointer;" onclick="filterTable(null)"></span>
+      </div>
+      <div class="panel-body" id="myRisksList" style="padding:0;overflow-x:auto;">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th data-i18n="table.id">ID</th>
+              <th data-i18n="table.risk_name">Risk Name</th>
+              <th data-i18n="table.severity">Severity</th>
+              <th data-i18n="table.status">Status</th>
+              <th data-i18n="table.tags">Tags</th>
+              <th data-i18n="table.owner">Owner</th>
+            </tr>
+          </thead>
+          <tbody id="myRisksBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-footer">
+        <button class="btn-link" onclick="filterTable(null)" data-i18n="btn.view_all">View all</button>
+        <button class="btn-new" data-i18n="btn.new_risk">+ New Risk</button>
+      </div>
+    </div>
+
+    <!-- PENDING TEAM -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" data-i18n="panel.pending_team">Pending — Team</span>
+        <span class="panel-count" id="pendingCount">0</span>
+      </div>
+      <div class="panel-body" id="pendingList">
+        <div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading...</div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn-link" data-i18n="pending.view_all">View all pending</button>
+      </div>
+    </div>
+
+    <!-- LIVE FEED RS -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="live-dot"></div>
+        <span class="panel-title" data-i18n="panel.live_feed">Risk Studio — Live Feed</span>
+        <span class="panel-count">RS</span>
+      </div>
+
+      <!-- GLOBAL THREAT PULSE intégré -->
+      <div class="pulse-bar" id="pulseBar" style="border-radius:0;border:none;border-bottom:1px solid var(--border);margin:0;cursor:pointer;" onclick="openPulseSearch()" title="Click to search related risks">
+        <div class="pulse-indicator">
+          <div class="pulse-dot" id="pulseDot"></div>
+          <span class="pulse-label" id="pulseLabel">ELEVATED</span>
+        </div>
+        <div class="pulse-sep"></div>
+        <span class="pulse-desc" id="pulseDesc">Ransomware surge · EU public sector · 3 CVEs 9.0+</span>
+        <div class="pulse-right">
+          <div class="pulse-events">
+            <span class="pulse-tag critical">2 Crit</span>
+            <span class="pulse-tag high">5 High</span>
+          </div>
+          <span class="pulse-updated" id="pulseUpdated">4 min ago</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--accent-hi);letter-spacing:0.06em;margin-left:8px;">Search →</span>
+        </div>
+      </div>
+      <div class="panel-body" id="liveFeedList">
+        <div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading feed...</div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn-link" data-i18n="feed.open_rs">Open Risk Studio</button>
+        <button class="btn-link" data-i18n="feed.import">Import as risk →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SLIDE PANEL ── -->
+<div class="sp-overlay" id="spOverlay" onclick="closePanel()"></div>
+<div class="slide-panel" id="slidePanel">
+
+  <!-- Barre de sévérité (colorée dynamiquement) -->
+  <div class="sp-sev-bar" id="spSevBar"></div>
+
+  <div class="sp-header" id="spHeader">
+    <div class="sp-title-row">
+      <div>
+        <span class="sp-title" id="spTitle">Detail</span>
+        <div class="sp-risk-name" id="spRiskName" style="display:none"></div>
+      </div>
+      <button class="sp-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="sp-header-meta" id="spHeaderMeta">
+      <div class="sp-subtitle" id="spSubtitle"></div>
+    </div>
+  </div>
+
+  <!-- Tab bar (visible en mode risk seulement) -->
+  <div class="sp-tab-bar" id="spTabBar" style="display:none">
+    <button class="sp-tab active" data-tab="overview"  onclick="setSpTab('overview')">Overview</button>
+    <button class="sp-tab"        data-tab="analysis"  onclick="setSpTab('analysis')">Analysis</button>
+    <button class="sp-tab"        data-tab="actions"   onclick="setSpTab('actions')">Actions</button>
+    <button class="sp-tab"        data-tab="journal"   onclick="setSpTab('journal')">Journal</button>
+  </div>
+
+  <div class="sp-body" id="spBody"></div>
+</div>
+
+<style>
+  /* ── SLIDE PANEL ── */
+  .sp-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    backdrop-filter: blur(3px);
+  }
+  .sp-overlay.open { display: block; }
+
+  .slide-panel {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 520px;
+    background: var(--card);
+    border-left: 1px solid var(--border-hi);
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    overflow: hidden;
+  }
+  .slide-panel.open { transform: translateX(0); }
+
+  /* Barre de couleur sévérité en haut */
+  .sp-sev-bar {
+    height: 3px;
+    width: 100%;
+    flex-shrink: 0;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+
+  .sp-header {
+    padding: 16px 22px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+
+  .sp-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .sp-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .sp-risk-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.35;
+    margin-top: 4px;
+    max-width: 400px;
+  }
+
+  .sp-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.1s;
+    flex-shrink: 0;
+  }
+  .sp-close:hover { color: var(--text); }
+
+  .sp-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .sp-subtitle {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── TAB BAR ── */
+  .sp-tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+
+  .sp-tab {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 11px 16px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .sp-tab:hover { color: var(--text); }
+  .sp-tab.active {
+    color: var(--accent-hi);
+    border-bottom-color: var(--accent-hi);
+  }
+
+  /* ── BODY ── */
+  .sp-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .sp-body::-webkit-scrollbar { width: 4px; }
+  .sp-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  /* SP sections */
+  .sp-section { display: flex; flex-direction: column; gap: 10px; }
+  .sp-section-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sp-field { display: flex; flex-direction: column; gap: 4px; }
+  .sp-field-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sp-field-value {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .sp-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ── RISK MATRIX ── */
+  .risk-matrix-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .risk-matrix-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .risk-matrix-grid {
+    display: grid;
+    grid-template-columns: 20px repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr) 20px;
+    gap: 2px;
+    width: 100%;
+    aspect-ratio: 6/6;
+    max-width: 260px;
+  }
+  .rm-axis-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rm-cell {
+    border-radius: 2px;
+    position: relative;
+    transition: opacity 0.15s;
+    min-height: 30px;
+  }
+  .rm-cell.dot::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.4), 0 0 8px rgba(255,255,255,0.6);
+  }
+  .rm-axis-title {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: center;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    grid-row: 1 / 6;
+  }
+
+  /* Score display */
+  .sp-score-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .sp-score-box {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 3px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sp-score-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sp-score-value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* Filtered list in panel */
+  .sp-risk-list { display: flex; flex-direction: column; gap: 6px; }
+  .sp-risk-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color 0.1s, background 0.1s;
+  }
+  .sp-risk-card:hover { background: var(--card-hi); border-color: var(--border-hi); }
+  .sp-risk-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .sp-risk-card-id {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .sp-risk-card-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+  .sp-risk-card-bot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* SP action buttons */
+  .sp-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  .sp-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 9px 16px;
+    border-radius: 2px;
+    border: 1px solid var(--border-hi);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sp-btn:hover { background: var(--card-hi); }
+
+  .sp-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .sp-btn.primary:hover { background: var(--accent-hi); border-color: var(--accent-hi); }
+
+  /* ── ANALYST EDIT FIELDS ── */
+  .sp-select {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 2px;
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .sp-select:focus { border-color: var(--accent); }
+
+  .sp-textarea {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  .sp-textarea::placeholder { color: var(--muted); opacity: 0.5; }
+  .sp-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,111,164,0.1); }
+
+  /* ── JOURNAL ── */
+  .jn-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .jn-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    resize: none;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  .jn-input::placeholder { color: var(--muted); opacity: 0.5; }
+  .jn-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,111,164,0.1); }
+
+  .jn-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border-hi);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .jn-btn:hover { background: var(--card-hi); border-color: var(--accent); color: var(--accent-hi); }
+
+  .jn-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .jn-list::-webkit-scrollbar { width: 3px; }
+  .jn-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  .jn-entry {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 2px 2px 0;
+    padding: 8px 12px;
+    animation: fadeUp 0.2s ease both;
+  }
+
+  .jn-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .jn-author {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-hi);
+    letter-spacing: 0.04em;
+  }
+
+  .jn-ts {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .jn-text {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .jn-empty {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding: 8px 0;
+  }
+  .sp-btn.approve { background: rgba(26,122,74,0.15); border: 1px solid rgba(26,122,74,0.4); color: var(--low); }
+  .sp-btn.approve:hover { background: rgba(26,122,74,0.25); }
+  .sp-btn.reject  { background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3); color: var(--critical); }
+  .sp-btn.reject:hover { background: rgba(192,57,43,0.2); }
+
+  /* Clickable rows/cards */
+  .risk-row { cursor: pointer; }
+  .summary-card { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .summary-card:hover { border-color: var(--border-hi); background: var(--card-hi); }
+  .feed-item { cursor: pointer; }
+  .pending-item { cursor: pointer; }
+
+  /* Status badge in panel */
+  .status-mono {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  /* Fade up animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  // ── GLOBALS — accessibles depuis tous les script blocks ──
+  const RISKS_MAP = new Map(); // lookup UUID → risk object, pour onclick propre
+
+  // ── ENV ──
+  const ENV = window.location.hostname.includes('beta') || !window.location.hostname.includes('www') ? 'beta' : 'prod';
+  const badge = document.getElementById('envBadge');
+  if (ENV === 'prod') { badge.textContent = 'PROD'; badge.classList.add('prod'); }
+
+  // ── DATE ──
+  const now = new Date();
+  document.getElementById('topDate').textContent =
+    now.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+
+  // ── PULSE ──
+  const PULSE_STATE = 'ELEVATED';
+  const pulseColors = { CALM:'#1a7a4a', ELEVATED:'#b8960a', CRITICAL:'#c0392b' };
+  const color = pulseColors[PULSE_STATE];
+  document.documentElement.style.setProperty('--pulse-color', color);
+  document.getElementById('pulseLabel').textContent = PULSE_STATE;
+  let secs = 4 * 60;
+  setInterval(() => {
+    secs++;
+    const m = Math.floor(secs / 60);
+    document.getElementById('pulseUpdated').textContent = m > 0 ? `${m} min ago` : `${secs % 60}s ago`;
+  }, 1000);
+
+  // ── DATA ──
+  // RISKS — peuplé dynamiquement par loadAndRenderRisks() depuis Supabase
+  const RISKS = [];
+
+  // FEED — peuplé dynamiquement depuis Risk Studio (Supabase)
+  let FEED = [];
+
+  // ── ROLE (à brancher sur Supabase Auth) ──
+  // 'risk_manager' | 'analyst' | 'admin'
+  // Role set by Supabase in init block below
+  window._currentRole = 'risk_owner'; // default until Supabase loads
+
+  // ── PANEL ──
+  window.openPanel = function openPanel(title, subtitle, bodyHTML) {
+    document.getElementById('spTitle').textContent = title;
+    document.getElementById('spSubtitle').textContent = subtitle;
+    document.getElementById('spRiskName').style.display = 'none';
+    document.getElementById('spTabBar').style.display = 'none';
+    document.getElementById('spSevBar').style.background = 'var(--border)';
+    document.getElementById('spBody').innerHTML = bodyHTML;
+    document.getElementById('spOverlay').classList.add('open');
+    document.getElementById('slidePanel').classList.add('open');
+    const id = title.match(/RM-\d+/)?.[0];
+    if (id) history.replaceState(null,'',`?risk=${id}`);
+  }
+
+  window.closePanel = function closePanel() {
+    document.getElementById('spOverlay').classList.remove('open');
+    document.getElementById('slidePanel').classList.remove('open');
+    history.replaceState(null,'','?');
+  }
+
+  // ── SEVERITY BADGE HTML ──
+  function sevBadge(sev) {
+    return `<span class="severity ${sev}">${i18n.t('severity.' + sev)}</span>`;
+  }
+
+  function tagHTML(tags) {
+    return (tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+  }
+
+  // ── JOURNAL HTML ──
+  function journalHTML(riskUuid, entries = []) {
+    const list = entries.slice().reverse().map(e => `
+      <div class="jn-entry">
+        <div class="jn-meta">
+          <span class="jn-author">${e.author?.first_name || 'Unknown'} ${e.author?.last_name || ''}</span>
+          <span class="jn-ts">${e.created_at?.slice(0,16).replace('T',' ') || ''}</span>
+        </div>
+        <div class="jn-text">${e.entry_text}</div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="sp-section">
+        <div class="sp-section-title">Analysis Journal</div>
+        <div class="jn-input-row">
+          <textarea class="jn-input" id="jnInput" placeholder="Add a note — findings, research, contacts, CVEs..." rows="2"></textarea>
+          <button class="jn-btn" onclick="addJournalEntry('${riskUuid}')">Add</button>
+        </div>
+        <div class="jn-list" id="jnList-${riskUuid}">
+          ${list || '<div class="jn-empty">No entries yet.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  window.addJournalEntry = async function addJournalEntry(riskUuid) {
+    const input = document.getElementById('jnInput');
+    const text  = input?.value.trim();
+    if (!text) return;
+
+    const btn = document.querySelector('.jn-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+    try {
+      const entry = await addJournalEntryAPI(riskUuid, text);
+
+      const list = document.getElementById(`jnList-${riskUuid}`);
+      if (list) {
+        const user = getUser();
+        const newEntry = `
+          <div class="jn-entry" style="animation:fadeUp 0.2s ease both">
+            <div class="jn-meta">
+              <span class="jn-author">${user?.first_name || ''} ${user?.last_name || ''}</span>
+              <span class="jn-ts">${new Date().toISOString().slice(0,16).replace('T',' ')}</span>
+            </div>
+            <div class="jn-text">${text}</div>
+          </div>`;
+        list.innerHTML = newEntry + list.innerHTML;
+        // Retirer le "No entries yet"
+        const empty = list.querySelector('.jn-empty');
+        if (empty) empty.remove();
+      }
+
+      input.value = '';
+      input.focus();
+    } catch (err) {
+      console.error('Journal entry error:', err);
+      alert('Error saving note: ' + err.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Add'; }
+    }
+  }
+
+  // ── RISK MATRIX BUILDER ──
+  function buildRiskMatrix(likelihood, impact) {
+    const L = parseInt(likelihood) || 0;
+    const I = parseInt(impact)     || 0;
+
+    // Couleur par zone (impact = col, likelihood = row)
+    function cellColor(row, col) {
+      const score = row * col;
+      if (score >= 15) return 'rgba(192,57,43,0.55)';   // critical
+      if (score >= 9)  return 'rgba(212,112,10,0.5)';   // high
+      if (score >= 4)  return 'rgba(184,150,10,0.4)';   // medium
+      return 'rgba(26,122,74,0.35)';                     // low
+    }
+
+    // Grille 5×5 : rows = likelihood 5→1 (top), cols = impact 1→5 (left→right)
+    let cells = '';
+    for (let r = 5; r >= 1; r--) {
+      cells += `<div class="rm-axis-label">${r}</div>`;
+      for (let c = 1; c <= 5; c++) {
+        const isDot = (r === L && c === I);
+        cells += `<div class="rm-cell ${isDot ? 'dot' : ''}" style="background:${cellColor(r,c)}"></div>`;
+      }
+    }
+    // Axe X bas
+    cells += `<div></div>`;
+    for (let c = 1; c <= 5; c++) cells += `<div class="rm-axis-label">${c}</div>`;
+
+    return `
+      <div class="risk-matrix-wrap">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;align-self:center;margin-right:2px">Likelihood</div>
+          <div>
+            <div class="risk-matrix-grid">${cells}</div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;text-align:center;margin-top:4px">Impact</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── OPEN RISK PANEL (tabbed) ──
+  window._spTabs  = {};
+  window._spRisk  = null;
+
+  window.setSpTab = function setSpTab(tab) {
+    document.querySelectorAll('.sp-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tab));
+    document.getElementById('spBody').innerHTML = window._spTabs[tab] || '';
+  }
+
+  function openRiskPanel(risk, tabs) {
+    const sev = risk.sev || 'medium';
+    const sevBarColor = {
+      critical: 'var(--critical)',
+      high:     'var(--high)',
+      medium:   'var(--medium)',
+      low:      'var(--low)',
+    }[sev] || 'var(--border)';
+
+    document.getElementById('spSevBar').style.background = sevBarColor;
+    document.getElementById('spTitle').textContent = risk.id || '';
+    const nameEl = document.getElementById('spRiskName');
+    nameEl.textContent = risk.name || '';
+    nameEl.style.display = 'block';
+    document.getElementById('spSubtitle').innerHTML =
+      `${sevBadge(sev)}&nbsp;<span class="status-mono">${risk.status}</span>`;
+    document.getElementById('spTabBar').style.display = 'flex';
+    // reset tabs actifs
+    document.querySelectorAll('.sp-tab').forEach((t,i) =>
+      t.classList.toggle('active', i === 0));
+
+    window._spTabs  = tabs;
+    window._spRisk  = risk;
+    document.getElementById('spBody').innerHTML = tabs.overview || '';
+    document.getElementById('spOverlay').classList.add('open');
+    document.getElementById('slidePanel').classList.add('open');
+    if (risk.id) history.replaceState(null,'',`?risk=${risk.id}`);
+  }
+
+  // ── RISK DETAIL ──
+  window.openRisk = async function openRisk(risk) {
+    if (!risk) return;
+
+    // Charger les données complètes depuis Supabase si on a l'UUID
+    if (risk.uuid) {
+      try {
+        const full = await getRisk(risk.uuid);
+        if (full) {
+          risk = {
+            id:                risk.id,
+            uuid:              risk.uuid,
+            name:              full.name,
+            sev:               full.severity || risk.sev,
+            status:            full.status,
+            tags:              (full.rm_risk_tags || []).map(t => t.tag),
+            owner:             risk.owner,
+            owner_full:        risk.owner_full,
+            description:       full.description,
+            asset:             full.asset,
+            threat_source:     full.threat_source,
+            vulnerability:     full.vulnerability,
+            scenario:          full.scenario,
+            existing_controls: full.existing_controls,
+            proposed_measures: full.proposed_measures,
+            likelihood:        full.likelihood,
+            impact:            full.impact,
+            residual:          full.residual_risk,
+            decision:          full.decision,
+            assigned_to:       full.assigned_to,
+            rm_risk_journal:   full.rm_risk_journal || [],
+          };
+        }
+      } catch (err) {
+        console.error('Load full risk error:', err);
+      }
+    }
+
+    const brut      = risk.likelihood && risk.impact ? risk.likelihood * risk.impact : null;
+    const role      = window._currentRole;
+    const isOwner   = role === 'risk_owner';
+    const isAnalyst = role === 'analyst';
+    const isLeader  = role === 'risk_leader';
+    const canEdit   = (isAnalyst || isLeader) && risk.uuid;
+    const canJournal = isAnalyst || isLeader;
+    const canArchive = isLeader;
+
+    // ── TAB OVERVIEW ──
+    const tabOverview = `
+      <div class="sp-section">
+        <div class="sp-section-title">Identification</div>
+        <div class="sp-field">
+          <div class="sp-field-label">Risk Name</div>
+          ${canEdit
+            ? `<input type="text" id="editName" value="${(risk.name||'').replace(/"/g,'&quot;')}"
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
+            : `<div class="sp-field-value">${risk.name || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Asset</div>
+          ${canEdit
+            ? `<input type="text" id="editAsset" value="${(risk.asset||'').replace(/"/g,'&quot;')}"
+                placeholder="Affected asset..."
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
+            : `<div class="sp-field-value">${risk.asset || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Description</div>
+          ${canEdit
+            ? `<textarea id="editDesc" rows="3" placeholder="Describe the risk..."
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;resize:vertical;">${risk.description||''}</textarea>`
+            : `<div class="sp-field-value">${risk.description || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Tags</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${(risk.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('') || '<span style="color:var(--muted);font-size:11px">No tags</span>'}
+          </div>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Governance</div>
+        <div class="sp-row">
+          <div class="sp-field">
+            <div class="sp-field-label">Owner</div>
+            <div class="sp-field-value">${risk.owner_full || risk.owner || '—'}</div>
+          </div>
+          <div class="sp-field">
+            <div class="sp-field-label">Assigned to</div>
+            <div class="sp-field-value">${risk.assigned_to || '—'}</div>
+          </div>
+        </div>
+      </div>
+      ${canEdit ? `<div style="display:flex;justify-content:flex-end;margin-top:4px">
+        <button class="sp-btn primary" onclick="saveRiskEdits('${risk.uuid||risk.id}')">Save changes →</button>
+      </div>` : ''}`;
+
+    // ── TAB ANALYSIS ──
+    const grossColor = !brut ? 'var(--muted)' :
+      brut >= 15 ? 'var(--critical)' : brut >= 9 ? 'var(--high)' : brut >= 4 ? 'var(--medium)' : 'var(--low)';
+
+    const tabAnalysis = `
+      ${buildRiskMatrix(risk.likelihood, risk.impact)}
+      <div class="sp-score-row">
+        <div class="sp-score-box">
+          <div class="sp-score-label">Likelihood</div>
+          ${canEdit
+            ? `<select id="editLikelihood" onchange="recalcGross()"
+                style="background:transparent;border:none;font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text);outline:none;padding:0;width:100%;">
+                <option value="">—</option>
+                ${[1,2,3,4,5].map(n=>`<option value="${n}" ${risk.likelihood==n?'selected':''}>${n}</option>`).join('')}
+              </select>`
+            : `<div class="sp-score-value" style="color:var(--text)">${risk.likelihood ?? '—'}</div>`}
+        </div>
+        <div class="sp-score-box">
+          <div class="sp-score-label">Impact</div>
+          ${canEdit
+            ? `<select id="editImpact" onchange="recalcGross()"
+                style="background:transparent;border:none;font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text);outline:none;padding:0;width:100%;">
+                <option value="">—</option>
+                ${[1,2,3,4,5].map(n=>`<option value="${n}" ${risk.impact==n?'selected':''}>${n}</option>`).join('')}
+              </select>`
+            : `<div class="sp-score-value" style="color:var(--text)">${risk.impact ?? '—'}</div>`}
+        </div>
+        <div class="sp-score-box">
+          <div class="sp-score-label">Gross Risk</div>
+          <div class="sp-score-value" id="grossDisplay" style="color:${grossColor}">${brut ?? '—'}</div>
+        </div>
+        <div class="sp-score-box">
+          <div class="sp-score-label">Residual</div>
+          ${canEdit
+            ? `<select id="editResidual"
+                style="background:transparent;border:none;font-family:var(--mono);font-size:22px;font-weight:700;color:var(--low);outline:none;padding:0;width:100%;">
+                <option value="">—</option>
+                ${[1,2,3,4,5,6,8,9,10,12,15,16,20,25].map(n=>`<option value="${n}" ${risk.residual==n?'selected':''}>${n}</option>`).join('')}
+              </select>`
+            : `<div class="sp-score-value" style="color:var(--low)">${risk.residual ?? '—'}</div>`}
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Threat Context</div>
+        <div class="sp-field">
+          <div class="sp-field-label">Threat Source</div>
+          ${canEdit
+            ? `<input type="text" id="editThreatSource" value="${(risk.threat_source||'').replace(/"/g,'&quot;')}"
+                placeholder="e.g. External attacker, insider..."
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
+            : `<div class="sp-field-value">${risk.threat_source || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Vulnerability</div>
+          ${canEdit
+            ? `<input type="text" id="editVuln" value="${(risk.vulnerability||'').replace(/"/g,'&quot;')}"
+                placeholder="Exploited weakness..."
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;">`
+            : `<div class="sp-field-value">${risk.vulnerability || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Scenario</div>
+          ${canEdit
+            ? `<textarea id="editScenario" rows="3" placeholder="Describe the threat scenario..."
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;resize:vertical;">${risk.scenario||''}</textarea>`
+            : `<div class="sp-field-value">${risk.scenario || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Existing Controls</div>
+          ${canEdit
+            ? `<textarea id="editControls" rows="2" placeholder="Controls already in place..."
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;resize:vertical;">${risk.existing_controls||''}</textarea>`
+            : `<div class="sp-field-value">${risk.existing_controls || '—'}</div>`}
+        </div>
+        <div class="sp-field">
+          <div class="sp-field-label">Proposed Measures</div>
+          ${canEdit
+            ? `<textarea id="editMeasures" rows="2" placeholder="Proposed treatment actions..."
+                style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:8px 12px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;width:100%;resize:vertical;">${risk.proposed_measures||''}</textarea>`
+            : `<div class="sp-field-value">${risk.proposed_measures || '—'}</div>`}
+        </div>
+      </div>
+      ${canEdit ? `<div style="display:flex;justify-content:flex-end">
+        <button class="sp-btn primary" onclick="saveRiskEdits('${risk.uuid||risk.id}')">Save changes →</button>
+      </div>` : ''}`;
+
+    // ── TAB ACTIONS ──
+    const statuses = [
+      { value:'DRAFT',         key:'status.draft' },
+      { value:'IN ANALYSIS',   key:'status.in_analysis' },
+      { value:'IN REVIEW',     key:'status.in_review' },
+      { value:'IN TREATMENT',  key:'status.in_treatment' },
+      { value:'MONITORED',     key:'status.monitored' },
+    ];
+    const statusOptions = statuses.map(s =>
+      `<option value="${s.value}" ${s.value === risk.status ? 'selected' : ''}>${i18n.t(s.key)}</option>`
+    ).join('');
+
+    let tabActions = '';
+
+    if (isOwner) {
+      tabActions = `
+        <div class="sp-section">
+          <div class="sp-section-title">Risk Owner Actions</div>
+          ${risk.status === 'DRAFT'
+            ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">This risk is in draft. Submit it to the analysis pool when ready.</div>
+               <button class="sp-btn primary" onclick="applyStatusDirect('${risk.uuid||risk.id}','IN ANALYSIS')">Submit to pool →</button>`
+            : `<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:3px">No actions available at this stage.</div>`}
+        </div>`;
+
+    } else if (isAnalyst || isLeader) {
+      tabActions = `
+        <div class="sp-section">
+          <div class="sp-section-title">Status</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="statusSelect" style="flex:1;background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;">
+              ${statusOptions}
+            </select>
+            <button class="sp-btn primary" onclick="applyStatus('${risk.uuid||risk.id}')">Apply →</button>
+          </div>
+        </div>
+
+        ${risk.status === 'IN ANALYSIS' && !risk.assigned_to ? `
+        <div class="sp-section">
+          <div class="sp-section-title">Assignment</div>
+          <button class="sp-btn" style="background:rgba(29,111,164,0.12);border:1px solid rgba(29,111,164,0.4);color:var(--accent-hi)" onclick="takeRisk('${risk.uuid||risk.id}')">Take this risk →</button>
+        </div>` : ''}
+
+        ${risk.status === 'IN REVIEW' ? `
+        <div class="sp-section">
+          <div class="sp-section-title">Review Decision</div>
+          <div style="display:flex;gap:8px">
+            <button class="sp-btn" style="flex:1;background:rgba(26,122,74,0.12);border:1px solid rgba(26,122,74,0.4);color:var(--low)"
+              onclick="applyStatusDirect('${risk.uuid||risk.id}','IN TREATMENT')">✓ Approve → Treatment</button>
+            <button class="sp-btn" style="flex:1;background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.3);color:var(--critical)"
+              onclick="applyStatusDirect('${risk.uuid||risk.id}','IN ANALYSIS')">✗ Reject → Analysis</button>
+          </div>
+        </div>` : ''}
+
+        ${risk.status === 'IN TREATMENT' ? `
+        <div class="sp-section">
+          <div class="sp-section-title">Treatment Decision</div>
+          ${canEdit
+            ? `<select id="editDecision" style="background:var(--surface);border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;width:100%;margin-bottom:8px">
+                <option value="">— Select a decision —</option>
+                ${['Reduce','Accept','Transfer'].map(d=>`<option value="${d}" ${risk.decision===d?'selected':''}>${d}</option>`).join('')}
+              </select>`
+            : `<div style="font-family:var(--mono);font-size:11px;color:var(--text);padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:3px;margin-bottom:8px">${risk.decision || '— Not defined —'}</div>`}
+          ${risk.decision === 'Accept'
+            ? `<button class="sp-btn" style="background:rgba(26,122,74,0.12);border:1px solid rgba(26,122,74,0.4);color:var(--low);width:100%"
+                onclick="applyStatusDirect('${risk.uuid||risk.id}','MONITORED')">✓ Accept → Move to Monitored</button>`
+            : risk.decision
+              ? `<button class="sp-btn" style="background:rgba(26,122,74,0.12);border:1px solid rgba(26,122,74,0.4);color:var(--low);width:100%"
+                  onclick="saveAndTreat('${risk.uuid||risk.id}')">✓ Save & Mark as Treated</button>`
+              : `<div style="padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--muted)">⚠ Select a decision above to proceed</div>`}
+        </div>` : ''}
+
+        ${risk.status === 'TREATED' ? `
+        <div class="sp-section">
+          <div class="sp-section-title">Next Step</div>
+          <button class="sp-btn" style="background:rgba(26,122,74,0.12);border:1px solid rgba(26,122,74,0.4);color:var(--low);width:100%"
+            onclick="applyStatusDirect('${risk.uuid||risk.id}','MONITORED')">→ Move to Monitored</button>
+        </div>` : ''}
+
+        ${canArchive ? `
+        <div style="margin-top:8px">
+          <button class="sp-btn" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;width:100%"
+            onclick="archiveRisk('${risk.uuid||risk.id}')">Archive risk</button>
+        </div>` : ''}`;
+    } else {
+      tabActions = `<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:3px">No actions available for your role.</div>`;
+    }
+
+    // ── TAB JOURNAL ──
+    const journal = risk.rm_risk_journal || [];
+    const tabJournal = canJournal
+      ? journalHTML(risk.uuid, journal)
+      : `<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:12px">Journal not available for your role.</div>`;
+
+    openRiskPanel(risk, {
+      overview: tabOverview,
+      analysis: tabAnalysis,
+      actions:  tabActions,
+      journal:  tabJournal,
+    });
+  } // end openRisk
+
+  function openPulseSearch() {
+    const desc = document.getElementById('pulseDesc')?.textContent || '';
+    const keyword = desc.split('·')[0].trim().split(' ').slice(0,2).join(' ');
+    window.location.href = `search.html?q=${encodeURIComponent(keyword)}`;
+  }
+
+  // ── FEED DETAIL ──
+  // ── RS IMPORTED DRAFTS (mock, à brancher Supabase) ──
+  const RS_IMPORTED = new Set();
+
+  window.importFromRS = async function importFromRS(item) {
+    if (RS_IMPORTED.has(item.id)) return;
+
+    const btn = document.getElementById(`importBtn-${item.id}`);
+    if (btn) { btn.disabled = true; btn.textContent = 'Importing...'; }
+
+    try {
+      const risk = await createRisk({
+        name:        item.name,
+        description: item.desc || null,
+        status:      'DRAFT',
+        tags:        item.tags || [],
+      });
+
+      RS_IMPORTED.add(item.id);
+      await loadAndRenderRisks();
+
+      // Fermer le panel feed et ouvrir directement le nouveau risque
+      closePanel();
+      setTimeout(() => openRisk({ id: risk.risk_ref, uuid: risk.id, name: risk.name, sev: risk.severity || 'medium', status: 'DRAFT' }), 150);
+
+      showToast(`✓ ${risk.risk_ref} created — opening...`);
+
+    } catch (err) {
+      console.error('Import RS error:', err);
+      if (btn) { btn.disabled = false; btn.textContent = '⊕ Import as Risk →'; }
+      alert('Error: ' + err.message);
+    }
+  }
+
+  window.showToast = function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, {
+      position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+      background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
+      fontSize:'11px', letterSpacing:'0.04em', padding:'10px 20px',
+      borderRadius:'3px', zIndex:'9999', whiteSpace:'nowrap',
+      boxShadow:'0 4px 16px rgba(0,0,0,0.4)',
+      animation:'fadeUp 0.2s ease both'
+    });
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  // ── FIND SIMILAR RISKS IN RM ──
+  function findSimilar(item) {
+    return RISKS.filter(r =>
+      r.tags?.some(t => item.tags?.includes(t)) && r.id !== item.id
+    ).slice(0, 3);
+  }
+
+  function openFeed(item) {
+    const similar = findSimilar(item);
+    const alreadyImported = RS_IMPORTED.has(item.id);
+
+    const similarHTML = similar.length > 0 ? `
+      <div class="sp-section">
+        <div class="sp-section-title" style="color:var(--medium)">⚠ Similar risks already in register</div>
+        <div class="sp-risk-list">
+          ${similar.map(r => `
+            <div class="sp-risk-card" onclick="openRisk(RISKS.find(x=>x.id==='${r.id}'))">
+              <div class="sp-risk-card-top">
+                <span class="sp-risk-card-id">${r.id}</span>
+                <span class="sp-risk-card-name">${r.name}</span>
+                ${sevBadge(r.sev)}
+              </div>
+              <div class="sp-risk-card-bot">
+                <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${r.status}</span>
+                <span style="margin-left:auto">${tagHTML(r.tags)}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    openPanel(item.id, `${item.source} · ${item.time}`, `
+      <div class="sp-section">
+        <div class="sp-section-title">${i18n.t('feed.detail.section')}</div>
+        <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.title')}</div><div class="sp-field-value">${item.name}</div></div>
+        <div class="sp-row">
+          <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.severity')}</div><div class="sp-field-value">${sevBadge(item.sev)}</div></div>
+          ${item.cvss ? `<div class="sp-field"><div class="sp-field-label">CVSS Score</div><div class="sp-field-value" style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--${item.sev})">${item.cvss}</div></div>` : ''}
+        </div>
+        <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.source')}</div><div class="sp-field-value" style="font-family:var(--mono);font-size:11px">${item.source}</div></div>
+        <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.tags')}</div><div class="sp-field-value" style="display:flex;gap:4px;flex-wrap:wrap">${tagHTML(item.tags)}</div></div>
+        <div class="sp-field"><div class="sp-field-label">${i18n.t('feed.detail.description')}</div><div class="sp-field-value">${item.desc}</div></div>
+        ${item.source_url ? `<div class="sp-field"><div class="sp-field-label">Source</div><div class="sp-field-value"><a href="${item.source_url}" target="_blank" style="color:var(--accent-hi);font-family:var(--mono);font-size:10px">View original →</a></div></div>` : ''}
+      </div>
+      ${similarHTML}
+      <div class="sp-actions">
+        <button class="sp-btn primary" id="importBtn-${item.id}"
+          onclick="importFromRS(FEED.find(x=>x.id==='${item.id}'))"
+          ${alreadyImported ? 'disabled style="background:var(--low)"' : ''}>
+          ${alreadyImported ? '✓ Already imported' : '⊕ Import as Risk →'}
+        </button>
+      </div>
+    `);
+  }
+
+  // ── FILTERED LIST ──
+  // ── FILTER TABLE ──
+  let _activeFilter = null; // null = all, 'critical'/'high'/'medium'/'low'/'pending'
+
+  function filterTable(sev) {
+    _activeFilter = sev;
+
+    const badge = document.getElementById('filterBadge');
+    const sevColors = {
+      critical: { color:'var(--critical)', border:'rgba(192,57,43,0.4)', bg:'rgba(192,57,43,0.08)' },
+      high:     { color:'var(--high)',     border:'rgba(212,112,10,0.4)', bg:'rgba(212,112,10,0.08)' },
+      medium:   { color:'var(--medium)',   border:'rgba(184,150,10,0.4)', bg:'rgba(184,150,10,0.08)' },
+      low:      { color:'var(--low)',      border:'rgba(26,122,74,0.4)',  bg:'rgba(26,122,74,0.08)' },
+      draft:    { color:'var(--muted)',    border:'var(--border-hi)',     bg:'var(--surface)' },
+    };
+
+    // Mettre à jour le badge filtre
+    if (sev && badge) {
+      const c = sevColors[sev] || sevColors.pending;
+      badge.style.display     = 'inline-block';
+      badge.style.color       = c.color;
+      badge.style.borderColor = c.border;
+      badge.style.background  = c.bg;
+      badge.textContent       = `${sev.toUpperCase()} ×`;
+    } else if (badge) {
+      badge.style.display = 'none';
+    }
+
+    // Mettre à jour le style actif des tiles
+    document.querySelectorAll('.summary-card').forEach(card => {
+      const key = card.querySelector('.summary-label')?.getAttribute('data-i18n') || '';
+      const cardSev = key.replace('summary.', '');
+      if (sev && cardSev === sev) {
+        card.style.borderColor = 'var(--accent-hi)';
+        card.style.background  = 'var(--card-hi)';
+      } else {
+        card.style.borderColor = '';
+        card.style.background  = '';
+      }
+    });
+
+    // Filtrer les risques et passer à renderMyRisks
+    // RISKS est peuplé par loadAndRenderRisks avec les bons champs
+    const filtered = sev
+      ? RISKS.filter(r => sev === 'draft'
+          ? r.status === 'DRAFT'
+          : r.sev === sev)
+      : RISKS;
+
+    // Convertir le format RISKS → format Supabase pour renderMyRisks
+    const mapped = filtered.map(r => ({
+      id:           r.uuid,
+      risk_ref:     r.id,
+      name:         r.name,
+      severity:     r.sev,
+      status:       r.status,
+      rm_risk_tags: (r.tags || []).map(t => ({ tag: t })),
+      owner:        r.owner_full ? {
+        first_name: r.owner_full.split(' ')[0],
+        last_name:  r.owner_full.split(' ').slice(1).join(' '),
+      } : null,
+      likelihood:   r.likelihood,
+      impact:       r.impact,
+      residual_risk: r.residual,
+      decision:     r.decision,
+    }));
+
+    renderMyRisks(mapped);
+
+    // Mettre à jour le compteur
+    const countEl = document.getElementById('myRisksCount');
+    if (countEl) countEl.textContent = filtered.length;
+  }
+
+  // ── SPARKLINE ──
+  const criticalByMonth = [0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 3, 3];
+  const highByMonth     = [1, 1, 2, 2, 3, 3, 4, 4, 5, 6, 7, 7];
+
+  (function drawSparkline() {
+    const svg = document.getElementById('sparkline');
+    const W = 200, H = 32, PAD = 3;
+    const allVals = [...criticalByMonth, ...highByMonth];
+    const min = Math.min(...allVals);
+    const max = Math.max(...allVals);
+    const range = max - min || 1;
+    const n = 12;
+
+    const x = i => PAD + (i / (n - 1)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - min) / range) * (H - PAD * 2 - 2);
+
+    function makeLine(data, color) {
+      const pts = data.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+      const areaPath = `M${x(0)},${y(data[0])} ` +
+        data.slice(1).map((v,i) => `L${x(i+1)},${y(v)}`).join(' ') +
+        ` L${x(n-1)},${H} L${x(0)},${H} Z`;
+      const gradId = `grad_${color.replace('#','')}`;
+      return `
+        <defs>
+          <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="${color}" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#${gradId})"/>
+        <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${x(n-1)}" cy="${y(data[n-1])}" r="2.5" fill="${color}"/>
+      `;
+    }
+
+    // Month tick marks
+    const ticks = Array.from({length:12}, (_,i) =>
+      `<line x1="${x(i)}" y1="${H-1}" x2="${x(i)}" y2="${H}" stroke="var(--border-hi)" stroke-width="1"/>`
+    ).join('');
+
+    svg.innerHTML = ticks + makeLine(highByMonth, '#d4700a') + makeLine(criticalByMonth, '#c0392b');
+  })();
+  document.querySelectorAll('.summary-card').forEach(card => {
+    const sev = card.getAttribute('data-filter');
+    if (!sev) return;
+    card.addEventListener('click', () => {
+      _activeFilter === sev ? filterTable(null) : filterTable(sev);
+    });
+  });
+
+  // ── RENDER FEED ──
+  // Couleurs par type de menace
+  const FEED_TYPE_COLORS = {
+    'CYBERSEC': { border:'rgba(192,57,43,0.5)',  bg:'rgba(192,57,43,0.04)',  badge:'#c0392b' },
+    'DATALEAK': { border:'rgba(130,60,180,0.5)', bg:'rgba(130,60,180,0.04)', badge:'#8a3cb4' },
+    'GRC':      { border:'rgba(29,111,164,0.5)', bg:'rgba(29,111,164,0.04)', badge:'#1d6fa4' },
+  };
+
+  function getFeedTypeColor(source) {
+    const key = Object.keys(FEED_TYPE_COLORS).find(k => source.toUpperCase().startsWith(k));
+    return FEED_TYPE_COLORS[key] || { border:'var(--border)', bg:'transparent', badge:'var(--muted)' };
+  }
+
+  function renderFeed(items) {
+    const list = document.getElementById('liveFeedList');
+    if (!list) return;
+
+    if (!items || items.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No significant threats at this time</div>';
+      return;
+    }
+
+    list.innerHTML = items.map((item, i) => {
+      const c = getFeedTypeColor(item.source);
+      return `
+        <div class="feed-item" onclick="openFeed(FEED[${i}])" style="border-left:2px solid ${c.border};background:${c.bg}">
+          <div class="feed-item-top">
+            ${i < 3 ? '<div class="feed-new"></div>' : ''}
+            <span class="feed-name">${item.name}</span>
+            <span class="severity ${item.sev}">${item.sev.charAt(0).toUpperCase()+item.sev.slice(1)}</span>
+          </div>
+          <div class="feed-item-bot">
+            <span class="feed-source" style="color:${c.badge}">${item.source}</span>
+            <div class="risk-tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+            <span class="feed-time">${item.time}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── PULSE BAR — mise à jour depuis données réelles ──
+  function updatePulse(items) {
+    const counts = { critical:0, high:0 };
+    items.forEach(r => {
+      if (r.sev === 'critical') counts.critical++;
+      else if (r.sev === 'high') counts.high++;
+    });
+
+    const state = counts.critical >= 3 ? 'CRITICAL'
+                : counts.critical >= 1 || counts.high >= 3 ? 'ELEVATED'
+                : 'CALM';
+
+    const pulseColors = { CALM:'#1a7a4a', ELEVATED:'#b8960a', CRITICAL:'#c0392b' };
+    const color = pulseColors[state];
+    document.documentElement.style.setProperty('--pulse-color', color);
+
+    const labelEl = document.getElementById('pulseLabel');
+    if (labelEl) labelEl.textContent = state;
+
+    // Top menace pour la description
+    const top = items[0];
+    const descEl = document.getElementById('pulseDesc');
+    if (descEl && top) descEl.textContent = top.name.length > 60 ? top.name.slice(0,60)+'…' : top.name;
+
+    // Compteurs
+    const critEl = document.querySelector('.pulse-tag.critical');
+    const highEl = document.querySelector('.pulse-tag.high');
+    if (critEl) critEl.textContent = `${counts.critical} Crit`;
+    if (highEl) highEl.textContent = `${counts.high} High`;
+  }
+
+  // ── URL RESTORE (après chargement des risques) ──
+  const urlRisk = new URLSearchParams(location.search).get('risk');
+  if (urlRisk) {
+    // Attendre que loadAndRenderRisks() ait peuplé RISKS
+    setTimeout(() => {
+      const r = RISKS.find(x => x.id === urlRisk);
+      if (r) openRisk(r);
+    }, 1000);
+  }
+
+  // ── I18N INIT ──
+  i18n.init();
+
+  // ── NEW RISK MODAL ──
+  window.openNewRiskModal = function openNewRiskModal() {
+    document.getElementById('newRiskModal').classList.add('open');
+    document.getElementById('nrName').focus();
+  }
+
+  document.querySelectorAll('.btn-new').forEach(btn => {
+    btn.addEventListener('click', openNewRiskModal);
+  });
+
+  window.closeNewRiskModal = function closeNewRiskModal() {
+    document.getElementById('newRiskModal').classList.remove('open');
+    document.getElementById('newRiskForm').reset();
+    document.getElementById('nrTagsDetected').innerHTML = '';
+    document.getElementById('nrTagsManual').value = '';
+    document.getElementById('nrMeasures').innerHTML = '';
+    document.getElementById('nrGrossRisk').textContent = '—';
+    document.getElementById('nrGroqStatus').textContent = '';
+    clearTimeout(groqTimer);
+  }
+
+  // Close on overlay click
+  const modalEl = document.getElementById('newRiskModal');
+  if (modalEl) {
+    modalEl.addEventListener('click', e => {
+      if (e.target === modalEl) closeNewRiskModal();
+    });
+  }
+
+  // Auto-calc gross risk
+  ['nrLikelihood','nrImpact'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const l = parseInt(document.getElementById('nrLikelihood').value) || 0;
+      const i = parseInt(document.getElementById('nrImpact').value) || 0;
+      const el = document.getElementById('nrGrossRisk');
+      if (l && i) {
+        const score = l * i;
+        let sev = score >= 16 ? 'critical' : score >= 9 ? 'high' : score >= 4 ? 'medium' : 'low';
+        el.innerHTML = `<span class="severity ${sev}" style="font-size:14px;padding:4px 10px">${score} — ${sev.toUpperCase()}</span>`;
+      } else {
+        el.textContent = '—';
+      }
+    });
+  });
+
+  // Groq debounce tag detection
+  let groqTimer;
+  const DETECTED_TAGS = new Set();
+
+  const nrDescEl = document.getElementById('nrDescription');
+  if (nrDescEl) {
+    nrDescEl.addEventListener('input', () => {
+      clearTimeout(groqTimer);
+      const desc = document.getElementById('nrDescription').value.trim();
+      if (desc.length < 20) return;
+      document.getElementById('nrGroqStatus').textContent = i18n.t('risk.new.groq.analysing');
+      groqTimer = setTimeout(() => detectTagsGroq(desc), 900);
+    });
+  }
+
+  async function detectTagsGroq(description) {
+    const status = document.getElementById('nrGroqStatus');
+    const container = document.getElementById('nrTagsDetected');
+    status.textContent = 'Detecting tags...';
+
+    // STUB — remplacer par vrai appel Groq
+    // const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${GROQ_KEY}` },
+    //   body: JSON.stringify({
+    //     model: 'llama3-8b-8192',
+    //     messages: [{ role:'user', content: `Extract cybersecurity risk tags from this text. Return ONLY a JSON array of lowercase hyphenated tags, no explanation:\n"${description}"` }],
+    //     max_tokens: 100
+    //   })
+    // });
+    // const data = await res.json();
+    // const tags = JSON.parse(data.choices[0].message.content);
+
+    // Simulation pour la démo
+    await new Promise(r => setTimeout(r, 600));
+    const mockTags = simulateTags(description);
+
+    DETECTED_TAGS.clear();
+    mockTags.forEach(t => DETECTED_TAGS.add(t));
+
+    container.innerHTML = mockTags.map(t => `
+      <span class="nr-tag-pill" onclick="removeTag(this,'${t}')">
+        ${t} <span class="nr-tag-remove">✕</span>
+      </span>
+    `).join('');
+
+    status.textContent = i18n.t('risk.new.groq.detected', { n: mockTags.length });
+    proposeMeasures(mockTags);
+  }
+
+  function simulateTags(desc) {
+    const rules = [
+      [/vpn|tunnel|remote access/i,        '#vpn'],
+      [/password|credential|auth/i,         '#credentials'],
+      [/access|unauthorized|privilege/i,    '#access-control'],
+      [/patch|update|vulnerab/i,            '#patch-management'],
+      [/backup|recovery|restore/i,          '#backup'],
+      [/supplier|vendor|third.party/i,      '#supply-chain'],
+      [/cloud|s3|bucket|azure|aws/i,        '#cloud'],
+      [/phishing|social|email/i,            '#phishing'],
+      [/ransomware|malware|virus/i,         '#malware'],
+      [/firewall|network|dmz/i,             '#network'],
+      [/mfa|two.factor|2fa/i,               '#mfa'],
+      [/iam|identity|role|user management/i,'#iam'],
+      [/data|leak|exposure|breach/i,        '#data-exposure'],
+      [/log|audit|monitor/i,                '#monitoring'],
+      [/encrypt|ssl|tls|cert/i,             '#encryption'],
+    ];
+    return rules.filter(([re]) => re.test(desc)).map(([,tag]) => tag);
+  }
+
+  function removeTag(el, tag) {
+    DETECTED_TAGS.delete(tag);
+    el.remove();
+  }
+
+  // Active frameworks → mesures proposées
+  const FRAMEWORK_MEASURES = {
+    '#access-control': { 'NIS2/CyFun':'PR.AC-1, PR.AC-3', 'Framework':'A.8.3, A.5.15' },
+    '#vpn':            { 'NIS2/CyFun':'PR.AC-5',           'Framework':'A.8.20' },
+    '#credentials':    { 'NIS2/CyFun':'PR.AC-1',           'Framework':'A.5.17', 'DORA':'Art. 9.4' },
+    '#mfa':            { 'NIS2/CyFun':'PR.AC-7',           'Framework':'A.8.5' },
+    '#patch-management':{ 'NIS2/CyFun':'PR.IP-12',         'Framework':'A.8.8' },
+    '#backup':         { 'NIS2/CyFun':'PR.IP-4',           'Framework':'A.8.13' },
+    '#supply-chain':   { 'NIS2/CyFun':'ID.SC-2',           'Framework':'A.5.19, A.5.21' },
+    '#cloud':          { 'NIS2/CyFun':'PR.DS-1',           'Framework':'A.5.23' },
+    '#phishing':       { 'NIS2/CyFun':'PR.AT-1',           'Framework':'A.6.3' },
+    '#malware':        { 'NIS2/CyFun':'DE.CM-4',           'Framework':'A.8.7' },
+    '#network':        { 'NIS2/CyFun':'PR.AC-5',           'Framework':'A.8.20, A.8.22' },
+    '#data-exposure':  { 'NIS2/CyFun':'PR.DS-5',           'Framework':'A.8.12', 'DORA':'Art. 9.2' },
+    '#monitoring':     { 'NIS2/CyFun':'DE.CM-1',           'Framework':'A.8.16' },
+    '#encryption':     { 'NIS2/CyFun':'PR.DS-2',           'Framework':'A.8.24' },
+  };
+
+  const ACTIVE_FRAMEWORKS = ['NIS2/CyFun', 'Framework', 'DORA']; // chargé depuis environment
+
+  function proposeMeasures(tags) {
+    const container = document.getElementById('nrMeasures');
+    const seen = new Set();
+    const rows = [];
+
+    tags.forEach(tag => {
+      const measures = FRAMEWORK_MEASURES[tag];
+      if (!measures) return;
+      ACTIVE_FRAMEWORKS.forEach(fw => {
+        const val = measures[fw];
+        if (!val) return;
+        const key = `${fw}:${val}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        rows.push(`
+          <div class="nr-measure-row">
+            <span class="nr-measure-fw">${fw}</span>
+            <span class="nr-measure-val">${val}</span>
+            <span class="nr-measure-tag">${tag}</span>
+          </div>
+        `);
+      });
+    });
+
+    container.innerHTML = rows.length
+      ? rows.join('')
+      : `<div style="font-size:11px;color:var(--muted)">${i18n.t('risk.new.tags.empty')}</div>`;
+  }
+
+  // ── GROQ STATUS ──
+  function setGroqStatus(n) {
+    document.getElementById('nrGroqStatus').textContent =
+      n === 0 ? i18n.t('risk.new.groq.analysing') : i18n.t('risk.new.groq.detected', { n });
+  }
+
+</script>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- NEW RISK MODAL                             -->
+<!-- ══════════════════════════════════════════ -->
+<div class="nr-modal-overlay" id="newRiskModal">
+  <div class="nr-modal">
+
+    <div class="nr-modal-header">
+      <div>
+        <div class="nr-modal-title" data-i18n="risk.new.title">New Risk</div>
+        <div class="nr-modal-sub" data-i18n="risk.new.sub">Private by default</div>
+      </div>
+      <button class="nr-modal-close" onclick="closeNewRiskModal()">✕</button>
+    </div>
+
+    <div class="nr-modal-body">
+      <form id="newRiskForm" onsubmit="return false">
+
+        <!-- COL LEFT -->
+        <div class="nr-col">
+
+          <div class="nr-section-title" data-i18n="risk.new.section.identification">Identification</div>
+
+          <div class="nr-field">
+            <label data-i18n="risk.new.name">Risk Name</label> <span class="nr-req">*</span>
+            <input type="text" id="nrName" data-i18n-placeholder="risk.new.name" placeholder="Risk Name">
+          </div>
+
+          <div class="nr-field">
+            <label data-i18n="risk.new.description">Description</label> <span class="nr-req">*</span>
+            <textarea id="nrDescription" rows="4" data-i18n-placeholder="risk.new.description.placeholder" placeholder="Describe the risk in plain language..."></textarea>
+            <div class="nr-groq-status" id="nrGroqStatus"></div>
+          </div>
+
+          <div class="nr-field">
+            <label data-i18n="risk.new.tags_detected">Tags detected</label>
+            <div class="nr-tags-detected" id="nrTagsDetected"></div>
+          </div>
+
+          <div class="nr-field">
+            <label data-i18n="risk.new.tags_manual">Additional tags</label>
+            <input type="text" id="nrTagsManual" data-i18n-placeholder="risk.new.tags_manual.placeholder" placeholder="#custom-tag">
+          </div>
+
+          <div class="nr-field">
+            <label data-i18n="risk.new.asset">Asset concerned</label>
+            <input type="text" id="nrAsset" data-i18n-placeholder="risk.new.asset.placeholder" placeholder="Server, application, process...">
+          </div>
+
+          <div class="nr-section-title" style="margin-top:8px" data-i18n="risk.new.section.analysis">Analysis</div>
+
+          <div class="nr-row-2">
+            <div class="nr-field">
+              <label data-i18n="risk.new.threat">Threat source</label>
+              <input type="text" id="nrThreat" data-i18n-placeholder="risk.new.threat.placeholder" placeholder="External attacker, insider...">
+            </div>
+            <div class="nr-field">
+              <label data-i18n="risk.new.vuln">Vulnerability</label>
+              <input type="text" id="nrVuln" data-i18n-placeholder="risk.new.vuln.placeholder" placeholder="Unpatched system, weak auth...">
+            </div>
+          </div>
+
+          <div class="nr-field">
+            <label data-i18n="risk.new.scenario">Scenario</label>
+            <textarea id="nrScenario" rows="2" data-i18n-placeholder="risk.new.scenario.placeholder" placeholder="How the threat exploits the vulnerability..."></textarea>
+          </div>
+
+        </div>
+
+        <!-- COL RIGHT -->
+        <div class="nr-col">
+
+          <div class="nr-section-title" data-i18n="risk.new.section.scoring">Scoring</div>
+
+          <div class="nr-row-2">
+            <div class="nr-field">
+              <label data-i18n="risk.new.likelihood">Likelihood</label> <span class="nr-req">*</span>
+              <select id="nrLikelihood">
+                <option value="">—</option>
+                <option value="1" data-i18n="likelihood.1">1 — Rare</option>
+                <option value="2" data-i18n="likelihood.2">2 — Unlikely</option>
+                <option value="3" data-i18n="likelihood.3">3 — Possible</option>
+                <option value="4" data-i18n="likelihood.4">4 — Likely</option>
+                <option value="5" data-i18n="likelihood.5">5 — Almost certain</option>
+              </select>
+            </div>
+            <div class="nr-field">
+              <label data-i18n="risk.new.impact">Impact</label> <span class="nr-req">*</span>
+              <select id="nrImpact">
+                <option value="">—</option>
+                <option value="1" data-i18n="impact.1">1 — Negligible</option>
+                <option value="2" data-i18n="impact.2">2 — Minor</option>
+                <option value="3" data-i18n="impact.3">3 — Moderate</option>
+                <option value="4" data-i18n="impact.4">4 — Major</option>
+                <option value="5" data-i18n="impact.5">5 — Catastrophic</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="nr-field">
+            <label data-i18n="risk.new.gross_risk">Gross Risk (auto)</label>
+            <div class="nr-gross-risk" id="nrGrossRisk">—</div>
+          </div>
+
+          <div class="nr-section-title" style="margin-top:8px" data-i18n="risk.new.section.governance">Governance</div>
+
+          <div class="nr-row-2">
+            <div class="nr-field">
+              <label data-i18n="risk.new.visibility">Visibility</label>
+              <select id="nrVisibility">
+                <option value="private" data-i18n="visibility.private">PRIVATE</option>
+                <option value="team" data-i18n="visibility.team">TEAM</option>
+              </select>
+            </div>
+            <div class="nr-field">
+              <label data-i18n="risk.new.owner">Risk Owner</label>
+              <select id="nrOwner">
+                <option value="me" data-i18n="risk.new.owner.me">Me</option>
+                <option value="team" data-i18n="risk.new.owner.assign">Assign to team...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="nr-section-title" style="margin-top:8px" data-i18n="risk.new.section.measures">Framework Measures</div>
+          <div class="nr-measures-hint" data-i18n="risk.new.measures.hint">Based on your active frameworks · auto-matched from tags</div>
+          <div class="nr-measures-list" id="nrMeasures">
+            <div style="font-size:11px;color:var(--muted)" data-i18n="risk.new.measures.empty">Start typing the description to detect measures.</div>
+          </div>
+
+        </div>
+
+      </form>
+    </div>
+
+    <div class="nr-modal-footer">
+      <button class="nr-btn-cancel" onclick="closeNewRiskModal()" data-i18n="btn.cancel">Cancel</button>
+      <div style="display:flex;gap:8px">
+        <button class="nr-btn-draft" onclick="submitNewRisk('DRAFT')">Save as Draft</button>
+        <button class="nr-btn-submit" onclick="submitNewRisk('IN ANALYSIS')">Submit for Analysis →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  /* ── NEW RISK MODAL ── */
+  .nr-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+    padding: 24px;
+  }
+  .nr-modal-overlay.open { display: flex; }
+
+  .nr-modal {
+    background: var(--card);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    width: 100%;
+    max-width: 880px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: fadeUp 0.2s ease both;
+    position: relative;
+  }
+
+  .nr-modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    border-radius: 4px 4px 0 0;
+  }
+
+  .nr-modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .nr-modal-title {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .nr-modal-sub {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .nr-modal-close {
+    background: none; border: none;
+    color: var(--muted); font-size: 16px;
+    cursor: pointer; padding: 0;
+    transition: color 0.1s;
+  }
+  .nr-modal-close:hover { color: var(--text); }
+
+  .nr-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+  .nr-modal-body::-webkit-scrollbar { width: 4px; }
+  .nr-modal-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  .nr-modal-body form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .nr-col { display: flex; flex-direction: column; gap: 12px; }
+
+  .nr-section-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nr-field { display: flex; flex-direction: column; gap: 5px; }
+
+  .nr-field label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .nr-req { color: var(--critical); }
+
+  .nr-field input,
+  .nr-field textarea,
+  .nr-field select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    resize: none;
+    -webkit-appearance: none;
+  }
+
+  .nr-field input::placeholder,
+  .nr-field textarea::placeholder { color: var(--muted); opacity: 0.5; }
+
+  .nr-field input:focus,
+  .nr-field textarea:focus,
+  .nr-field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(29,111,164,0.1);
+  }
+
+  .nr-field select option { background: var(--card); }
+
+  .nr-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .nr-groq-status {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--accent-hi);
+    min-height: 14px;
+    margin-top: 2px;
+  }
+
+  .nr-tags-detected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 28px;
+    padding: 4px 0;
+  }
+
+  .nr-tag-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent-hi);
+    background: rgba(29,111,164,0.12);
+    border: 1px solid rgba(29,111,164,0.3);
+    padding: 3px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.1s;
+    animation: fadeUp 0.2s ease both;
+  }
+  .nr-tag-pill:hover { background: rgba(192,57,43,0.1); border-color: rgba(192,57,43,0.3); color: var(--critical); }
+  .nr-tag-remove { font-size: 9px; opacity: 0.6; }
+
+  .nr-gross-risk {
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .nr-measures-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-top: -6px;
+    margin-bottom: 2px;
+  }
+
+  .nr-measures-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .nr-measures-list::-webkit-scrollbar { width: 3px; }
+  .nr-measures-list::-webkit-scrollbar-thumb { background: var(--border-hi); }
+
+  .nr-measure-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    animation: fadeUp 0.2s ease both;
+  }
+
+  .nr-measure-fw {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    white-space: nowrap;
+    width: 90px;
+    flex-shrink: 0;
+  }
+
+  .nr-measure-val {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-hi);
+    flex: 1;
+  }
+
+  .nr-measure-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--border-hi);
+    letter-spacing: 0.04em;
+  }
+
+  .nr-modal-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .nr-btn-cancel {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+  }
+  .nr-btn-cancel:hover { color: var(--text); }
+
+  .nr-btn-draft {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 2px;
+    border: 1px solid var(--border-hi);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .nr-btn-draft:hover { background: var(--card-hi); }
+
+  .nr-btn-submit {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    border-radius: 2px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .nr-btn-submit:hover { background: var(--accent-hi); }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script>
+// ── INIT — Auth + chargement des données réelles ──
+(async () => {
+  try {
+    const user = await requireAuth();
+    if (!user) return;
+
+    // Mettre à jour le nom et avatar dans la topbar
+    const userNameEl = document.getElementById('userName');
+    if (userNameEl) userNameEl.textContent = `${user.first_name} ${user.last_name}`;
+
+    const avatarEl = document.getElementById('userAvatar');
+    if (avatarEl) avatarEl.textContent = `${user.first_name[0]}${user.last_name[0]}`;
+
+    // Rôle depuis Supabase
+    window._currentRole = user.role;
+
+    const roleLabels = { risk_leader:'RISK LEADER', risk_owner:'RISK OWNER', analyst:'ANALYST' };
+    const roleDisplayEl = document.getElementById('userRole');
+    if (roleDisplayEl) roleDisplayEl.textContent = roleLabels[user.role] || user.role.toUpperCase().replace('_',' ');
+
+    // Settings visible uniquement pour risk_leader
+    const settingsLinkEl = document.getElementById('settingsLink');
+    if (settingsLinkEl) settingsLinkEl.style.display = user.role === 'risk_leader' ? 'block' : 'none';
+
+    // Charger et afficher les risques (une seule fois)
+    await loadAndRenderRisks();
+
+    // Charger le feed Risk Studio
+    await loadAndRenderFeed();
+
+    // Charger le panel Pending Team
+    await loadAndRenderPending();
+
+  } catch (err) {
+    console.error('Dashboard init error:', err);
+  }
+})();
+
+function renderMyRisks(risks) {
+  const tbody   = document.getElementById('myRisksBody');
+  const countEl = document.getElementById('myRisksCount');
+  if (!tbody) return;
+
+  if (!risks || risks.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No risks found</td></tr>';
+    if (countEl) countEl.textContent = '0';
+    return;
+  }
+
+  if (countEl) countEl.textContent = risks.length;
+
+  tbody.innerHTML = risks.map(r => {
+    const uuid      = r._uuid || r.id;
+    const ref       = r.risk_ref || r.id;
+    const sev       = r.severity || r.sev || 'medium';
+    const tags      = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
+    const ownerFull = r.owner
+      ? `${r.owner.first_name} ${r.owner.last_name}`
+      : (r.owner_full || 'Unassigned');
+    // Encoder pour attribut HTML onclick — JSON.stringify puis échapper les guillemets doubles
+    const enc = s => JSON.stringify(s||'').replace(/"/g, '&quot;');
+    // Stocker dans RISKS_MAP pour lookup propre depuis onclick
+    RISKS_MAP.set(uuid, {
+      id: ref, uuid, name: r.name, sev, status: r.status,
+      tags: (r.rm_risk_tags||[]).map(t=>t.tag),
+      owner: 'You', owner_full: ownerFull,
+      likelihood: r.likelihood, impact: r.impact,
+      residual: r.residual_risk||r.residual,
+      decision: r.decision,
+    });
+    return `
+      <tr class="risk-row" onclick="openRisk(RISKS_MAP.get('${uuid}'))">
+        <td class="col-id">${ref}</td>
+        <td class="col-name">${r.name}</td>
+        <td class="col-sev"><span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span></td>
+        <td class="col-status">${r.status}</td>
+        <td class="col-tags">${tags}</td>
+        <td class="col-owner">${ownerFull}</td>
+      </tr>`;
+  }).join('');
+}
+
+function renderPendingTeam(risks) {
+  const list    = document.getElementById('pendingList');
+  const countEl = document.getElementById('pendingCount');
+  if (!list) return;
+
+  if (countEl) countEl.textContent = risks.length;
+
+  if (!risks.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No risks pending review</div>';
+    return;
+  }
+
+  list.innerHTML = risks.map(r => {
+    const sev      = r.severity || 'medium';
+    const tags     = (r.rm_risk_tags || []).map(t => `<span class="tag">${t.tag}</span>`).join('');
+    const analyst  = r.assignee ? `${r.assignee.first_name} ${r.assignee.last_name}` : 'Unassigned';
+    const updated  = r.updated_at ? timeAgo(r.updated_at) : '';
+    const enc      = s => JSON.stringify(s||'').replace(/"/g, '&quot;');
+    RISKS_MAP.set(r.id, {
+      id: r.risk_ref, uuid: r.id, name: r.name, sev,
+      status: r.status, tags: (r.rm_risk_tags||[]).map(t=>t.tag),
+      owner: '', owner_full: analyst,
+    });
+    return `
+      <div class="pending-item" onclick="openRisk(RISKS_MAP.get('${r.id}'))">
+        <div class="pending-item-top">
+          <span class="risk-id">${r.risk_ref}</span>
+          <span class="pending-name">${r.name}</span>
+          <span class="severity ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span>
+        </div>
+        <div class="pending-item-bot">
+          <div class="risk-tags">${tags}</div>
+          <div class="pending-actions">
+            <button class="btn-approve" onclick="event.stopPropagation();pendingAction('${r.id}','MONITORED',this)">Approve</button>
+            <button class="btn-reject"  onclick="event.stopPropagation();pendingAction('${r.id}','IN ANALYSIS',this)">Reject</button>
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <span style="font-size:10px;color:var(--muted)">Submitted by ${analyst} · ${updated}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function timeAgo(isoDate) {
+  const diff = Math.floor((Date.now() - new Date(isoDate)) / 1000);
+  if (diff < 60)   return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}min ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+async function loadAndRenderRisks() {
+  try {
+    const [risks, pending] = await Promise.all([
+      listRisks(),
+      listPendingRisks(),
+    ]);
+
+    // Vider RISKS_MAP avant de repeupler
+    RISKS_MAP.clear();
+    renderMyRisks(risks);
+    renderPendingTeam(pending);
+
+    // ── SUMMARY ROW — compteurs réels ──
+    const counts = { critical:0, high:0, medium:0, low:0, draft:0 };
+    risks.forEach(r => {
+      const sev = r.severity || 'medium';
+      if (counts[sev] !== undefined) counts[sev]++;
+      if (r.status === 'DRAFT') counts.draft++;
+    });
+    const el = id => document.getElementById(id);
+    if (el('countCritical')) el('countCritical').textContent = counts.critical;
+    if (el('countHigh'))     el('countHigh').textContent     = counts.high;
+    if (el('countMedium'))   el('countMedium').textContent   = counts.medium;
+    if (el('countLow'))      el('countLow').textContent      = counts.low;
+    if (el('countDraft'))    el('countDraft').textContent    = counts.draft;
+
+    // Mettre à jour RISKS pour filterTable (summary card click)
+    if (typeof RISKS !== 'undefined') {
+      RISKS.length = 0;
+      risks.forEach(r => RISKS.push({
+        id:         r.risk_ref,
+        uuid:       r.id,
+        name:       r.name,
+        sev:        r.severity || 'medium',
+        status:     r.status,
+        tags:       (r.rm_risk_tags || []).map(t => t.tag),
+        owner:      'You',
+        likelihood: r.likelihood,
+        impact:     r.impact,
+        residual:   r.residual_risk,
+        decision:   r.decision,
+        owner_full: r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned',
+      }));
+    }
+  } catch (err) {
+    console.error('Load risks error:', err);
+  }
+}
+
+async function loadAndRenderPending() {
+  try {
+    const risks = await listPendingTeam();
+    renderPendingTeam(risks);
+  } catch (err) {
+    console.error('Load pending error:', err);
+  }
+}
+
+async function loadAndRenderFeed() {
+  try {
+    const items = await listRSFeed();
+    FEED.length = 0;
+    items.forEach(i => FEED.push(i));
+    renderFeed(FEED);
+    updatePulse(FEED);
+  } catch (err) {
+    console.error('Load RS feed error:', err);
+  }
+}
+
+// ── PANEL ACTION HANDLERS ──
+
+// Recalcule le gross risk dans le panel Analysis + redessine la matrice
+window.recalcGross = function recalcGross() {
+  const L = parseInt(document.getElementById('editLikelihood')?.value) || 0;
+  const I = parseInt(document.getElementById('editImpact')?.value)     || 0;
+  const gross = L && I ? L * I : null;
+  const grossColor = !gross ? 'var(--muted)' :
+    gross >= 15 ? 'var(--critical)' : gross >= 9 ? 'var(--high)' : gross >= 4 ? 'var(--medium)' : 'var(--low)';
+  const el = document.getElementById('grossDisplay');
+  if (el) { el.textContent = gross ?? '—'; el.style.color = grossColor; }
+
+  // Redessiner la matrice
+  const matWrap = document.querySelector('.risk-matrix-wrap');
+  if (matWrap && L && I) {
+    const newMatrix = buildRiskMatrix(L, I);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = newMatrix;
+    matWrap.replaceWith(tmp.firstElementChild);
+  }
+}
+
+// Sauvegarde tous les champs éditables du panel (Overview + Analysis)
+window.saveRiskEdits = async function saveRiskEdits(uuid) {
+  const val = id => document.getElementById(id)?.value?.trim() ?? null;
+  const intVal = id => { const v = parseInt(document.getElementById(id)?.value); return isNaN(v) ? null : v; };
+
+  const payload = {
+    name:              val('editName')        || undefined,
+    asset:             val('editAsset')       || undefined,
+    description:       val('editDesc')        || undefined,
+    threat_source:     val('editThreatSource')|| undefined,
+    vulnerability:     val('editVuln')        || undefined,
+    scenario:          val('editScenario')    || undefined,
+    existing_controls: val('editControls')    || undefined,
+    proposed_measures: val('editMeasures')    || undefined,
+    likelihood:        intVal('editLikelihood'),
+    impact:            intVal('editImpact'),
+    residual_risk:     intVal('editResidual'),
+    decision:          val('editDecision')    || undefined,
+  };
+  // Supprimer les undefined
+  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+  try {
+    await updateRisk(uuid, payload);
+    showToast('Risk saved ✓');
+    await loadAndRenderRisks();
+  } catch (err) {
+    alert('Save error: ' + err.message);
+  }
+}
+
+window.applyStatus = async function applyStatus(uuid) {
+  const status = document.getElementById('statusSelect')?.value;
+  if (!status) return;
+  try {
+    await updateRisk(uuid, { status });
+    showToast(`Status → ${status}`);
+    closePanel();
+    await loadAndRenderRisks();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+window.applyStatusDirect = async function applyStatusDirect(uuid, status) {
+  try {
+    await updateRisk(uuid, { status });
+    showToast(`Status → ${status}`);
+    closePanel();
+    await loadAndRenderRisks();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+window.takeRisk = async function takeRisk(uuid) {
+  try {
+    const user = window._currentUser;
+    await updateRisk(uuid, { assigned_to: user ? `${user.first_name} ${user.last_name}` : 'Me', status: 'IN ANALYSIS' });
+    showToast('Risk assigned to you ✓');
+    closePanel();
+    await loadAndRenderRisks();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+window.archiveRisk = async function archiveRisk(uuid) {
+  if (!confirm('Archive this risk? It will be removed from active view.')) return;
+  try {
+    await updateRisk(uuid, { status: 'ARCHIVED' });
+    showToast('Risk archived');
+    closePanel();
+    await loadAndRenderRisks();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+window.saveAndTreat = async function saveAndTreat(uuid) {
+  const decision = document.getElementById('editDecision')?.value;
+  if (!decision) { alert('Select a decision first'); return; }
+  try {
+    await updateRisk(uuid, { decision, status: 'TREATED' });
+    showToast('Marked as Treated ✓');
+    closePanel();
+    await loadAndRenderRisks();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── NEW RISK SUBMIT ──
+async function submitNewRisk(status = 'DRAFT') {
+  const name       = document.getElementById('nrName')?.value.trim();
+  const desc       = document.getElementById('nrDescription')?.value.trim();
+  const asset      = document.getElementById('nrAsset')?.value.trim();
+  const likelihood = parseInt(document.getElementById('nrLikelihood')?.value) || null;
+  const impact     = parseInt(document.getElementById('nrImpact')?.value) || null;
+
+  if (!name) { alert('Risk name is required'); return; }
+
+  document.querySelectorAll('.nr-btn-draft, .nr-btn-submit').forEach(b => {
+    b.disabled = true; b.textContent = 'Saving...';
+  });
+
+  try {
+    const tags = [...(window.DETECTED_TAGS || new Set())];
+    const risk = await createRisk({ name, description: desc, asset, likelihood, impact, status, tags });
+
+    closeNewRiskModal();
+
+    const toast = document.createElement('div');
+    toast.textContent = `✓ ${risk.risk_ref} created`;
+    Object.assign(toast.style, {
+      position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+      background:'var(--low)', color:'#fff', fontFamily:'var(--mono)',
+      fontSize:'11px', padding:'10px 20px', borderRadius:'3px',
+      zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,0.4)'
+    });
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+
+    // Recharger la liste
+    await loadAndRenderRisks();
+
+  } catch (err) {
+    console.error('Create risk error:', err);
+    alert('Error: ' + err.message);
+  } finally {
+    document.querySelectorAll('.nr-btn-draft, .nr-btn-submit').forEach(b => { b.disabled = false; });
+    const d = document.querySelector('.nr-btn-draft');
+    const s = document.querySelector('.nr-btn-submit');
+    if (d) d.textContent = 'Save as Draft';
+    if (s) s.textContent = 'Submit for Analysis →';
+  }
+}
+</script>
+</body>
+</html>

@@ -2844,20 +2844,22 @@ document.addEventListener('click', e => {
     });
   });
 
-  // Groq debounce tag detection
+  // Groq debounce tag detection — attaché après rendu du DOM
   let groqTimer;
   const DETECTED_TAGS = new Set();
 
-  const nrDescEl = document.getElementById('nrDescription');
-  if (nrDescEl) {
-    nrDescEl.addEventListener('input', () => {
-      clearTimeout(groqTimer);
-      const desc = document.getElementById('nrDescription').value.trim();
-      if (desc.length < 20) return;
-      document.getElementById('nrGroqStatus').textContent = i18n.t('risk.new.groq.analysing');
-      groqTimer = setTimeout(() => detectTagsGroq(desc), 900);
-    });
-  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const nrDescEl = document.getElementById('nrDescription');
+    if (nrDescEl) {
+      nrDescEl.addEventListener('input', () => {
+        clearTimeout(groqTimer);
+        const desc = nrDescEl.value.trim();
+        if (desc.length < 20) return;
+        document.getElementById('nrGroqStatus').textContent = i18n.t('risk.new.groq.analysing');
+        groqTimer = setTimeout(() => detectTagsGroq(desc), 900);
+      });
+    }
+  });
 
   async function detectTagsGroq(description) {
     const status = document.getElementById('nrGroqStatus');

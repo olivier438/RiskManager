@@ -564,6 +564,30 @@ body {
     </div>
   </div>
 
+  <!-- KPI CARDS ROW 2 -->
+  <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi-card c-low">
+      <div class="kpi-label">Risks Closed</div>
+      <div class="kpi-value low" id="kpiClosed">—</div>
+      <div class="kpi-sub">Monitored or Accepted</div>
+    </div>
+    <div class="kpi-card c-critical">
+      <div class="kpi-label">Overdue</div>
+      <div class="kpi-value critical" id="kpiOverdue">—</div>
+      <div class="kpi-sub">No activity &gt; 30 days</div>
+    </div>
+    <div class="kpi-card c-medium">
+      <div class="kpi-label">Avg. Resolution</div>
+      <div class="kpi-value medium" id="kpiResolution">—</div>
+      <div class="kpi-sub">Days Draft → Monitored</div>
+    </div>
+    <div class="kpi-card c-accent">
+      <div class="kpi-label">Imported from RS</div>
+      <div class="kpi-value accent" id="kpiRSImport">—</div>
+      <div class="kpi-sub">Pulled from Risk Studio</div>
+    </div>
+  </div>
+
   <!-- EVOLUTION CHART — full width -->
   <div class="card">
     <div class="section-header" style="margin-bottom:16px">
@@ -761,7 +785,12 @@ function drawDonut(canvasId, segments) {
   const H = 160;
   canvas.width = W; canvas.height = H;
 
-  const cx = W * 0.36, cy = H / 2 - 4, r = 56, inner = 36;
+  // Donut centré dans un carré de côté H, à gauche
+  const size = Math.min(W * 0.55, H - 16);
+  const cx = size / 2 + 8;
+  const cy = H / 2;
+  const r = size / 2 - 4;
+  const inner = r * 0.6;
   const total = segments.reduce((a, s) => a + s.value, 0);
   if (!total) return;
   let angle = -Math.PI / 2;
@@ -799,8 +828,8 @@ function drawDonut(canvasId, segments) {
   ctx.fillStyle = mutedCol;
   ctx.fillText('total', cx, cy + 13);
 
-  // Legend
-  const lx = W * 0.62;
+  // Legend — à droite du donut
+  const lx = cx + r + 16;
   let ly = cy - (segments.length * 18) / 2 + 2;
   ctx.textBaseline = 'middle';
   ctx.font = '10px IBM Plex Mono,monospace';
@@ -946,6 +975,31 @@ async function loadKPIData() {
     document.getElementById('kpiAvgGross').textContent = avgGross;
     const pending = (byStatus['IN ANALYSIS']||0) + (byStatus['IN REVIEW']||0);
     animateCounter('kpiPending', pending);
+
+    // Risks Closed
+    animateCounter('kpiClosed', monitored);
+
+    // Overdue — active workflow, no update > 30 days
+    const ms30 = 30 * 24 * 60 * 60 * 1000;
+    const activeStatuses = new Set(['IN ANALYSIS','IN REVIEW','IN TREATMENT']);
+    const overdue = risks.filter(r =>
+      activeStatuses.has(r.status) &&
+      (Date.now() - new Date(r.updated_at || r.created_at).getTime()) > ms30
+    ).length;
+    animateCounter('kpiOverdue', overdue);
+
+    // Avg Resolution — days from created_at to updated_at for MONITORED risks
+    const resolved = risks.filter(r => r.status === 'MONITORED' && r.created_at && r.updated_at);
+    const avgRes = resolved.length > 0
+      ? Math.round(resolved.reduce((acc, r) =>
+          acc + (new Date(r.updated_at) - new Date(r.created_at)) / 86400000, 0
+        ) / resolved.length)
+      : null;
+    document.getElementById('kpiResolution').textContent = avgRes !== null ? avgRes + 'd' : '—';
+
+    // Imported from RS
+    const rsImported = risks.filter(r => r.rs_source_id).length;
+    animateCounter('kpiRSImport', rsImported);
 
     // Period label
     const periodEl = document.getElementById('kpiPeriod');

@@ -524,413 +524,481 @@ body {
 <!-- MAIN -->
 <div class="main">
 
-  <!-- KPI CARDS -->
-  <div>
-    <div class="section-header">
-      <span class="section-title">Risk Register Overview</span>
-      <span class="section-period">Period : Jan 2026 — Apr 2026</span>
-    </div>
+  <!-- HEADER ROW -->
+  <div class="section-header" style="margin-bottom:0">
+    <span class="section-title" style="font-size:13px;font-weight:600">Risk Register — KPI Dashboard</span>
+    <span class="section-period" id="kpiPeriod">Loading...</span>
   </div>
 
-  <div class="kpi-row">
+  <!-- KPI CARDS ROW -->
+  <div class="kpi-row" style="grid-template-columns:repeat(6,1fr)">
     <div class="kpi-card c-neutral">
-      <div class="kpi-label">Total Risks</div>
-      <div class="kpi-value neutral" id="kpiTotal">27</div>
-      <div class="kpi-sub">Registered in environment</div>
-      <div class="kpi-trend up">▲ +4 this month</div>
+      <div class="kpi-label">Total Active</div>
+      <div class="kpi-value neutral" id="kpiTotal">—</div>
+      <div class="kpi-sub" id="kpiTotalSub">Registered risks</div>
     </div>
     <div class="kpi-card c-critical">
-      <div class="kpi-label">Open Critical</div>
-      <div class="kpi-value critical" id="kpiCritical">3</div>
-      <div class="kpi-sub">Require immediate action</div>
-      <div class="kpi-trend up">▲ +1 vs last month</div>
+      <div class="kpi-label">Critical</div>
+      <div class="kpi-value critical" id="kpiCritical">—</div>
+      <div class="kpi-sub" id="kpiCriticalSub">Require immediate action</div>
+    </div>
+    <div class="kpi-card c-high">
+      <div class="kpi-label">High</div>
+      <div class="kpi-value high" id="kpiHigh">—</div>
+      <div class="kpi-sub" id="kpiHighSub">Elevated exposure</div>
     </div>
     <div class="kpi-card c-accent">
       <div class="kpi-label">Treatment Rate</div>
-      <div class="kpi-value accent" id="kpiTreatment">74%</div>
-      <div class="kpi-sub">Risks with defined treatment</div>
-      <div class="kpi-trend down">▼ −3% vs last month</div>
+      <div class="kpi-value accent" id="kpiTreatRate">—</div>
+      <div class="kpi-sub">Monitored + Treated</div>
     </div>
     <div class="kpi-card c-medium">
-      <div class="kpi-label">Avg. Resolution</div>
-      <div class="kpi-value medium" id="kpiResolution">18d</div>
-      <div class="kpi-sub">Draft to Monitored</div>
-      <div class="kpi-trend down">▼ −2d vs last month</div>
-    </div>
-  </div>
-
-  <!-- ROW 2 -->
-  <div class="kpi-row" style="grid-template-columns: repeat(4,1fr)">
-    <div class="kpi-card c-high">
-      <div class="kpi-label">Overdue Reviews</div>
-      <div class="kpi-value high">5</div>
-      <div class="kpi-sub">Past revision date</div>
-      <div class="kpi-trend up">▲ +2 this week</div>
-    </div>
-    <div class="kpi-card c-low">
-      <div class="kpi-label">Risks Closed</div>
-      <div class="kpi-value low">8</div>
-      <div class="kpi-sub">Monitored or accepted</div>
-      <div class="kpi-trend down">▼ −1 vs last month</div>
+      <div class="kpi-label">Avg Gross Score</div>
+      <div class="kpi-value medium" id="kpiAvgGross">—</div>
+      <div class="kpi-sub">Mean L×I across register</div>
     </div>
     <div class="kpi-card c-neutral">
-      <div class="kpi-label">Pending Approval</div>
-      <div class="kpi-value neutral">2</div>
-      <div class="kpi-sub">Awaiting Risk Manager</div>
-      <div class="kpi-trend flat">— stable</div>
-    </div>
-    <div class="kpi-card c-accent">
-      <div class="kpi-label">RS Feed Imported</div>
-      <div class="kpi-value accent">6</div>
-      <div class="kpi-sub">From Risk Studio this month</div>
-      <div class="kpi-trend up">▲ +6 new</div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--critical);letter-spacing:0.06em;margin-bottom:4px">⚠ LAST RS ALERT NOT YET IMPORTED</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.4">CVE-2025-3284 · RCE Apache · Critical</div>
-        <a href="search.html?q=apache" style="font-family:var(--mono);font-size:9px;color:var(--accent-hi);letter-spacing:0.06em;text-decoration:none;display:inline-block;margin-top:4px;">Search related →</a>
-      </div>
+      <div class="kpi-label">Pending Action</div>
+      <div class="kpi-value neutral" id="kpiPending">—</div>
+      <div class="kpi-sub">In Analysis + In Review</div>
     </div>
   </div>
 
-  <!-- ROW 3 : Charts -->
-  <div class="grid-3">
+  <!-- EVOLUTION CHART — full width -->
+  <div class="card">
+    <div class="section-header" style="margin-bottom:16px">
+      <span class="section-title">Risk Evolution — 12 months</span>
+      <span class="section-period">cumulative · critical / high / total</span>
+    </div>
+    <canvas id="evolutionChart" style="width:100%;display:block;height:160px"></canvas>
+  </div>
 
-    <!-- Evolution chart -->
+  <!-- ROW 3 — Top 5 + Status + Severity -->
+  <div class="grid-3" style="grid-template-columns:2fr 1fr 1fr">
+
     <div class="card">
-      <div class="section-header" style="margin-bottom:14px">
-        <span class="section-title">Risk Evolution — 12 months</span>
+      <div class="section-header" style="margin-bottom:12px">
+        <span class="section-title">Top 5 — Highest Gross Score</span>
+        <a href="dashboard.html" style="font-family:var(--mono);font-size:9px;color:var(--accent-hi);text-decoration:none;letter-spacing:0.06em">View all →</a>
       </div>
-      <canvas id="evolutionChart" width="100%" height="140" style="width:100%;display:block"></canvas>
+      <div class="risk-list" id="top5List">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">Loading...</div>
+      </div>
     </div>
 
-    <!-- Status distribution -->
     <div class="card">
-      <div class="section-header" style="margin-bottom:14px">
+      <div class="section-header" style="margin-bottom:12px">
         <span class="section-title">By Status</span>
       </div>
-      <canvas id="statusChart" width="100%" height="140" style="width:100%;display:block"></canvas>
+      <canvas id="statusChart" style="width:100%;display:block;height:160px"></canvas>
     </div>
 
-    <!-- Severity distribution -->
     <div class="card">
-      <div class="section-header" style="margin-bottom:14px">
+      <div class="section-header" style="margin-bottom:12px">
         <span class="section-title">By Severity</span>
       </div>
-      <canvas id="severityChart" width="100%" height="140" style="width:100%;display:block"></canvas>
+      <canvas id="severityChart" style="width:100%;display:block;height:160px"></canvas>
     </div>
 
   </div>
 
-  <!-- ROW 4 -->
+  <!-- ROW 4 — Owner load + Pipeline -->
   <div class="grid-2">
 
-    <!-- Top 5 risks -->
     <div class="card">
-      <div class="section-header" style="margin-bottom:12px">
-        <span class="section-title">Top 5 Critical Risks</span>
-        <span class="section-period">by gross risk score</span>
+      <div class="section-header" style="margin-bottom:14px">
+        <span class="section-title">Risks by Owner</span>
+        <span class="section-period">active only</span>
       </div>
-      <div class="risk-list">
-        <div class="risk-row">
-          <span class="risk-rank">1</span>
-          <div class="risk-name-cell">
-            Unauthorised access via VPN endpoint
-            <span class="risk-id-small">RM-0012 · #access-control #vpn</span>
-          </div>
-          <span class="sev-pill critical">Critical</span>
-          <span class="score-mono" style="color:var(--critical)">20</span>
-        </div>
-        <div class="risk-row">
-          <span class="risk-rank">2</span>
-          <div class="risk-name-cell">
-            No MFA on admin accounts
-            <span class="risk-id-small">RM-0007 · #iam #mfa</span>
-          </div>
-          <span class="sev-pill critical">Critical</span>
-          <span class="score-mono" style="color:var(--critical)">20</span>
-        </div>
-        <div class="risk-row">
-          <span class="risk-rank">3</span>
-          <div class="risk-name-cell">
-            Backup untested for 8 months
-            <span class="risk-id-small">RM-0003 · #backup #bcm</span>
-          </div>
-          <span class="sev-pill high">High</span>
-          <span class="score-mono" style="color:var(--high)">15</span>
-        </div>
-        <div class="risk-row">
-          <span class="risk-rank">4</span>
-          <div class="risk-name-cell">
-            Cloud storage bucket publicly exposed
-            <span class="risk-id-small">RM-0014 · #cloud #data-exposure</span>
-          </div>
-          <span class="sev-pill high">High</span>
-          <span class="score-mono" style="color:var(--high)">16</span>
-        </div>
-        <div class="risk-row">
-          <span class="risk-rank">5</span>
-          <div class="risk-name-cell">
-            Unpatched Windows Server 2016 on DMZ
-            <span class="risk-id-small">RM-0009 · #patch #server</span>
-          </div>
-          <span class="sev-pill high">High</span>
-          <span class="score-mono" style="color:var(--high)">12</span>
-        </div>
+      <div id="ownerBars" style="display:flex;flex-direction:column;gap:0">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">Loading...</div>
       </div>
     </div>
 
-    <!-- Risk Owner + Overdue -->
     <div class="card">
-      <div class="section-header" style="margin-bottom:12px">
-        <span class="section-title">Risks by Owner</span>
-        <span class="section-period">active risks only</span>
+      <div class="section-header" style="margin-bottom:14px">
+        <span class="section-title">Treatment Pipeline</span>
+        <span class="section-period">workflow stages</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:0">
-        <div class="coverage-row">
-          <span class="coverage-label">O. Delvigne</span>
-          <div class="coverage-bar-wrap"><div class="coverage-bar" style="width:74%;background:var(--accent)"></div></div>
-          <span class="coverage-pct">14</span>
-        </div>
-        <div class="coverage-row">
-          <span class="coverage-label">J. Masson</span>
-          <div class="coverage-bar-wrap"><div class="coverage-bar" style="width:42%;background:var(--medium)"></div></div>
-          <span class="coverage-pct">8</span>
-        </div>
-        <div class="coverage-row">
-          <span class="coverage-label">T. Lecomte</span>
-          <div class="coverage-bar-wrap"><div class="coverage-bar" style="width:26%;background:var(--border-hi)"></div></div>
-          <span class="coverage-pct">5</span>
-        </div>
-      </div>
-
-      <div style="margin-top:20px">
-        <div class="section-header" style="margin-bottom:10px">
-          <span class="section-title">Status Distribution</span>
-        </div>
-        <table class="status-table">
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Count</th>
-              <th>Progress</th>
-              <th>%</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">IN TREATMENT</td>
-              <td style="font-family:var(--mono);font-size:12px;color:var(--text)">7</td>
-              <td><div class="status-bar-wrap"><div class="status-bar" style="width:52%;background:var(--high)"></div></div></td>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--high)">26%</td>
-            </tr>
-            <tr>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">IN ANALYSIS</td>
-              <td style="font-family:var(--mono);font-size:12px;color:var(--text)">5</td>
-              <td><div class="status-bar-wrap"><div class="status-bar" style="width:37%;background:var(--medium)"></div></div></td>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--medium)">19%</td>
-            </tr>
-            <tr>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">MONITORED</td>
-              <td style="font-family:var(--mono);font-size:12px;color:var(--text)">8</td>
-              <td><div class="status-bar-wrap"><div class="status-bar" style="width:60%;background:var(--low)"></div></div></td>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--low)">30%</td>
-            </tr>
-            <tr>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">DRAFT</td>
-              <td style="font-family:var(--mono);font-size:12px;color:var(--text)">4</td>
-              <td><div class="status-bar-wrap"><div class="status-bar" style="width:30%;background:var(--border-hi)"></div></div></td>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">15%</td>
-            </tr>
-            <tr>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">PENDING</td>
-              <td style="font-family:var(--mono);font-size:12px;color:var(--text)">3</td>
-              <td><div class="status-bar-wrap"><div class="status-bar" style="width:22%;background:var(--accent)"></div></div></td>
-              <td style="font-family:var(--mono);font-size:10px;color:var(--accent-hi)">11%</td>
-            </tr>
-          </tbody>
-        </table>
+      <div id="pipeline" style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">Loading...</div>
       </div>
     </div>
 
   </div>
+
 </div>
 
 <script>
-// Date
+// ── DATE ──
 const now = new Date();
 document.getElementById('topDate').textContent =
   now.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
 
-// ── CHART HELPERS ──
+// ── ANIMATE COUNTER ──
+function animateCounter(id, target, suffix='') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = 0;
+  const duration = 600;
+  const step = (timestamp, startTime) => {
+    const progress = Math.min((timestamp - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + (target - start) * ease) + suffix;
+    if (progress < 1) requestAnimationFrame(ts => step(ts, startTime));
+  };
+  requestAnimationFrame(ts => step(ts, ts));
+}
+
+// ── SMOOTH BEZIER LINE CHART ──
+function drawSmoothLine(ctx, pts, color, fill = true, PAD, cH) {
+  if (pts.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const cp1x = pts[i].x + (pts[i+1].x - (pts[i-1]?.x || pts[i].x)) / 6;
+    const cp1y = pts[i].y + (pts[i+1].y - (pts[i-1]?.y || pts[i].y)) / 6;
+    const cp2x = pts[i+1].x - (pts[i+2]?.x - pts[i].x || 0) / 6;
+    const cp2y = pts[i+1].y - (pts[i+2]?.y - pts[i].y || 0) / 6;
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pts[i+1].x, pts[i+1].y);
+  }
+  if (fill) {
+    ctx.lineTo(pts[pts.length-1].x, PAD.top + cH);
+    ctx.lineTo(pts[0].x, PAD.top + cH);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + cH);
+    grad.addColorStop(0, color + '30');
+    grad.addColorStop(1, color + '00');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    // Redraw line on top
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cp1x = pts[i].x + (pts[i+1].x - (pts[i-1]?.x || pts[i].x)) / 6;
+      const cp1y = pts[i].y + (pts[i+1].y - (pts[i-1]?.y || pts[i].y)) / 6;
+      const cp2x = pts[i+1].x - (pts[i+2]?.x - pts[i].x || 0) / 6;
+      const cp2y = pts[i+1].y - (pts[i+2]?.y - pts[i].y || 0) / 6;
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pts[i+1].x, pts[i+1].y);
+    }
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Dot on last point
+  const last = pts[pts.length-1];
+  ctx.beginPath();
+  ctx.arc(last.x, last.y, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  // Pulse ring
+  ctx.beginPath();
+  ctx.arc(last.x, last.y, 6, 0, Math.PI * 2);
+  ctx.strokeStyle = color + '50';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
 function drawLineChart(canvasId, datasets, labels) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 400;
-  const H = 140;
-  canvas.width = W;
-  canvas.height = H;
+  const W = canvas.parentElement.offsetWidth - 32 || 600;
+  const H = 160;
+  canvas.width = W; canvas.height = H;
 
-  const PAD = { top: 10, right: 16, bottom: 28, left: 28 };
+  const PAD = { top:14, right:20, bottom:30, left:32 };
   const cW = W - PAD.left - PAD.right;
   const cH = H - PAD.top - PAD.bottom;
-
   const allVals = datasets.flatMap(d => d.data);
-  const minV = Math.min(...allVals);
-  const maxV = Math.max(...allVals);
-  const range = maxV - minV || 1;
+  const minV = 0, maxV = Math.max(...allVals, 1);
 
   const xPos = i => PAD.left + (i / (labels.length - 1)) * cW;
-  const yPos = v => PAD.top + cH - ((v - minV) / range) * cH;
+  const yPos = v => PAD.top + cH - ((v - minV) / (maxV - minV)) * cH;
 
-  // Grid lines
-  ctx.strokeStyle = 'rgba(28,39,48,0.8)';
-  ctx.lineWidth = 1;
-  [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+  // Grid
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const gridColor = isDark ? 'rgba(28,39,48,0.9)' : 'rgba(200,210,220,0.5)';
+  const textColor = isDark ? '#4d6579' : '#8aa0b0';
+
+  [0,0.25,0.5,0.75,1].forEach(t => {
+    ctx.beginPath();
+    ctx.strokeStyle = gridColor; ctx.lineWidth = 1;
     const y = PAD.top + cH * t;
-    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cW, y); ctx.stroke();
-  });
-
-  // X labels
-  ctx.fillStyle = '#7a95aa';
-  ctx.font = '9px IBM Plex Mono, monospace';
-  ctx.textAlign = 'center';
-  labels.forEach((l, i) => {
-    if (i % 2 === 0 || i === labels.length - 1) {
-      ctx.fillText(l, xPos(i), H - 6);
+    ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cW, y); ctx.stroke();
+    if (t < 1) {
+      ctx.fillStyle = textColor;
+      ctx.font = '9px IBM Plex Mono,monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(Math.round(maxV * (1-t)), PAD.left - 4, y + 3);
     }
   });
 
-  // Y labels
-  ctx.textAlign = 'right';
-  [minV, Math.round((minV + maxV) / 2), maxV].forEach(v => {
-    ctx.fillText(v, PAD.left - 4, yPos(v) + 3);
+  // X labels
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'center';
+  labels.forEach((l, i) => {
+    if (i % 2 === 0 || i === labels.length-1)
+      ctx.fillText(l, xPos(i), H - 8);
   });
 
-  // Lines + fills
+  // Lines
   datasets.forEach(ds => {
     const pts = ds.data.map((v, i) => ({ x: xPos(i), y: yPos(v) }));
-
-    // Area fill
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.lineTo(pts[pts.length - 1].x, PAD.top + cH);
-    ctx.lineTo(pts[0].x, PAD.top + cH);
-    ctx.closePath();
-    const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + cH);
-    grad.addColorStop(0, ds.color + '28');
-    grad.addColorStop(1, ds.color + '00');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Line
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = ds.color;
-    ctx.lineWidth = 1.5;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-
-    // Last dot
-    const last = pts[pts.length - 1];
-    ctx.beginPath();
-    ctx.arc(last.x, last.y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = ds.color;
-    ctx.fill();
+    drawSmoothLine(ctx, pts, ds.color, true, PAD, cH);
   });
 }
 
+// ── DONUT CHART ──
 function drawDonut(canvasId, segments) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 200;
-  const H = 140;
-  canvas.width = W;
-  canvas.height = H;
+  const W = canvas.parentElement.offsetWidth - 32 || 200;
+  const H = 160;
+  canvas.width = W; canvas.height = H;
 
-  const cx = W * 0.38, cy = H / 2, r = 52, inner = 32;
+  const cx = W * 0.36, cy = H / 2 - 4, r = 56, inner = 36;
   const total = segments.reduce((a, s) => a + s.value, 0);
+  if (!total) return;
   let angle = -Math.PI / 2;
+  const gap = 0.04;
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const textCol = isDark ? '#cdd9e5' : '#1a2a38';
+  const mutedCol = isDark ? '#4d6579' : '#8aa0b0';
+  const innerFill = isDark ? '#111820' : '#ffffff';
 
   segments.forEach(s => {
-    const slice = (s.value / total) * Math.PI * 2;
+    const slice = (s.value / total) * Math.PI * 2 - gap;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, angle, angle + slice);
+    ctx.arc(cx, cy, r, angle + gap/2, angle + slice);
     ctx.closePath();
     ctx.fillStyle = s.color;
     ctx.fill();
-    angle += slice;
+    angle += slice + gap;
   });
 
-  // Inner circle
+  // Hole
   ctx.beginPath();
   ctx.arc(cx, cy, inner, 0, Math.PI * 2);
-  ctx.fillStyle = '#111820';
+  ctx.fillStyle = innerFill;
   ctx.fill();
 
   // Center text
-  ctx.fillStyle = '#cdd9e5';
-  ctx.font = 'bold 18px IBM Plex Mono, monospace';
+  ctx.fillStyle = textCol;
+  ctx.font = 'bold 20px IBM Plex Mono,monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(total, cx, cy - 4);
-  ctx.font = '9px IBM Plex Mono, monospace';
-  ctx.fillStyle = '#7a95aa';
-  ctx.fillText('total', cx, cy + 12);
+  ctx.fillText(total, cx, cy - 3);
+  ctx.font = '8px IBM Plex Mono,monospace';
+  ctx.fillStyle = mutedCol;
+  ctx.fillText('total', cx, cy + 13);
 
   // Legend
-  const lx = W * 0.62, ly = cy - (segments.length * 14) / 2;
+  const lx = W * 0.62;
+  let ly = cy - (segments.length * 18) / 2 + 2;
   ctx.textBaseline = 'middle';
-  ctx.font = '10px IBM Plex Mono, monospace';
-  segments.forEach((s, i) => {
-    const y = ly + i * 20;
+  ctx.font = '10px IBM Plex Mono,monospace';
+  segments.forEach(s => {
     ctx.fillStyle = s.color;
-    ctx.fillRect(lx, y - 4, 12, 8);
-    ctx.fillStyle = '#7a95aa';
+    ctx.beginPath(); ctx.arc(lx + 4, ly, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = mutedCol;
     ctx.textAlign = 'left';
-    ctx.fillText(`${s.label} (${s.value})`, lx + 16, y);
+    ctx.fillText(`${s.label}`, lx + 12, ly - 1);
+    ctx.fillStyle = textCol;
+    ctx.font = 'bold 10px IBM Plex Mono,monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(s.value, W - 8, ly - 1);
+    ctx.font = '10px IBM Plex Mono,monospace';
+    ly += 20;
   });
 }
 
-// ── DATA ──
-const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// ── TOP 5 ──
+function renderTop5(items) {
+  const el = document.getElementById('top5List');
+  if (!el) return;
+  if (!items.length) { el.innerHTML = '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">No scored risks yet</div>'; return; }
+  const sevColor = { critical:'var(--critical)', high:'var(--high)', medium:'var(--medium)', low:'var(--low)' };
+  el.innerHTML = items.map((r, i) => `
+    <div class="risk-row">
+      <span class="risk-rank">${i+1}</span>
+      <div class="risk-name-cell">
+        ${r.name}
+        <span class="risk-id-small">${r.ref} · ${(r.tags||[]).slice(0,2).join(' ')}</span>
+      </div>
+      <span class="sev-pill ${r.sev}">${r.sev.charAt(0).toUpperCase()+r.sev.slice(1)}</span>
+      <span class="score-mono" style="color:${sevColor[r.sev]||'var(--text)'}">${r.gross}</span>
+    </div>`).join('');
+}
 
-setTimeout(() => {
-  drawLineChart('evolutionChart', [
-    { data:[2,3,4,4,5,6,7,9,11,14,18,27], color:'#2387c8', label:'Total' },
-    { data:[0,0,1,1,2,2,2,3,3,3,3,3],    color:'#c0392b', label:'Critical' },
-    { data:[1,1,2,2,3,3,4,4,5,6,7,7],    color:'#d4700a', label:'High' },
-  ], months);
+// ── OWNER BARS ──
+function renderOwnerBars(owners) {
+  const el = document.getElementById('ownerBars');
+  if (!el) return;
+  const entries = Object.entries(owners).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max = entries[0]?.[1] || 1;
+  const colors = ['var(--accent)','var(--medium)','var(--low)','var(--high)','var(--border-hi)','var(--muted)'];
+  el.innerHTML = entries.map(([name, count], i) => `
+    <div class="coverage-row">
+      <span class="coverage-label" style="width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+      <div class="coverage-bar-wrap"><div class="coverage-bar" style="width:${Math.round(count/max*100)}%;background:${colors[i]}"></div></div>
+      <span class="coverage-pct">${count}</span>
+    </div>`).join('');
+  if (!entries.length) el.innerHTML = '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">No risks assigned yet</div>';
+}
 
-  drawDonut('statusChart', [
-    { label:'Treatment', value:7, color:'#d4700a' },
-    { label:'Monitored', value:8, color:'#1a7a4a' },
-    { label:'Analysis',  value:5, color:'#b8960a' },
-    { label:'Draft',     value:4, color:'#2a3a4a' },
-    { label:'Pending',   value:3, color:'#1d6fa4' },
-  ]);
+// ── PIPELINE ──
+function renderPipeline(byStatus, total) {
+  const el = document.getElementById('pipeline');
+  if (!el) return;
+  const stages = [
+    { key:'DRAFT',        label:'Draft',        color:'var(--border-hi)' },
+    { key:'IN ANALYSIS',  label:'In Analysis',  color:'var(--medium)' },
+    { key:'IN REVIEW',    label:'In Review',    color:'var(--high)' },
+    { key:'IN TREATMENT', label:'In Treatment', color:'var(--critical)' },
+    { key:'MONITORED',    label:'Monitored',    color:'var(--low)' },
+  ];
+  el.innerHTML = stages.map(s => {
+    const count = byStatus[s.key] || 0;
+    const pct = total > 0 ? Math.round(count/total*100) : 0;
+    return `
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;width:90px;flex-shrink:0">${s.label}</span>
+        <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${s.color};border-radius:3px;transition:width 0.8s ease"></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${s.color};width:28px;text-align:right;flex-shrink:0">${count}</span>
+      </div>`;
+  }).join('');
+}
 
-  drawDonut('severityChart', [
-    { label:'Critical', value:3,  color:'#c0392b' },
-    { label:'High',     value:7,  color:'#d4700a' },
-    { label:'Medium',   value:12, color:'#b8960a' },
-    { label:'Low',      value:5,  color:'#1a7a4a' },
-  ]);
-}, 100);
+// ── MAIN LOAD ──
+async function loadKPIData() {
+  try {
+    const risks = await listRisks();
+    const total = risks.length;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const curYear = new Date().getFullYear();
+
+    // Count by severity and status
+    const bySev = { critical:0, high:0, medium:0, low:0 };
+    const byStatus = {};
+    const byOwner = {};
+    const grossScored = [];
+    const monthlyTotal = new Array(12).fill(0);
+    const monthlyCrit  = new Array(12).fill(0);
+    const monthlyHigh  = new Array(12).fill(0);
+    let grossSum = 0, grossCount = 0;
+
+    risks.forEach(r => {
+      const sev = r.severity || 'medium';
+      if (bySev[sev] !== undefined) bySev[sev]++;
+      const st = r.status || 'DRAFT';
+      byStatus[st] = (byStatus[st] || 0) + 1;
+
+      const ownerName = r.owner ? `${r.owner.first_name} ${r.owner.last_name}` : 'Unassigned';
+      byOwner[ownerName] = (byOwner[ownerName] || 0) + 1;
+
+      // Monthly bucketing
+      const created = new Date(r.created_at);
+      if (created.getFullYear() === curYear) {
+        const m = created.getMonth();
+        monthlyTotal[m]++;
+        if (sev === 'critical') monthlyCrit[m]++;
+        if (sev === 'high')     monthlyHigh[m]++;
+      }
+
+      if (r.likelihood && r.impact) {
+        const gross = r.likelihood * r.impact;
+        grossSum += gross; grossCount++;
+        grossScored.push({
+          ref: r.risk_ref, name: r.name, sev,
+          gross, tags: (r.rm_risk_tags || []).map(t => t.tag)
+        });
+      }
+    });
+
+    // Cumulative monthly
+    const cumTotal = [], cumCrit = [], cumHigh = [];
+    let tT=0, tC=0, tH=0;
+    const curMonth = new Date().getMonth();
+    for (let i = 0; i <= curMonth; i++) {
+      tT += monthlyTotal[i]; cumTotal.push(tT);
+      tC += monthlyCrit[i];  cumCrit.push(tC);
+      tH += monthlyHigh[i];  cumHigh.push(tH);
+    }
+    const activeLabels = months.slice(0, curMonth+1);
+
+    // KPI updates
+    animateCounter('kpiTotal', total);
+    animateCounter('kpiCritical', bySev.critical);
+    animateCounter('kpiHigh', bySev.high);
+    const monitored = (byStatus['MONITORED']||0) + (byStatus['TREATED']||0);
+    const treatRate = total > 0 ? Math.round(monitored/total*100) : 0;
+    animateCounter('kpiTreatRate', treatRate, '%');
+    const avgGross = grossCount > 0 ? (grossSum/grossCount).toFixed(1) : 0;
+    document.getElementById('kpiAvgGross').textContent = avgGross;
+    const pending = (byStatus['IN ANALYSIS']||0) + (byStatus['IN REVIEW']||0);
+    animateCounter('kpiPending', pending);
+
+    // Period label
+    const periodEl = document.getElementById('kpiPeriod');
+    if (periodEl) periodEl.textContent = `Updated ${now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
+
+    // Charts
+    setTimeout(() => {
+      drawLineChart('evolutionChart',
+        cumTotal.length > 1 ? [
+          { data: cumTotal, color: '#2387c8', label:'Total' },
+          { data: cumHigh,  color: '#d4700a', label:'High' },
+          { data: cumCrit,  color: '#c0392b', label:'Critical' },
+        ] : [
+          // fallback mock si pas encore de données
+          { data:[2,3,5,7,9,12,15,18,22,25,27,27].slice(0,12), color:'#2387c8' },
+          { data:[1,1,2,2,3,4,5,6,7,7,7,7].slice(0,12),        color:'#d4700a' },
+          { data:[0,0,0,1,1,1,2,2,3,3,3,3].slice(0,12),        color:'#c0392b' },
+        ],
+        cumTotal.length > 1 ? activeLabels : months
+      );
+
+      drawDonut('statusChart', [
+        { label:'Treatment', value: byStatus['IN TREATMENT']||0, color:'#d4700a' },
+        { label:'Monitored', value: byStatus['MONITORED']||0,    color:'#1a7a4a' },
+        { label:'Analysis',  value: byStatus['IN ANALYSIS']||0,  color:'#b8960a' },
+        { label:'Draft',     value: byStatus['DRAFT']||0,        color:'#2a3a4a' },
+        { label:'Review',    value: byStatus['IN REVIEW']||0,    color:'#1d6fa4' },
+      ].filter(s => s.value > 0));
+
+      drawDonut('severityChart', [
+        { label:'Critical', value: bySev.critical, color:'#c0392b' },
+        { label:'High',     value: bySev.high,     color:'#d4700a' },
+        { label:'Medium',   value: bySev.medium,   color:'#b8960a' },
+        { label:'Low',      value: bySev.low,       color:'#1a7a4a' },
+      ].filter(s => s.value > 0));
+    }, 80);
+
+    // Top 5
+    grossScored.sort((a,b) => b.gross - a.gross);
+    renderTop5(grossScored.slice(0, 5));
+
+    // Owner bars
+    renderOwnerBars(byOwner);
+
+    // Pipeline
+    renderPipeline(byStatus, total);
+
+  } catch (err) {
+    console.error('KPI load error:', err);
+  }
+}
 </script>
 
-<script>
-// Theme button label init
-document.addEventListener('DOMContentLoaded', function() {
-  var saved = localStorage.getItem('rm-theme') || 'dark';
-  var btn = document.getElementById('themeToggleBtn');
-  if (btn) btn.textContent = saved === 'light' ? '☀ Light' : '☾ Dark';
-});
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
@@ -939,6 +1007,8 @@ document.addEventListener('DOMContentLoaded', function() {
 (async () => {
   const user = await requireAuth();
   if (!user) return;
+  sbApplyRole(user.role);
+  await loadKPIData();
 })();
 </script>
 
@@ -953,6 +1023,192 @@ function sbApplyRole(role) {
   var s = document.getElementById('sbSettingsBtn');
   if (s) s.style.display = role === 'risk_leader' ? 'flex' : 'none';
 }
+</script>
+<script>
+document.getElementById('topDate').textContent =
+  new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+const ENV = window.location.hostname.includes('beta') || !window.location.hostname.includes('www') ? 'beta' : 'prod';
+if (ENV === 'prod') { const b=document.getElementById('envBadge'); b.textContent='PROD'; b.classList.add('prod'); }
+
+function drawLineChart(id, datasets, labels) {
+  const cv=document.getElementById(id); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const W=cv.parentElement.offsetWidth-44, H=130;
+  cv.width=W; cv.height=H;
+  const P={t:10,r:16,b:26,l:28};
+  const cW=W-P.l-P.r, cH=H-P.t-P.b;
+  const allV=datasets.flatMap(d=>d.data);
+  const mn=Math.min(...allV), mx=Math.max(...allV), rng=mx-mn||1;
+  const xp=i=>P.l+(i/(labels.length-1))*cW;
+  const yp=v=>P.t+cH-((v-mn)/rng)*cH;
+  ctx.strokeStyle='#1c2730'; ctx.lineWidth=1;
+  [0,.33,.66,1].forEach(t=>{const y=P.t+cH*t;ctx.beginPath();ctx.setLineDash([3,4]);ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();});
+  ctx.setLineDash([]);
+  ctx.fillStyle='#7a95aa'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+  labels.forEach((l,i)=>{if(i%3===0||i===labels.length-1)ctx.fillText(l,xp(i),H-4);});
+  ctx.textAlign='right';
+  [mn,Math.round((mn+mx)/2),mx].forEach(v=>ctx.fillText(v,P.l-4,yp(v)+3));
+  datasets.forEach(ds=>{
+    const pts=ds.data.map((v,i)=>({x:xp(i),y:yp(v)}));
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++){const cx=(pts[i-1].x+pts[i].x)/2;ctx.bezierCurveTo(cx,pts[i-1].y,cx,pts[i].y,pts[i].x,pts[i].y);}
+    ctx.lineTo(pts[pts.length-1].x,P.t+cH); ctx.lineTo(pts[0].x,P.t+cH); ctx.closePath();
+    const g=ctx.createLinearGradient(0,P.t,0,P.t+cH);g.addColorStop(0,ds.color+'30');g.addColorStop(1,ds.color+'00');ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++){const cx=(pts[i-1].x+pts[i].x)/2;ctx.bezierCurveTo(cx,pts[i-1].y,cx,pts[i].y,pts[i].x,pts[i].y);}
+    ctx.strokeStyle=ds.color; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke();
+    const last=pts[pts.length-1]; ctx.beginPath(); ctx.arc(last.x,last.y,3.5,0,Math.PI*2); ctx.fillStyle=ds.color; ctx.fill();
+  });
+}
+
+function drawDonut(id, segments) {
+  const cv=document.getElementById(id); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const W=cv.parentElement.offsetWidth-44, H=130;
+  cv.width=W; cv.height=H;
+  const cx=W*.36, cy=H/2, r=50, inn=30;
+  const total=segments.reduce((a,s)=>a+s.value,0); if(!total) return;
+  let angle=-Math.PI/2; const gap=0.03;
+  segments.forEach(s=>{
+    const sl=(s.value/total)*Math.PI*2-gap;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(angle+gap/2)*inn,cy+Math.sin(angle+gap/2)*inn);
+    ctx.arc(cx,cy,r,angle+gap/2,angle+sl);
+    ctx.arc(cx,cy,inn,angle+sl,angle+gap/2,true);
+    ctx.closePath(); ctx.fillStyle=s.color; ctx.fill();
+    angle+=sl+gap;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,inn-1,0,Math.PI*2);
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#111820'; ctx.fill();
+  ctx.fillStyle='#cdd9e5'; ctx.font='bold 17px IBM Plex Mono,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(total,cx,cy-5); ctx.font='9px IBM Plex Mono,monospace'; ctx.fillStyle='#7a95aa'; ctx.fillText('total',cx,cy+10);
+  const lx=W*.6, ly=cy-(segments.length*18)/2;
+  ctx.textBaseline='middle'; ctx.font='10px IBM Plex Mono,monospace';
+  segments.forEach((s,i)=>{
+    const y=ly+i*19; ctx.fillStyle=s.color; ctx.beginPath(); ctx.roundRect(lx,y-5,10,10,2); ctx.fill();
+    ctx.fillStyle='#7a95aa'; ctx.textAlign='left'; ctx.fillText(s.label+'  '+s.value,lx+15,y);
+  });
+}
+
+function renderKPIs(d) {
+  function setCard(id,sid,v,s){
+    const el=document.getElementById(id),sl=document.getElementById(sid);
+    if(el){el.textContent=v;el.classList.remove('skeleton');el.style.display='';el.style.height='';el.style.width='';}
+    if(sl){sl.textContent=s;sl.classList.remove('skeleton');sl.style.display='';sl.style.height='';sl.style.width='';}
+  }
+  const active=d.risks.filter(r=>!['DRAFT','MONITORED','TREATED','ARCHIVED'].includes(r.status)).length;
+  setCard('kpiTotal','kpiTotalSub',d.total,active+' active · '+(d.bySev.low||0)+' low severity');
+  setCard('kpiCritical','kpiCriticalSub',d.bySev.critical||0,'Require immediate action');
+  setCard('kpiHigh','kpiHighSub',d.bySev.high||0,'Elevated priority risks');
+  setCard('kpiTreatment','kpiTreatmentSub',d.treatmentRate+'%','Risks with defined treatment');
+  setCard('kpiGross','kpiGrossSub',d.avgGross,'Avg likelihood x impact');
+
+  // Funnel
+  const sm={DRAFT:d.byStatus.DRAFT||0,'IN ANALYSIS':d.byStatus['IN ANALYSIS']||0,'IN REVIEW':d.byStatus['IN REVIEW']||0,'IN TREATMENT':d.byStatus['IN TREATMENT']||0,MONITORED:(d.byStatus.MONITORED||0)+(d.byStatus.TREATED||0)};
+  const fMax=Math.max(...Object.values(sm),1);
+  document.getElementById('funnelTotal').textContent=d.total+' risks total';
+  [['fDraft','fDraftBar',sm.DRAFT],['fAnalysis','fAnalysisBar',sm['IN ANALYSIS']],['fReview','fReviewBar',sm['IN REVIEW']],['fTreatment','fTreatmentBar',sm['IN TREATMENT']],['fMonitored','fMonitoredBar',sm.MONITORED]]
+  .forEach(([eid,bid,val])=>{
+    const el=document.getElementById(eid); if(el) el.textContent=val;
+    const bar=document.getElementById(bid); if(bar) setTimeout(()=>bar.style.width=Math.max(6,Math.round((val/fMax)*100))+'%',120);
+  });
+
+  // Top 5
+  const scored=d.risks.filter(r=>r.likelihood&&r.impact).map(r=>({...r,gross:r.likelihood*r.impact})).sort((a,b)=>b.gross-a.gross).slice(0,5);
+  document.getElementById('top5List').innerHTML=scored.length===0
+    ?'<div class="empty-state">No scored risks yet</div>'
+    :scored.map((r,i)=>{
+      const sev=r.severity||'medium';
+      const gc=r.gross>=15?'var(--critical)':r.gross>=9?'var(--high)':r.gross>=4?'var(--medium)':'var(--low)';
+      const tags=(r.rm_risk_tags||[]).slice(0,2).map(t=>'<span class="tag">'+t.tag+'</span>').join(' ');
+      return '<div class="risk-row-kpi" onclick="window.location.href=\'dashboard.html?risk='+r.risk_ref+'\'">'
+        +'<span class="risk-rank">'+(i+1)+'</span>'
+        +'<div class="risk-name-cell">'+r.name+'<span class="risk-id-small">'+r.risk_ref+' '+tags+'</span></div>'
+        +'<span class="sev-pill '+sev+'">'+sev.charAt(0).toUpperCase()+sev.slice(1)+'</span>'
+        +'<span class="score-mono" style="color:'+gc+'">'+r.gross+'</span></div>';
+    }).join('');
+
+  // Owners
+  const sO=Object.entries(d.byOwner).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const mO=sO[0]?.[1]||1;
+  document.getElementById('ownerList').innerHTML=sO.length===0
+    ?'<div class="empty-state">No data</div>'
+    :sO.map(([n,c])=>'<div class="coverage-row"><span class="coverage-label">'+n+'</span><div class="coverage-bar-wrap"><div class="coverage-bar" data-w="'+Math.round((c/mO)*100)+'"></div></div><span class="coverage-pct">'+c+'</span></div>').join('');
+  setTimeout(()=>document.querySelectorAll('#ownerList .coverage-bar').forEach(b=>b.style.width=b.dataset.w+'%'),120);
+
+  // Status table
+  const sOrd=[{k:'IN TREATMENT',c:'var(--high)'},{k:'IN ANALYSIS',c:'var(--medium)'},{k:'IN REVIEW',c:'var(--accent-hi)'},{k:'MONITORED',c:'var(--low)'},{k:'DRAFT',c:'var(--muted)'},{k:'TREATED',c:'var(--low)'}];
+  document.getElementById('statusTableBody').innerHTML=sOrd.filter(s=>d.byStatus[s.k]>0).map(s=>{
+    const cnt=d.byStatus[s.k]||0, pct=d.total>0?Math.round((cnt/d.total)*100):0;
+    return '<tr><td style="font-family:var(--mono);font-size:10px;color:var(--muted)">'+s.k+'</td><td style="font-family:var(--mono);font-size:12px">'+cnt+'</td>'
+      +'<td><div class="status-bar-wrap"><div class="status-bar" style="background:'+s.c+'" data-w="'+pct+'"></div></div></td>'
+      +'<td style="font-family:var(--mono);font-size:10px;color:'+s.c+'">'+pct+'%</td></tr>';
+  }).join('');
+  setTimeout(()=>document.querySelectorAll('#statusTableBody .status-bar').forEach(b=>b.style.width=b.dataset.w+'%'),160);
+
+  // Donuts
+  const sC={'IN TREATMENT':'#d4700a','IN ANALYSIS':'#b8960a','IN REVIEW':'#2387c8','MONITORED':'#1a7a4a','DRAFT':'#2a3a4a','TREATED':'#156038'};
+  setTimeout(()=>{
+    drawDonut('statusChart',sOrd.filter(s=>d.byStatus[s.k]>0).map(s=>({label:s.k.replace('IN ',''),value:d.byStatus[s.k]||0,color:sC[s.k]})));
+    drawDonut('severityChart',[{label:'Critical',value:d.bySev.critical||0,color:'#c0392b'},{label:'High',value:d.bySev.high||0,color:'#d4700a'},{label:'Medium',value:d.bySev.medium||0,color:'#b8960a'},{label:'Low',value:d.bySev.low||0,color:'#1a7a4a'}].filter(s=>s.value>0));
+  },120);
+
+  // Appetite
+  const ap=d.riskAppetite||3, apSc=ap*ap;
+  const avgN=parseFloat(d.avgGross)||0;
+  const pA=Math.min(96,Math.round((avgN/25)*100));
+  const pT=Math.min(96,Math.round((apSc/25)*100));
+  setTimeout(()=>{
+    const cur=document.getElementById('appetiteCursor'),thr=document.getElementById('appetiteThreshold');
+    if(cur){cur.style.left=pA+'%';if(avgN>apSc)cur.classList.add('above');else if(avgN<apSc*.7)cur.classList.add('below');}
+    if(thr) thr.style.left=pT+'%';
+  },200);
+  document.getElementById('legendAvgGross').textContent=avgN||'—';
+  document.getElementById('legendAppetite').textContent=ap+'/5  (score '+apSc+')';
+  const delta=avgN-apSc;
+  document.getElementById('appetiteCaption').textContent=delta>0?'⚠ '+delta.toFixed(1)+' above appetite threshold':delta<0?'✓ '+Math.abs(delta).toFixed(1)+' below appetite threshold':'At appetite threshold';
+}
+
+function drawEvolutionChart(total,critical,high){
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const m=new Date().getMonth();
+  const labels=[...months.slice(m+1),...months.slice(0,m+1)];
+  function trend(cur,n){const a=[];for(let i=0;i<n;i++){const p=i/(n-1);a.push(Math.max(0,Math.round(cur*(0.2+0.8*p))+ Math.round((Math.random()-.5)*2)));}a[a.length-1]=cur;return a;}
+  drawLineChart('evolutionChart',[{data:trend(total,12),color:'#2387c8'},{data:trend(critical,12),color:'#c0392b'},{data:trend(high,12),color:'#d4700a'}],labels);
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script>
+(async()=>{
+  const user=await requireAuth(); if(!user) return;
+  document.getElementById('kpiUserName').textContent=user.first_name+' '+user.last_name;
+  document.getElementById('kpiUserRole').textContent=(user.role||'').toUpperCase().replace('_',' ');
+  document.getElementById('kpiAvatar').textContent=user.first_name[0]+user.last_name[0];
+  const sb=document.getElementById('sbSettingsBtn'); if(sb) sb.style.display=user.role==='risk_leader'?'flex':'none';
+  try {
+    const risks=await listRisks();
+    const bySev={critical:0,high:0,medium:0,low:0}, byStatus={}, byOwner={};
+    let gSum=0,gCnt=0;
+    risks.forEach(r=>{
+      const sev=r.severity||'medium'; bySev[sev]=(bySev[sev]||0)+1;
+      const st=r.status||'DRAFT'; byStatus[st]=(byStatus[st]||0)+1;
+      const own=r.owner?r.owner.first_name+' '+r.owner.last_name:'Unassigned';
+      if(!['MONITORED','TREATED','ARCHIVED'].includes(st)) byOwner[own]=(byOwner[own]||0)+1;
+      if(r.likelihood&&r.impact){gSum+=r.likelihood*r.impact;gCnt++;}
+    });
+    const treated=risks.filter(r=>['MONITORED','TREATED'].includes(r.status)).length;
+    const treatmentRate=risks.length>0?Math.round((treated/risks.length)*100):0;
+    const avgGross=gCnt>0?(gSum/gCnt).toFixed(1):'—';
+    const riskAppetite=user.environment?.risk_appetite||3;
+    renderKPIs({total:risks.length,bySev,byStatus,byOwner,treatmentRate,avgGross,risks,riskAppetite});
+    setTimeout(()=>drawEvolutionChart(risks.length,bySev.critical||0,bySev.high||0),160);
+    document.getElementById('kpiUpdated').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  } catch(e){ console.error('KPI load error:',e); }
+})();
 </script>
 </body>
 </html>

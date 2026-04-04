@@ -760,3 +760,57 @@ async function listRSCatalog(limit = 1000) {
     };
   });
 }
+
+// ── FRAMEWORK MEASURES ──
+
+// Retourne les frameworks actifs de l'environment courant
+async function getEnvFrameworks() {
+  const sb = getClient();
+  const { data, error } = await sb
+    .from('rm_environments')
+    .select('frameworks')
+    .single();
+  if (error) throw error;
+  return data?.frameworks || ['NIS2', 'ISO27001'];
+}
+
+// Retourne les mesures correspondant aux keywords détectés
+// keywords: string[] — extraits de la description libre
+// frameworks: string[] — ex. ['NIS2', 'ISO27001']
+async function getMeasuresByKeywords(keywords, frameworks) {
+  if (!keywords?.length) return [];
+  const sb = getClient();
+
+  const kw = [...new Set(
+    keywords
+      .map(k => k.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+      .filter(k => k.length >= 3)
+  )];
+  if (!kw.length) return [];
+
+  const { data, error } = await sb
+    .from('rm_framework_measures')
+    .select('id, framework, reference, description, keywords')
+    .in('framework', frameworks)
+    .overlaps('keywords', kw);
+
+  if (error) {
+    console.error('getMeasuresByKeywords error:', error);
+    return [];
+  }
+
+  return (data || [])
+    .map(m => ({ ...m, score: m.keywords.filter(k => kw.includes(k)).length }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8);
+}
+
+// Sauvegarde les mesures sélectionnées sur un risk existant
+async function saveRiskMeasures(riskId, measures) {
+  const sb = getClient();
+  const { error } = await sb
+    .from('rm_risks')
+    .update({ framework_measures: measures })
+    .eq('id', riskId);
+  if (error) throw error;
+}

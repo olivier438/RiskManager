@@ -66,8 +66,9 @@ async function createRisk(riskData) {
       severity,
       status:         'DRAFT',
       visibility:     riskData.visibility || 'PRIVATE',
-      owner_id:       riskData.owner_id || user.id,
-      created_by:     user.id,
+      owner_id:           riskData.owner_id || user.id,
+      created_by:         user.id,
+      framework_measures: riskData.framework_measures || [],
     })
     .select()
     .single();

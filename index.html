@@ -14,13 +14,15 @@
 <div class="login-card">
 
   <div class="login-header">
-    <div class="logo-row" style="justify-content:center;margin-bottom:12px">
-      <img src="logo.svg" alt="Risk Manager" style="width:180px;height:180px;display:block;margin:0 auto">
+    <div class="logo-row" style="justify-content:center;margin-bottom:20px">
+      <img src="logo.svg" alt="Risk Manager" style="width:240px;height:240px;display:block;margin:0 auto">
     </div>
   </div>
 
-  <input type="email"    class="login-input" id="inputEmail"    placeholder="Email" autocomplete="email">
-  <input type="password" class="login-input" id="inputPassword" placeholder="Password" autocomplete="current-password">
+  <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px">
+    <input type="email"    class="login-input" id="inputEmail"    placeholder="Email" autocomplete="email">
+    <input type="password" class="login-input" id="inputPassword" placeholder="Password" autocomplete="current-password">
+  </div>
 
   <button class="btn-login" id="btnLogin" onclick="doLogin()">Authenticate</button>
   <div class="error-msg" id="errorMsg"></div>

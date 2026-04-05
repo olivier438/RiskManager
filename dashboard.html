@@ -1119,7 +1119,7 @@ const i18n = (() => {
 
   async function load(locale = 'en') {
     try {
-      const res = await fetch(`locales/${locale}.json`);
+      const res = await fetch(`${locale}.json`);
       if (!res.ok) throw new Error();
       _strings = await res.json();
       _locale = locale;
@@ -1159,7 +1159,7 @@ const i18n = (() => {
     document.documentElement.lang = locale;
     // Essaie de charger le fichier de traduction
     try {
-      const res = await fetch(`locales/${locale}.json`);
+      const res = await fetch(`${locale}.json`);
       if (res.ok) _strings = await res.json();
       else _strings = { ...FALLBACK };
     } catch {

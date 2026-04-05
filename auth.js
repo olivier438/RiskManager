@@ -32,8 +32,9 @@ async function login(email, password) {
 }
 
 async function logout() {
+  stopInactivityWatcher();
   const sb = getClient();
-  await sb.auth.signOut({ scope: 'global' });
+  await sb.auth.signOut({ scope: 'local' });
   currentUser = null;
   currentEnv  = null;
   currentRole = null;
@@ -89,11 +90,13 @@ async function requireAuth() {
     currentUser = JSON.parse(cached);
     currentEnv  = JSON.parse(sessionStorage.getItem('rm_env') || 'null');
     currentRole = currentUser.role;
+    startInactivityWatcher();
     return currentUser;
   }
 
   try {
     await loadUserProfile(user.id);
+    startInactivityWatcher();
     return currentUser;
   } catch (e) {
     console.error('Profile load failed:', e.message);
@@ -111,3 +114,34 @@ function isRiskManager()  { return currentRole === 'risk_leader'; }
 function isRiskLeader()   { return currentRole === 'risk_leader'; }
 function isRiskOwner()    { return currentRole === 'risk_owner' || currentRole === 'risk_leader'; }
 function isAnalyst()      { return currentRole === 'analyst'; }
+
+// ── SESSION TIMEOUT — 5 minutes d'inactivité ──
+
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
+let _inactivityTimer     = null;
+const _ACTIVITY_EVENTS   = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+
+function _onActivity() {
+  clearTimeout(_inactivityTimer);
+  _inactivityTimer = setTimeout(_sessionExpired, SESSION_TIMEOUT_MS);
+}
+
+async function _sessionExpired() {
+  const sb = getClient();
+  await sb.auth.signOut({ scope: 'local' });
+  currentUser = null;
+  currentEnv  = null;
+  currentRole = null;
+  sessionStorage.clear();
+  window.location.href = 'index.html';
+}
+
+function startInactivityWatcher() {
+  _ACTIVITY_EVENTS.forEach(e => document.addEventListener(e, _onActivity, { passive: true }));
+  _onActivity(); // démarrer le timer immédiatement
+}
+
+function stopInactivityWatcher() {
+  clearTimeout(_inactivityTimer);
+  _ACTIVITY_EVENTS.forEach(e => document.removeEventListener(e, _onActivity));
+}

@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risk Manager — Login</title>
 <link rel="stylesheet" href="style.css">
@@ -14,15 +13,15 @@
 <div class="login-card">
 
   <div class="login-header">
-    <div class="logo-row" style="justify-content:center;margin-bottom:20px">
-      <img src="logo.svg" alt="Risk Manager" style="width:340px;height:340px;display:block;margin:0 auto">
+    <div class="logo-row">
+      <span class="logo-text">RM</span>
+      <span class="logo-label">Risk Manager</span>
     </div>
+    <div class="logo-sub">ONE CIRCLE IT SOLUTIONS</div>
   </div>
 
-  <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px">
-    <input type="email"    class="login-input" id="inputEmail"    placeholder="Email" autocomplete="email">
-    <input type="password" class="login-input" id="inputPassword" placeholder="Password" autocomplete="current-password">
-  </div>
+  <input type="email"    class="login-input" id="inputEmail"    placeholder="Email" autocomplete="email">
+  <input type="password" class="login-input" id="inputPassword" placeholder="Password" autocomplete="current-password">
 
   <button class="btn-login" id="btnLogin" onclick="doLogin()">Authenticate</button>
   <div class="error-msg" id="errorMsg"></div>
@@ -39,10 +38,13 @@
 <script src="auth.js"></script>
 <script>
 
-// Force logout global à chaque visite du login
+// Si déjà connecté, rediriger directement vers dashboard
 (async () => {
   const sb = getClient();
-  await sb.auth.signOut({ scope: 'global' });
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    window.location.href = 'dashboard.html';
+  }
 })();
 
 async function doLogin() {

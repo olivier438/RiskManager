@@ -3105,39 +3105,46 @@ document.addEventListener('click', e => {
       const fwColors = { NIS2:'var(--accent-hi)', ISO27001:'var(--low)', DORA:'var(--medium)' };
 
       container.innerHTML = Object.entries(byFw).map(([fw, items]) => `
-        <div style="margin-bottom:10px">
+        <div style="margin-bottom:14px">
           <div style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;
-               text-transform:uppercase;color:${fwColors[fw]||'var(--muted)'};margin-bottom:5px">${fw}</div>
+               text-transform:uppercase;color:${fwColors[fw]||'var(--muted)'};margin-bottom:6px">${fw}</div>
           ${items.map(m => `
-            <div style="margin-bottom:6px;border:1px solid var(--border);border-radius:3px;
-              background:var(--surface);overflow:hidden">
-              <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;cursor:pointer">
+            <div style="margin-bottom:8px;border:1px solid var(--border);border-radius:3px;background:var(--surface);overflow:hidden">
+
+              <!-- Ligne mesure + checkbox -->
+              <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border)">
                 <input type="checkbox" class="nr-measure-cb" checked
                   value="${fw}|${m.reference}"
                   data-fw="${fw}" data-ref="${m.reference}" data-desc="${m.description.replace(/"/g,'&quot;')}"
-                  style="margin-top:2px;accent-color:${fwColors[fw]||'var(--accent)'};flex-shrink:0">
-                <div style="flex:1;min-width:0">
-                  <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text)">${m.reference}</div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4">${m.description}</div>
-                </div>
+                  style="accent-color:${fwColors[fw]||'var(--accent)'};flex-shrink:0;width:14px;height:14px">
+                <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${fwColors[fw]||'var(--text)'};flex-shrink:0">${m.reference}</span>
+                <span style="font-size:11px;color:var(--muted);line-height:1.4">${m.description}</span>
               </label>
-              ${m.advicetech || m.advicegrc ? `
-              <div style="border-top:1px solid var(--border);padding:8px 10px 8px 28px;display:flex;flex-direction:column;gap:6px">
-                ${m.advicetech ? `
-                <div style="display:flex;gap:6px;align-items:flex-start">
-                  <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.08em;
+
+              ${m.advicetech ? `
+              <!-- Conseil TECH -->
+              <div style="padding:10px 14px;border-bottom:${m.advicegrc ? '1px solid var(--border)' : 'none'}">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.1em;
                     color:#2387c8;background:rgba(29,111,164,0.12);border:1px solid rgba(29,111,164,0.3);
-                    padding:1px 5px;border-radius:2px;flex-shrink:0;margin-top:1px">TECH</span>
-                  <span style="font-size:10px;color:var(--muted);line-height:1.5">${m.advicetech}</span>
-                </div>` : ''}
-                ${m.advicegrc ? `
-                <div style="display:flex;gap:6px;align-items:flex-start">
-                  <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.08em;
-                    color:${fwColors[fw]||'var(--muted)'};background:rgba(29,111,164,0.06);border:1px solid rgba(29,111,164,0.2);
-                    padding:1px 5px;border-radius:2px;flex-shrink:0;margin-top:1px">GRC</span>
-                  <span style="font-size:10px;color:var(--muted);line-height:1.5">${m.advicegrc}</span>
-                </div>` : ''}
+                    padding:2px 7px;border-radius:2px">TECH</span>
+                  <span style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.06em">Recommandation technique</span>
+                </div>
+                <div style="font-size:11px;color:var(--text);line-height:1.6">${m.advicetech}</div>
               </div>` : ''}
+
+              ${m.advicegrc ? `
+              <!-- Conseil GRC -->
+              <div style="padding:10px 14px;background:rgba(29,111,164,0.03)">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                  <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.1em;
+                    color:${fwColors[fw]||'var(--muted)'};background:rgba(29,111,164,0.06);border:1px solid rgba(29,111,164,0.2);
+                    padding:2px 7px;border-radius:2px">GRC</span>
+                  <span style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.06em">Recommandation politique & gouvernance</span>
+                </div>
+                <div style="font-size:11px;color:var(--text);line-height:1.6">${m.advicegrc}</div>
+              </div>` : ''}
+
             </div>`).join('')}
         </div>`).join('');
 

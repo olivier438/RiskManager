@@ -380,7 +380,74 @@ body {
   </div>
   <div class="help-no-results" id="noResults">No results for this search.</div>
 
-  <!-- ── CATEGORY 1 : GETTING STARTED ── -->
+  <!-- ── CATEGORY 1 : SECURITY & COMPLIANCE ── -->
+  <div class="faq-category" data-cat="security">
+    <div class="faq-category-title">Security & compliance</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFAQ(this)">
+        <span class="faq-q-text">Where is my data stored?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>All data is hosted on <strong>Infomaniak</strong> infrastructure, based in Switzerland and France. Infomaniak is ISO 27001 certified, GDPR-compliant, and outside the scope of the US CLOUD Act.</p>
+        <p>Risk Manager uses a dedicated PostgreSQL database per environment with Row Level Security (RLS) enforced — no cross-environment data access is possible.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFAQ(this)">
+        <span class="faq-q-text">Is my session secure?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>Yes. Risk Manager uses JWT-based authentication via Supabase Auth with the following protections:</p>
+        <ul>
+          <li><strong>Auto-refresh tokens</strong> — Sessions stay valid without requiring re-login during active use</li>
+          <li><strong>Inactivity timeout</strong> — After 5 minutes without activity, you are automatically logged out</li>
+          <li><strong>HTTPS only</strong> — All traffic is encrypted in transit</li>
+          <li><strong>Server-side validation</strong> — Every authenticated request is validated server-side via <code>getUser()</code></li>
+        </ul>
+      </div>
+    </div>
+
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFAQ(this)">
+        <span class="faq-q-text">Is Risk Manager compliant with the EU Cyber Resilience Act (CRA)?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>Risk Manager is designed in alignment with the <strong>EU Cyber Resilience Act (CRA)</strong>, which applies to products with digital elements placed on the EU market. Key compliance aspects:</p>
+        <ul>
+          <li><strong>Security by design</strong> — RLS enforced at database level, no default open access, automatic session timeout</li>
+          <li><strong>Vulnerability handling</strong> — Patch management process in place, security updates prioritised</li>
+          <li><strong>Transparency</strong> — Clear documentation of data flows, hosting location (Switzerland/France), and third-party components</li>
+          <li><strong>Incident reporting</strong> — Aligned with ENISA reporting obligations for actively exploited vulnerabilities</li>
+          <li><strong>SBOM</strong> — Software Bill of Materials available on request for procurement purposes</li>
+        </ul>
+        <div class="tip"><strong>Note:</strong> CRA compliance is an ongoing process. ONE CIRCLE IT SOLUTIONS monitors CRA implementation acts and updates Risk Manager accordingly.</div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFAQ(this)">
+        <span class="faq-q-text">Is Risk Manager NIS2 compliant?</span>
+        <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>Risk Manager is designed to <strong>support NIS2 compliance</strong> — it is not itself subject to NIS2 as a tool, but it helps your organisation meet NIS2 Article 21 requirements by:</p>
+        <ul>
+          <li>Maintaining a structured risk register with full audit trail</li>
+          <li>Mapping risks to NIS2 security domains (access control, continuity, incident management, etc.)</li>
+          <li>Tracking treatment decisions with accountability</li>
+          <li>Providing measurable KPIs for governance reporting</li>
+        </ul>
+        <div class="tip"><strong>Coming in V2:</strong> Full incident management with CCB notification workflow (H+24 / H+72 / J+30) to complete the NIS2 lifecycle end-to-end.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CATEGORY 2 : GETTING STARTED ── -->
   <div class="faq-category" data-cat="getting-started">
     <div class="faq-category-title">Getting started</div>
 
@@ -435,7 +502,7 @@ body {
     </div>
   </div>
 
-  <!-- ── CATEGORY 2 : RISK MANAGEMENT ── -->
+  <!-- ── CATEGORY 3 : RISK MANAGEMENT ── -->
   <div class="faq-category" data-cat="risks">
     <div class="faq-category-title">Risk management</div>
 
@@ -535,7 +602,7 @@ body {
     </div>
   </div>
 
-  <!-- ── CATEGORY 3 : FRAMEWORK MEASURES ── -->
+  <!-- ── CATEGORY 4 : FRAMEWORK MEASURES & AI ── -->
   <div class="faq-category" data-cat="frameworks">
     <div class="faq-category-title">Framework measures & AI</div>
 
@@ -583,7 +650,7 @@ body {
     </div>
   </div>
 
-  <!-- ── CATEGORY 4 : THREAT MARKETPLACE ── -->
+  <!-- ── CATEGORY 5 : THREAT MARKETPLACE & RISK STUDIO ── -->
   <div class="faq-category" data-cat="marketplace">
     <div class="faq-category-title">Threat Marketplace & Risk Studio</div>
 
@@ -632,7 +699,7 @@ body {
     </div>
   </div>
 
-  <!-- ── CATEGORY 5 : KPI & NAVIGATION ── -->
+  <!-- ── CATEGORY 6 : NAVIGATION & KPI ── -->
   <div class="faq-category" data-cat="navigation">
     <div class="faq-category-title">Navigation & KPI</div>
 
@@ -686,55 +753,6 @@ body {
       <div class="faq-a">
         <p>Click the language button (<strong>EN / FR / NL / DE</strong>) in the top-right corner of the topbar. The interface switches immediately. Your preference is saved locally and remembered on next login.</p>
         <div class="tip"><strong>Note:</strong> Risk data (names, descriptions) you've entered stays in the language you typed it in — only the interface labels are translated.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── CATEGORY 6 : SECURITY ── -->
-  <div class="faq-category" data-cat="security">
-    <div class="faq-category-title">Security & compliance</div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFAQ(this)">
-        <span class="faq-q-text">Where is my data stored?</span>
-        <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="faq-a">
-        <p>All data is hosted on <strong>Infomaniak</strong> infrastructure, based in Switzerland and France. Infomaniak is ISO 27001 certified, GDPR-compliant, and outside the scope of the US CLOUD Act.</p>
-        <p>Risk Manager uses a dedicated PostgreSQL database per environment with Row Level Security (RLS) enforced — no cross-environment data access is possible.</p>
-      </div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFAQ(this)">
-        <span class="faq-q-text">Is my session secure?</span>
-        <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="faq-a">
-        <p>Yes. Risk Manager uses JWT-based authentication via Supabase Auth with the following protections:</p>
-        <ul>
-          <li><strong>Auto-refresh tokens</strong> — Sessions stay valid without requiring re-login during active use</li>
-          <li><strong>Inactivity timeout</strong> — After 5 minutes without activity, you are automatically logged out</li>
-          <li><strong>HTTPS only</strong> — All traffic is encrypted in transit</li>
-          <li><strong>Server-side validation</strong> — Every authenticated request is validated server-side via <code>getUser()</code></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFAQ(this)">
-        <span class="faq-q-text">Is Risk Manager NIS2 compliant?</span>
-        <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="faq-a">
-        <p>Risk Manager is designed to <strong>support NIS2 compliance</strong> — it is not itself subject to NIS2 as a tool, but it helps your organisation meet NIS2 Article 21 requirements by:</p>
-        <ul>
-          <li>Maintaining a structured risk register with full audit trail</li>
-          <li>Mapping risks to NIS2 security domains (access control, continuity, incident management, etc.)</li>
-          <li>Tracking treatment decisions with accountability</li>
-          <li>Providing measurable KPIs for governance reporting</li>
-        </ul>
-        <div class="tip"><strong>Coming in V2:</strong> Full incident management with CCB notification workflow (H+24 / H+72 / J+30) to complete the NIS2 lifecycle end-to-end.</div>
       </div>
     </div>
   </div>

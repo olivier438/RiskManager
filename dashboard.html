@@ -3831,7 +3831,7 @@ async function loadAndRenderPending() {
 
 async function loadAndRenderFeed() {
   try {
-    const items = await listRSFeed();
+    const items = await listRSFeed(10);
     FEED.length = 0;
     items.forEach(i => FEED.push(i));
     renderFeed(FEED);

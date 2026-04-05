@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Manager — Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="page-login">
+
+<div class="env-badge beta env-badge-fixed">BETA</div>
+
+<div class="login-card">
+
+  <div class="login-header">
+    <div class="logo-row">
+      <span class="logo-text">RM</span>
+      <span class="logo-label">Risk Manager</span>
+    </div>
+    <div class="logo-sub">ONE CIRCLE IT SOLUTIONS</div>
+  </div>
+
+  <input type="email"    class="login-input" id="inputEmail"    placeholder="Email" autocomplete="email">
+  <input type="password" class="login-input" id="inputPassword" placeholder="Password" autocomplete="current-password">
+
+  <button class="btn-login" id="btnLogin" onclick="doLogin()">Authenticate</button>
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="login-footer">
+    <span>ONE CIRCLE IT SOLUTIONS</span>
+    <span>v1.0.0 · BETA</span>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+
+// Force logout global à chaque visite du login
+(async () => {
+  const sb = getClient();
+  await sb.auth.signOut({ scope: 'global' });
+})();
+
+async function doLogin() {
+  const email    = document.getElementById('inputEmail').value.trim();
+  const password = document.getElementById('inputPassword').value;
+  const btn      = document.getElementById('btnLogin');
+  const err      = document.getElementById('errorMsg');
+
+  if (!email || !password) { err.textContent = 'Email and password required'; return; }
+
+  btn.textContent = 'Authenticating...';
+  btn.disabled    = true;
+  err.textContent = '';
+
+  try {
+    await login(email, password);
+    window.location.href = 'dashboard.html';
+  } catch (e) {
+    console.error('Login error:', e);
+    err.textContent = e.message || 'Invalid credentials';
+    btn.textContent = 'Authenticate';
+    btn.disabled    = false;
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+</script>
+</body>
+</html>

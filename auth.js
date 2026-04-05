@@ -39,7 +39,7 @@ async function logout() {
   currentEnv  = null;
   currentRole = null;
   sessionStorage.clear();
-  window.location.href = 'index.html';
+  window.location.href = 'login.html';
 }
 
 async function loadUserProfile(authUserId) {
@@ -81,7 +81,7 @@ async function requireAuth() {
   const { data: { user }, error } = await sb.auth.getUser();
 
   if (error || !user) {
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
     return null;
   }
 
@@ -100,7 +100,7 @@ async function requireAuth() {
     return currentUser;
   } catch (e) {
     console.error('Profile load failed:', e.message);
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
     return null;
   }
 }
@@ -133,7 +133,7 @@ async function _sessionExpired() {
   currentEnv  = null;
   currentRole = null;
   sessionStorage.clear();
-  window.location.href = 'index.html';
+  window.location.href = 'login.html';
 }
 
 function startInactivityWatcher() {

@@ -727,20 +727,7 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
 <nav class="sidebar" id="sidebar">
 
   <!-- Logo mini -->
-  <div class="sb-logo">
-    <svg width="20" height="20" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(16,16)">
-          <circle cx="0" cy="0" r="14" fill="none" stroke="#1d6fa4" stroke-width="1.5"/>
-          <circle cx="0" cy="0" r="9"  fill="none" stroke="#1d6fa4" stroke-width="1" opacity="0.7"/>
-          <circle cx="0" cy="0" r="5"  fill="none" stroke="#2387c8" stroke-width="0.8" opacity="0.5"/>
-          <line x1="-14" y1="0"  x2="14" y2="0"  stroke="#1d6fa4" stroke-width="0.6" opacity="0.3"/>
-          <line x1="0" y1="-14"  x2="0"  y2="14" stroke="#1d6fa4" stroke-width="0.6" opacity="0.3"/>
-          <line x1="0" y1="0" x2="11" y2="-8" stroke="#2387c8" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="8.5" cy="-5" r="2.5" fill="#c0392b"/>
-          <circle cx="0" cy="0" r="2" fill="#2387c8"/>
-        </g>
-      </svg>
-  </div>
+  <a href="dashboard.html" class="sb-logo" title="Dashboard" style="cursor:pointer;text-decoration:none"></a>
 
   <!-- Actions principales -->
   <button class="sb-btn " data-tip="New Risk" onclick="window.location.href='dashboard.html'">
@@ -842,6 +829,11 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
           <button class="scope-btn active" data-scope="client" onclick="setScope('client')">Client Register</button>
           <button class="scope-btn" data-scope="rs" onclick="setScope('rs')">Risk Studio</button>
           <button class="scope-btn" data-scope="all" onclick="setScope('all')">All Sources</button>
+        </div>
+        <!-- Journal checkbox -->
+        <div class="journal-option" style="margin-left:8px">
+          <div class="custom-check" id="journalCheck" onclick="toggleJournalOption()"></div>
+          <span class="journal-label" onclick="toggleJournalOption()">Include journal entries</span>
         </div>
       </div>
 
@@ -1532,6 +1524,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (urlQ) {
     document.getElementById('searchInput').value = urlQ;
     doSearch();
+  }
+
+  // Ouvrir le bon tab selon le hash URL (#market → Marketplace)
+  if (location.hash === '#market') {
+    setTab('market');
   }
 })();
 

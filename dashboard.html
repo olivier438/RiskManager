@@ -568,6 +568,11 @@
     flex: 1;
   }
 
+  .grid > .panel {
+    min-width: 0;
+    overflow: hidden;
+  }
+
   .panel.full-width {
     grid-column: 1 / -1;
   }
@@ -1150,9 +1155,24 @@ const i18n = (() => {
 
   async function setLocale(locale) {
     localStorage.setItem('rm_locale', locale);
-    await load(locale);
+    _locale = locale;
+    document.documentElement.lang = locale;
+    // Essaie de charger le fichier de traduction
+    try {
+      const res = await fetch(`locales/${locale}.json`);
+      if (res.ok) _strings = await res.json();
+      else _strings = { ...FALLBACK };
+    } catch {
+      _strings = { ...FALLBACK };
+    }
     applyDOM();
     renderLangSwitcher();
+    // Fermer le menu
+    document.getElementById('langMenu')?.classList.remove('open');
+    // Feedback visuel
+    if (typeof showToast === 'function') showToast(`Language: ${locale.toUpperCase()}`);
+    // Re-render les composants dynamiques
+    if (typeof loadAndRenderRisks === 'function') loadAndRenderRisks();
   }
 
   function renderLangSwitcher() {
@@ -1169,6 +1189,7 @@ const i18n = (() => {
 
   return { init, load, t, locale: () => _locale, setLocale, applyDOM, AVAILABLE };
 })();
+window.i18n = i18n;
 
 function toggleLangMenu() {
   document.getElementById('langMenu')?.classList.toggle('open');
@@ -1221,7 +1242,7 @@ document.addEventListener('click', e => {
 <nav class="sidebar" id="sidebar">
 
   <!-- Logo mini -->
-  <div class="sb-logo">
+  <a href="dashboard.html" class="sb-logo" title="Dashboard" style="cursor:pointer;text-decoration:none">
     <svg width="20" height="20" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(16,16)">
           <circle cx="0" cy="0" r="14" fill="none" stroke="#1d6fa4" stroke-width="1.5"/>
@@ -1234,7 +1255,7 @@ document.addEventListener('click', e => {
           <circle cx="0" cy="0" r="2" fill="#2387c8"/>
         </g>
       </svg>
-  </div>
+  </a>
 
   <!-- Actions principales -->
   <button class="sb-btn" data-tip="New Risk" onclick="openNewRiskModal()">
@@ -1419,7 +1440,7 @@ document.addEventListener('click', e => {
     </div>
 
     <!-- PENDING TEAM -->
-    <div class="panel">
+    <div class="panel" style="min-height:0">
       <div class="panel-header">
         <span class="panel-title" data-i18n="panel.pending_team">Pending — Team</span>
         <span class="panel-count" id="pendingCount">0</span>
@@ -1433,7 +1454,7 @@ document.addEventListener('click', e => {
     </div>
 
     <!-- LIVE FEED RS -->
-    <div class="panel">
+    <div class="panel" style="min-height:0">
       <div class="panel-header">
         <div class="live-dot"></div>
         <span class="panel-title" data-i18n="panel.live_feed">Risk Studio — Live Feed</span>

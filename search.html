@@ -930,8 +930,16 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); min-
 
 <script>
 // Date
-document.getElementById('topDate').textContent =
-  new Date().toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+
+const _LOCALE_MAP = { en: 'en-GB', fr: 'fr-BE', nl: 'nl-BE', de: 'de-BE' };
+function renderTopDate() {
+  const loc = (typeof i18n !== 'undefined' ? i18n.locale() : null) || localStorage.getItem('rm_locale') || 'en';
+  const bcp = _LOCALE_MAP[loc] || 'en-GB';
+  const el = document.getElementById('topDate');
+  if (el) el.textContent = new Date().toLocaleDateString(bcp, { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+}
+
+renderTopDate();
 
 // RISKS & RS_FEED — peuplés dynamiquement par reloadSearchData()
 let RISKS   = [];

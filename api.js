@@ -791,7 +791,7 @@ async function getMeasuresByKeywords(keywords, frameworks) {
 
   const { data, error } = await sb
     .from('rm_framework_measures')
-    .select('id, framework, reference, description, keywords')
+    .select('id, framework, reference, description, keywords, advicetech, advicegrc')
     .in('framework', frameworks)
     .overlaps('keywords', kw);
 

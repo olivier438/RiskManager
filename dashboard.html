@@ -2305,12 +2305,30 @@ document.addEventListener('click', e => {
               <div style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;
                 text-transform:uppercase;color:${fwColors[fw]||'var(--muted)'};margin-bottom:4px">${fw}</div>
               ${items.map(m => `
-                <div style="display:flex;align-items:flex-start;gap:8px;padding:5px 8px;
-                  border-left:2px solid ${fwColors[fw]||'var(--border-hi)'};background:var(--surface);
-                  border-radius:0 3px 3px 0;margin-bottom:3px">
-                  <span style="font-family:var(--mono);font-size:10px;font-weight:600;
-                    color:var(--text);flex-shrink:0">${m.reference}</span>
-                  <span style="font-size:11px;color:var(--muted);line-height:1.4">${m.description}</span>
+                <div style="margin-bottom:5px;border-left:2px solid ${fwColors[fw]||'var(--border-hi)'};
+                  background:var(--surface);border-radius:0 3px 3px 0;overflow:hidden">
+                  <div style="padding:5px 8px">
+                    <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text)">${m.reference}</div>
+                    <div style="font-size:11px;color:var(--muted);line-height:1.4">${m.description}</div>
+                  </div>
+                  ${m.advicetech || m.advicegrc ? `
+                  <div style="border-top:1px solid var(--border);padding:6px 8px;display:flex;flex-direction:column;gap:5px">
+                    ${m.advicetech ? `
+                    <div style="display:flex;gap:6px;align-items:flex-start">
+                      <span style="font-family:var(--mono);font-size:8px;font-weight:700;color:#2387c8;
+                        background:rgba(29,111,164,0.12);border:1px solid rgba(29,111,164,0.3);
+                        padding:1px 5px;border-radius:2px;flex-shrink:0;margin-top:1px">TECH</span>
+                      <span style="font-size:10px;color:var(--muted);line-height:1.5">${m.advicetech}</span>
+                    </div>` : ''}
+                    ${m.advicegrc ? `
+                    <div style="display:flex;gap:6px;align-items:flex-start">
+                      <span style="font-family:var(--mono);font-size:8px;font-weight:700;
+                        color:${fwColors[fw]||'var(--muted)'};background:rgba(29,111,164,0.06);
+                        border:1px solid rgba(29,111,164,0.2);padding:1px 5px;border-radius:2px;
+                        flex-shrink:0;margin-top:1px">GRC</span>
+                      <span style="font-size:10px;color:var(--muted);line-height:1.5">${m.advicegrc}</span>
+                    </div>` : ''}
+                  </div>` : ''}
                 </div>`).join('')}
             </div>`).join('');
         })()}
@@ -3091,17 +3109,36 @@ document.addEventListener('click', e => {
           <div style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;
                text-transform:uppercase;color:${fwColors[fw]||'var(--muted)'};margin-bottom:5px">${fw}</div>
           ${items.map(m => `
-            <label class="nr-measure-row" style="cursor:pointer;display:flex;align-items:flex-start;gap:8px;padding:6px 8px;
-              border-radius:3px;border:1px solid var(--border);background:var(--surface);margin-bottom:4px;transition:border-color 0.15s">
-              <input type="checkbox" class="nr-measure-cb" checked
-                value="${fw}|${m.reference}"
-                data-fw="${fw}" data-ref="${m.reference}" data-desc="${m.description.replace(/"/g,'&quot;')}"
-                style="margin-top:2px;accent-color:${fwColors[fw]||'var(--accent)'};flex-shrink:0">
-              <div style="flex:1;min-width:0">
-                <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text)">${m.reference}</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4">${m.description}</div>
-              </div>
-            </label>`).join('')}
+            <div style="margin-bottom:6px;border:1px solid var(--border);border-radius:3px;
+              background:var(--surface);overflow:hidden">
+              <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;cursor:pointer">
+                <input type="checkbox" class="nr-measure-cb" checked
+                  value="${fw}|${m.reference}"
+                  data-fw="${fw}" data-ref="${m.reference}" data-desc="${m.description.replace(/"/g,'&quot;')}"
+                  style="margin-top:2px;accent-color:${fwColors[fw]||'var(--accent)'};flex-shrink:0">
+                <div style="flex:1;min-width:0">
+                  <div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text)">${m.reference}</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4">${m.description}</div>
+                </div>
+              </label>
+              ${m.advicetech || m.advicegrc ? `
+              <div style="border-top:1px solid var(--border);padding:8px 10px 8px 28px;display:flex;flex-direction:column;gap:6px">
+                ${m.advicetech ? `
+                <div style="display:flex;gap:6px;align-items:flex-start">
+                  <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.08em;
+                    color:#2387c8;background:rgba(29,111,164,0.12);border:1px solid rgba(29,111,164,0.3);
+                    padding:1px 5px;border-radius:2px;flex-shrink:0;margin-top:1px">TECH</span>
+                  <span style="font-size:10px;color:var(--muted);line-height:1.5">${m.advicetech}</span>
+                </div>` : ''}
+                ${m.advicegrc ? `
+                <div style="display:flex;gap:6px;align-items:flex-start">
+                  <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.08em;
+                    color:${fwColors[fw]||'var(--muted)'};background:rgba(29,111,164,0.06);border:1px solid rgba(29,111,164,0.2);
+                    padding:1px 5px;border-radius:2px;flex-shrink:0;margin-top:1px">GRC</span>
+                  <span style="font-size:10px;color:var(--muted);line-height:1.5">${m.advicegrc}</span>
+                </div>` : ''}
+              </div>` : ''}
+            </div>`).join('')}
         </div>`).join('');
 
     } catch (err) {

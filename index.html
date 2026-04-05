@@ -579,6 +579,187 @@ footer {
   50%       { opacity: 1;   transform: scale(1.15); }
 }
 
+/* ── DATA INTEGRITY ── */
+.integrity {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 64px 48px;
+}
+.integrity-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+.integrity-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Accordion rule */
+.integrity-rule {
+  background: var(--card);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.integrity-rule:hover { background: #141e28; }
+.integrity-rule-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  user-select: none;
+}
+.integrity-rule-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease, padding 0.2s ease;
+  padding: 0 18px 0 56px;
+}
+.integrity-rule.open .integrity-rule-body {
+  max-height: 80px;
+  padding: 0 18px 12px 56px;
+}
+.integrity-rule-chevron {
+  margin-left: auto;
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  opacity: 0.35;
+  transition: transform 0.22s ease, opacity 0.15s;
+}
+.integrity-rule.open .integrity-rule-chevron {
+  transform: rotate(180deg);
+  opacity: 0.7;
+}
+.int-badge {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.int-badge.never  { color: #c0392b; background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.25); }
+.int-badge.always { color: #1a9a5a; background: rgba(26,154,90,0.1); border: 1px solid rgba(26,154,90,0.25); }
+.int-rule-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+.int-rule-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.integrity-commitment {
+  margin-top: 24px;
+  padding: 20px 22px;
+  border: 1px solid var(--border-hi);
+  border-left: 3px solid var(--accent);
+  background: rgba(29,111,164,0.04);
+}
+.integrity-commitment p {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.integrity-commitment p strong { color: var(--text); }
+
+/* ── SOVEREIGNTY BANNER ── */
+.sovereignty {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 64px 48px;
+}
+.sovereignty-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+.sovereignty-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Collapsible sov-badge */
+.sov-badge {
+  background: var(--card);
+  border-left: 3px solid var(--accent);
+  transition: background 0.15s, border-left-color 0.15s;
+  cursor: pointer;
+}
+.sov-badge:hover { background: #141e28; border-left-color: var(--accent-hi); }
+.sov-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  user-select: none;
+}
+.sov-badge-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease, padding 0.2s ease;
+  padding: 0 18px 0 52px;
+}
+.sov-badge.open .sov-badge-body {
+  max-height: 100px;
+  padding: 0 18px 14px 52px;
+}
+.sov-badge-chevron {
+  margin-left: auto;
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  opacity: 0.3;
+  transition: transform 0.22s ease, opacity 0.15s;
+}
+.sov-badge.open .sov-badge-chevron {
+  transform: rotate(180deg);
+  opacity: 0.65;
+}
+.sov-badge-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.sov-badge-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+.sov-badge-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .animate { animation: fadeUp 0.5s ease both; }
 </style>
 </head>
@@ -607,6 +788,7 @@ footer {
   <div class="nav-links">
     <a href="#features">Features</a>
     <a href="#sovereignty">Sovereignty</a>
+    <a href="#integrity">Integrity</a>
     <a href="#compliance">Compliance</a>
     <a href="#expert">About</a>
   </div>
@@ -763,32 +945,165 @@ footer {
     </div>
     <div class="sovereignty-badges">
       <div class="sov-badge">
-        <div class="sov-badge-icon">🇨🇭</div>
-        <div>
+        <div class="sov-badge-header">
+          <div class="sov-badge-icon">🇨🇭</div>
           <div class="sov-badge-title">Hosted on Infomaniak — Switzerland & France</div>
+          <svg class="sov-badge-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+        </div>
+        <div class="sov-badge-body">
           <div class="sov-badge-text">All data, backups, and AI processing run on Infomaniak infrastructure. ISO 27001 certified. Outside the scope of the US CLOUD Act and FISA.</div>
         </div>
       </div>
       <div class="sov-badge">
-        <div class="sov-badge-icon">🤖</div>
-        <div>
+        <div class="sov-badge-header">
+          <div class="sov-badge-icon">🤖</div>
           <div class="sov-badge-title">Sovereign AI — no data leaves the EU</div>
+          <svg class="sov-badge-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+        </div>
+        <div class="sov-badge-body">
           <div class="sov-badge-text">AI-powered control matching and advice generation runs on Infomaniak's MiniLM infrastructure. Your risk descriptions are never sent to US cloud AI providers.</div>
         </div>
       </div>
       <div class="sov-badge">
-        <div class="sov-badge-icon">🔒</div>
-        <div>
+        <div class="sov-badge-header">
+          <div class="sov-badge-icon">🔒</div>
           <div class="sov-badge-title">Automated backups — tested regularly</div>
+          <svg class="sov-badge-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+        </div>
+        <div class="sov-badge-body">
           <div class="sov-badge-text">Daily automated backups with point-in-time recovery. Restore procedures are tested on a regular schedule — not just documented. Your data is recoverable.</div>
         </div>
       </div>
       <div class="sov-badge">
-        <div class="sov-badge-icon">🏛️</div>
-        <div>
+        <div class="sov-badge-header">
+          <div class="sov-badge-icon">🏛️</div>
           <div class="sov-badge-title">Isolated environments — strict data separation</div>
+          <svg class="sov-badge-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+        </div>
+        <div class="sov-badge-body">
           <div class="sov-badge-text">Every organisation operates in its own isolated environment. Access control is enforced at application level — no user can ever access data outside their own environment.</div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DATA INTEGRITY ── -->
+<section class="integrity" id="integrity">
+  <div class="integrity-inner">
+    <div>
+      <div class="section-label">Data integrity</div>
+      <h2 class="section-title">Your data, protected<br>against us.</h2>
+      <p class="section-sub" style="margin-bottom:28px">Security protects your data from attackers. Data Integrity protects it from us. No development mistake, bad deployment, or accidental query can corrupt or destroy your risk register.</p>
+
+      <div class="sov-badge" style="margin-bottom:12px">
+        <div class="sov-badge-icon">🔒</div>
+        <div>
+          <div class="sov-badge-title">Zero physical deletion</div>
+          <div class="sov-badge-text">No DELETE on business data — ever. Every removal is a soft archive. A developer with a bad WHERE clause cannot wipe a federal risk register.</div>
+        </div>
+      </div>
+      <div class="sov-badge" style="margin-bottom:12px">
+        <div class="sov-badge-icon">📋</div>
+        <div>
+          <div class="sov-badge-title">Immutable audit history</div>
+          <div class="sov-badge-text">Risk history and incident timelines are append-only. No update, no delete — ever. Every change creates a new version. The full history is always there.</div>
+        </div>
+      </div>
+      <div class="sov-badge">
+        <div class="sov-badge-icon">📦</div>
+        <div>
+          <div class="sov-badge-title">Your data — full portability</div>
+          <div class="sov-badge-text">Full export available on demand: JSON + CSV, every risk, every version, every incident. No dependency on us. GDPR Art.17 deletion on written request.</div>
+        </div>
+      </div>
+
+      <div class="integrity-commitment" style="margin-top:24px">
+        <p>
+          <strong>Your risk data does not belong to us.</strong><br>
+          Every modification is versioned, traced, and immutable.<br>
+          No code error can make it disappear.<br>
+          That's what you expect from a tool that manages your <strong>NIS2 compliance</strong>.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Absolute rules — click to expand</div>
+      <div class="integrity-rules">
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge never">NEVER</span>
+            <span class="int-rule-title">Physical DELETE on business data</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">All deletions are soft. Recoverable by the Owner at any time.</div></div>
+        </div>
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge always">ALWAYS</span>
+            <span class="int-rule-title">Risk versioning</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">Every change creates a new version. Full history is permanent and auditable.</div></div>
+        </div>
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge never">NEVER</span>
+            <span class="int-rule-title">Silent CASCADE DELETE</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">No implicit chain deletions. Each table is individually protected at DB level.</div></div>
+        </div>
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge always">ALWAYS</span>
+            <span class="int-rule-title">DB-level constraints</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">PostgreSQL enforces business rules — not just the app. Bugs can't corrupt structure.</div></div>
+        </div>
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge never">NEVER</span>
+            <span class="int-rule-title">Untested backup in production</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">A backup without a documented restore test does not exist. Tested on every major release.</div></div>
+        </div>
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge always">ALWAYS</span>
+            <span class="int-rule-title">On-demand export</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">Full data export (JSON + CSV), no dependency on ONE CIRCLE. Your data, your control.</div></div>
+        </div>
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge never">NEVER</span>
+            <span class="int-rule-title">Mutable audit log</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">Audit trail and incident timelines are append-only. No UPDATE or DELETE at DB level.</div></div>
+        </div>
+
+        <div class="integrity-rule">
+          <div class="integrity-rule-header">
+            <span class="int-badge always">ALWAYS</span>
+            <span class="int-rule-title">Daily automated backup</span>
+            <svg class="integrity-rule-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 7,10 12,4"/></svg>
+          </div>
+          <div class="integrity-rule-body"><div class="int-rule-text">Encrypted, per-environment, 30-day retention. RTO and RPO documented and verified.</div></div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -848,5 +1163,20 @@ footer {
   <div class="footer-right">Hosted on Infomaniak · Switzerland · 🇨🇭 · GDPR compliant</div>
 </footer>
 
+<script>
+// Accordion — integrity rules
+document.querySelectorAll('.integrity-rule').forEach(rule => {
+  rule.querySelector('.integrity-rule-header').addEventListener('click', () => {
+    rule.classList.toggle('open');
+  });
+});
+
+// Accordion — sovereignty badges
+document.querySelectorAll('.sov-badge').forEach(badge => {
+  badge.querySelector('.sov-badge-header').addEventListener('click', () => {
+    badge.classList.toggle('open');
+  });
+});
+</script>
 </body>
 </html>
